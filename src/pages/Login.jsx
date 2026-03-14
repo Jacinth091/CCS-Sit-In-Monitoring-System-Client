@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import ccsLogo from '../assets/images/png/uccslogobg.png';
+import authService from '../services/auth.service';
 
 const inputStyles =
   "w-full px-0 py-2 bg-transparent border-0 border-b border-[#6A9AB0]/30 focus:ring-0 focus:outline-none focus:border-[#3A6D8C] text-[#001F3F] text-sm transition-colors placeholder:text-[#6A9AB0]/50";
@@ -10,7 +11,36 @@ const labelStyles =
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [studentId, setStudentId] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault(); 
+    if (!studentId || !password) {
+      setErrorMsg("Please enter both ID Number and Password.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+
+    try {
+      const payload = {
+        student_id: studentId,
+        password: password
+      };
+      const response = await authService.login(payload);
+      alert("Login Successful!");
+      navigate('/student/dashboard'); 
+    } catch (err) {
+      setErrorMsg(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#EAD8B1]/20 p-4 md:p-8">
@@ -48,31 +78,50 @@ export default function Login() {
             </p>
           </div>
         </div>
-        <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
+<div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-1 text-sm text-[#6A9AB0] hover:text-[#001F3F] font-medium mb-8 transition-colors self-start"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
-            </button>
+          </button>
+          
           <div className="mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-[#001F3F]">Sign in</h2>
             <p className="mt-1 text-sm text-[#6A9AB0]">Enter your credentials to continue.</p>
           </div>
 
-          <form className="space-y-6">
+          {/* 3. Display Errors here if they exist */}
+          {errorMsg && (
+             <div className="mb-4 p-3 bg-red-100 text-red-700 text-sm rounded-lg border border-red-200">
+               {errorMsg}
+             </div>
+          )}
+
+          {/* 4. Add onSubmit to the form */}
+          <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className={labelStyles}>ID Number</label>
-              <input type="text" placeholder="e.g. 12345678" className={inputStyles} />
+              {/* 5. Bind value and onChange to state */}
+              <input 
+                type="text" 
+                placeholder="e.g. 12345678" 
+                className={inputStyles} 
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+              />
             </div>
             <div>
               <label className={labelStyles}>Password</label>
               <div className="relative">
+                {/* 5. Bind value and onChange to state */}
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   className={`${inputStyles} pr-8`}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
@@ -98,17 +147,18 @@ export default function Login() {
             </div>
 
             <hr className="border-[#6A9AB0]/20" />
-
-            {/* Submit */}
+            
+            {/* 6. Update button to show loading state */}
             <button
               type="submit"
-              className="w-full bg-[#3A6D8C] hover:bg-[#001F3F] text-[#EAD8B1] font-semibold py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg text-sm tracking-wide"
+              disabled={isLoading}
+              className={`w-full text-[#EAD8B1] font-semibold py-3 rounded-lg transition-all duration-300 shadow-md text-sm tracking-wide ${
+                isLoading ? 'bg-[#6A9AB0] cursor-not-allowed' : 'bg-[#3A6D8C] hover:bg-[#001F3F] hover:shadow-lg'
+              }`}
             >
-              Sign In
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Footer */}
           <p className="mt-5 text-xs text-[#6A9AB0]">
             Don't have an account?{' '}
             <a href="/auth/signup" className="text-[#3A6D8C] font-semibold hover:underline">
