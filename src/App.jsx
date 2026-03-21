@@ -16,6 +16,7 @@ import CurrentSitIn from './pages/Admin/CurrentSitIn';
 import StudentLayout from './layout/StudentLayout';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import EditProfile from './pages/Student/EditProfile';
+import SitInRecord from './pages/Admin/SitInRecords';
 
 
 
@@ -47,6 +48,7 @@ function App() {
               <Route path='announcements' element={<AdminAnnouncements/>}/>
               <Route path='students' element={<AdminStudents/>}/>
               <Route path='sit-in' element={<CurrentSitIn/>}/>
+              <Route path='sit-in-records' element={<SitInRecord/>}/>
             </Route>
 
             <Route path='/student' element={<StudentLayout/>}>

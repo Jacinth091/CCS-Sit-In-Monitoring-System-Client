@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import studentService from '../../services/student.service';
 import sitinService from '../../services/sitin.service';
 import labService from '../../services/lab.service';
+import { AlertTriangle } from 'lucide-react';
 
 export default function AdminStudents() {
   const [students, setStudents] = useState([]);
@@ -22,6 +23,8 @@ export default function AdminStudents() {
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const fetchStudents = async () => {
     setIsLoading(true);
@@ -72,8 +75,7 @@ export default function AdminStudents() {
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if(!window.confirm(`Are you sure you want to permanently delete ${name}?`)) return;
+  const handleDelete = async (id) => {
     try {
       await studentService.delete(id);
       toast.success("Student deleted successfully.");
@@ -81,6 +83,22 @@ export default function AdminStudents() {
     } catch (err) {
       toast.error("Failed to delete student.");
     }
+  };
+
+  const openDeleteModal = (student) => {
+    setStudentToDelete(student);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setStudentToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!studentToDelete?.id) return;
+    await handleDelete(studentToDelete.id);
+    closeDeleteModal();
   };
 
   const openStudentDetails = (student) => {
@@ -214,7 +232,7 @@ export default function AdminStudents() {
                           <Edit className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => handleDelete(student.id, student.first_name)}
+                          onClick={() => openDeleteModal(student)}
                           className="p-2 rounded-lg text-[#6A9AB0] hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
                           title="Delete Student"
                         >
@@ -278,10 +296,63 @@ export default function AdminStudents() {
           fetchStudents();
         }}
       />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        student={studentToDelete}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
 
+function DeleteConfirmationModal({ isOpen, student, onClose, onConfirm }) {
+  if (!isOpen || !student) return null;
+  return (
+    <div className="fixed inset-0 bg-[#001F3F]/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#6A9AB0]/20 flex flex-col">
+        <div className="px-8 py-6 bg-[#F87171]/10 border-b border-[#F87171]/20 flex items-center gap-4">
+          <div className="p-2 bg-white rounded-full shadow-sm">
+            <AlertTriangle className="w-6 h-6 text-[#EF4444]" strokeWidth={2.5} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold tracking-widest uppercase text-[#001F3F]">
+              Confirm Deletion
+            </h3>
+            <p className="text-xs text-[#6A9AB0] mt-1 font-medium">
+              This action will deactivate the record.
+            </p>
+          </div>
+        </div>
+        <div className="px-8 py-8 text-center">
+          <p className="text-base text-[#001F3F]/90 leading-relaxed">
+            Are you sure you want to delete <br />
+            <span className="text-xl font-extrabold text-[#001F3F] block mt-2">
+              {student.first_name} {student.last_name}?
+            </span>
+          </p>
+        </div>
+        <div className="px-8 py-5 bg-[#EAD8B1]/15 border-t border-[#6A9AB0]/15 flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-xl border-2 border-[#6A9AB0]/30 text-sm font-bold text-[#3A6D8C] hover:bg-[#6A9AB0]/10 hover:border-[#6A9AB0]/50 transition-all duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-[#EF4444] hover:bg-[#FF5A5F] shadow-md shadow-[#EF4444]/20 transition-all duration-200"
+          >
+            Delete Record
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 // ----------------------------------------------------------------------
 function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
   const isEditing = !!student;

@@ -20,6 +20,11 @@ const sitinService = {
     endSession: async (logId) => {
         const response = await api.post('sitin/end_session.php', { log_id: logId });
         return response.data;
+    },
+
+    getAllRecords: async () => {
+        const response = await api.get('sitin/read.php');
+        return response.data;
     }
 };
 
