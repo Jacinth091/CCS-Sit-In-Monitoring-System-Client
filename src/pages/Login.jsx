@@ -3,6 +3,8 @@ import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import ccsLogo from '../assets/images/png/uccslogobg.png';
 import authService from '../services/auth.service';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 const inputStyles =
   "w-full px-0 py-2 bg-transparent border-0 border-b border-[#6A9AB0]/30 focus:ring-0 focus:outline-none focus:border-[#3A6D8C] text-[#001F3F] text-sm transition-colors placeholder:text-[#6A9AB0]/50";
@@ -13,19 +15,18 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault(); 
     if (!studentId || !password) {
-      setErrorMsg("Please enter both ID Number and Password.");
+      toast.error("Please enter both ID Number and Password.");
       return;
     }
 
     setIsLoading(true);
-    setErrorMsg('');
 
     try {
       const payload = {
@@ -33,10 +34,20 @@ export default function Login() {
         password: password
       };
       const response = await authService.login(payload);
-      alert("Login Successful!");
-      navigate('/student/dashboard'); 
+      
+      // Store user in context
+      login(response);
+
+      // Role-based redirect
+      if (response.role === 'admin') {
+        toast.success("Welcome to the Admin Dashboard!");
+        navigate('/admin/dashboard');
+      } else {
+        toast.success(`Welcome back, ${response.first_name || 'Student'}!`);
+        navigate('/student/dashboard');
+      }
     } catch (err) {
-      setErrorMsg(err.message || "Login failed. Please try again.");
+      toast.error(err.customMessage || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -91,13 +102,6 @@ export default function Login() {
             <h2 className="text-2xl md:text-3xl font-bold text-[#001F3F]">Sign in</h2>
             <p className="mt-1 text-sm text-[#6A9AB0]">Enter your credentials to continue.</p>
           </div>
-
-          {/* 3. Display Errors here if they exist */}
-          {errorMsg && (
-             <div className="mb-4 p-3 bg-red-100 text-red-700 text-sm rounded-lg border border-red-200">
-               {errorMsg}
-             </div>
-          )}
 
           {/* 4. Add onSubmit to the form */}
           <form className="space-y-6" onSubmit={handleLogin}>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react'; // Added useState
-import { ChevronLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router'; // Added useNavigate
 import ccsLogo from '../assets/images/png/uccslogobg.png';
-import authService from '../services/auth.service'; // Adjust path if your file is named differently!
+import authService from '../services/auth.service';
+import { toast } from 'sonner';
 
 export default function SignUp() {
   const inputStyles =
@@ -25,9 +26,9 @@ export default function SignUp() {
     confirm_password: '',
     address: ''
   });
-
-  const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // 2. Handle input changes dynamically
   const handleChange = (e) => {
@@ -37,17 +38,16 @@ export default function SignUp() {
   // 3. Form Submission Logic
   const handleRegister = async (e) => {
     e.preventDefault();
-    setErrorMsg('');
 
     // Check if passwords match
     if (formData.password !== formData.confirm_password) {
-      setErrorMsg("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
 
     // Basic required field check
     if (!formData.student_id || !formData.first_name || !formData.last_name || !formData.password) {
-      setErrorMsg("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
 
@@ -57,12 +57,12 @@ export default function SignUp() {
       // Send data to PHP
       await authService.register(formData);
       
-      alert("Registration Successful! Please log in.");
-      navigate('/auth/login'); // Redirect to login page
+      toast.success("Registration Successful! Redirecting to login...");
+      navigate('/auth/login');
 
     } catch (err) {
       // Show error from PHP (e.g., "ID may already exist")
-      setErrorMsg(err.message || "Registration failed. Please try again.");
+      toast.error(err.customMessage || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -121,13 +121,6 @@ export default function SignUp() {
             <p className="mt-1 text-sm text-[#6A9AB0]">Fill in the details below to get started.</p>
           </div>
 
-          {/* 4. Display Error Messages */}
-          {errorMsg && (
-             <div className="mb-6 p-3 bg-red-100 text-red-700 text-sm rounded-lg border border-red-200">
-               {errorMsg}
-             </div>
-          )}
-
           {/* 5. Bind onSubmit and add name/value/onChange to all inputs */}
           <form className="space-y-6" onSubmit={handleRegister}>
             <div>
@@ -158,7 +151,18 @@ export default function SignUp() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelStyles}>Course</label>
-                <input type="text" name="course" value={formData.course} onChange={handleChange} placeholder="BSIT" className={inputStyles} />
+                <select 
+                  name="course" 
+                  value={formData.course} 
+                  onChange={handleChange} 
+                  className={`${inputStyles} cursor-pointer appearance-none`}
+                >
+                  <option value="" disabled>Select a Course</option>
+                  <option value="Bachelor of Science in Information Technology">Bachelor of Science in Information Technology</option>
+                  <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
+                  <option value="Bachelor of Science in Information Systems">Bachelor of Science in Information Systems</option>
+                  <option value="Bachelor of Science in Computer Engineering">Bachelor of Science in Computer Engineering</option>
+                </select>
               </div>
               <div>
                 <label className={labelStyles}>Year Level</label>
@@ -172,11 +176,43 @@ export default function SignUp() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelStyles}>Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" className={inputStyles} />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    name="password" 
+                    value={formData.password} 
+                    onChange={handleChange} 
+                    placeholder="••••••••" 
+                    className={`${inputStyles} pr-8`} 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6A9AB0] hover:text-[#001F3F] transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className={labelStyles}>Confirm Password</label>
-                <input type="password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} placeholder="••••••••" className={inputStyles} />
+                <div className="relative">
+                  <input 
+                    type={showConfirmPassword ? 'text' : 'password'} 
+                    name="confirm_password" 
+                    value={formData.confirm_password} 
+                    onChange={handleChange} 
+                    placeholder="••••••••" 
+                    className={`${inputStyles} pr-8`} 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6A9AB0] hover:text-[#001F3F] transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 
