@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 
 import announcementService from '../../services/announcement.service';
 import { Loader2 } from 'lucide-react';
+import { Link } from 'react-router';
 
 const RULES = [
   'Maintain silence, decorum, and order inside the laboratory. Turn off or keep on silent mode all mobile phones and personal electronic devices.',
@@ -28,11 +29,23 @@ export default function StudentDashboard() {
   // Fetch announcements
   useEffect(() => {
     async function fetchAnnouncements() {
+      setIsLoading(true);
       try {
-        const data = await announcementService.getAll();
-        setAnnouncements(data);
+        const response = await announcementService.getAll(1);
+        const rawData = response?.data || (Array.isArray(response) ? response : []);
+        
+        const transformed = Array.isArray(rawData) ? rawData.map(a => ({
+          id: a.id,
+          title: a.title || 'Administrative Update',
+          body: a.content || a.body || '',
+          date: new Date(a.created_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          author: a.admin_username || a.author || 'CCS Admin'
+        })) : [];
+
+        setAnnouncements(transformed);
       } catch (err) {
         console.error("Failed to fetch announcements:", err);
+        setAnnouncements([]);
       } finally {
         setIsLoading(false);
       }
@@ -154,7 +167,7 @@ export default function StudentDashboard() {
             {/* Tab Content */}
             <div className="p-5">
               {activeTab === 'announcements' && (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                <div className="space-y-4 pr-1">
                   {isLoading ? (
                     <div className="flex justify-center py-10">
                       <Loader2 className="h-6 w-6 animate-spin text-[#3A6D8C]" />
@@ -164,20 +177,37 @@ export default function StudentDashboard() {
                       No announcements yet.
                     </p>
                   ) : (
-                    announcements.map((a) => (
-                      <div
-                        key={a.id}
-                        className="group/card relative border border-[#6A9AB0]/10 rounded-xl px-5 py-4 hover:border-[#3A6D8C]/25 hover:shadow-sm transition-all duration-200"
-                      >
-                        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-gradient-to-b from-[#3A6D8C] to-[#6A9AB0]" />
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs font-bold text-[#001F3F]">{a.author || 'CCS Admin'}</span>
-                          <span className="w-1 h-1 rounded-full bg-[#6A9AB0]/40" />
-                          <span className="text-[11px] text-[#6A9AB0]">{a.date}</span>
-                        </div>
-                        <p className="text-sm text-[#001F3F]/75 leading-relaxed whitespace-pre-wrap">{a.body}</p>
+                    <>
+                      <div className="space-y-4">
+                        {announcements.slice(0, 3).map((a) => (
+                          <div
+                            key={a.id}
+                            className="group/card relative border border-[#6A9AB0]/10 rounded-xl px-5 py-4 hover:border-[#3A6D8C]/25 hover:shadow-sm transition-all duration-200"
+                          >
+                            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-gradient-to-b from-[#3A6D8C] to-[#6A9AB0]" />
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-bold text-[#001F3F]">{a.author || 'CCS Admin'}</span>
+                              <span className="w-1 h-1 rounded-full bg-[#6A9AB0]/40" />
+                              <span className="text-[11px] text-[#6A9AB0]">{a.date}</span>
+                            </div>
+                            <h4 className="text-sm font-bold text-[#001F3F] mb-1">{a.title || 'Announcement'}</h4>
+                            <p className="text-sm text-[#001F3F]/75 leading-relaxed line-clamp-2 whitespace-pre-wrap">{a.body}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))
+                      
+                      {announcements.length > 3 && (
+                        <div className="mt-6 pt-4 border-t border-[#6A9AB0]/5">
+                          <Link
+                            to="/student/announcements" 
+                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-[#3A6D8C]/30 text-[#3A6D8C] text-xs font-bold uppercase tracking-widest hover:bg-[#3A6D8C] hover:text-white transition-all group"
+                          >
+                            View All Announcements
+                            <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
