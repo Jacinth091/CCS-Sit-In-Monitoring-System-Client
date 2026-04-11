@@ -403,7 +403,7 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
     
     try {
       if (isEditing) {
-        await studentService.update(formData);
+        await studentService.adminUpdate(formData);
         toast.success("Student updated successfully.");
       } else {
         // Validation check for password if creating
@@ -412,7 +412,7 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
            setIsSubmitting(false);
            return;
         }
-        await studentService.create(formData);
+        await studentService.adminCreate(formData);
         toast.success("Student created successfully.");
       }
       onSuccess();
@@ -519,8 +519,8 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      const data = await sitinService.getHistoryByStudent(student.student_id);
-      setHistory(data);
+      const res = await sitinService.getHistoryByStudent(student.student_id);
+      setHistory(res.data || []);
     } catch (err) {
       toast.error('Failed to load sit-in history.');
     } finally {
