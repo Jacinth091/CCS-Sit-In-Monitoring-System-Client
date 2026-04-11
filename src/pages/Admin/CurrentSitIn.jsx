@@ -191,7 +191,7 @@ export default function CurrentSitIn() {
   const handleEndSession = async (logId) => {
     if (!window.confirm('Are you sure you want to end this sit-in session?')) return;
     try {
-      await sitinService.endSession(logId);
+      await sitinService.endSessionAdmin(logId);
       toast.success('Session ended successfully.');
       fetchActiveSessions();
     } catch (err) {
