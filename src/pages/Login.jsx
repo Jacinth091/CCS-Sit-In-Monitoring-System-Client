@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router';
-import ccsLogo from '../assets/images/png/uccslogobg.png';
-import authService from '../services/auth.service';
-import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import ccsLogo from "../assets/images/png/uccslogobg.png";
+import { useAuth } from "../context/AuthContext";
+import authService from "../services/auth.service";
 
 const inputStyles =
   "w-full px-0 py-2 bg-transparent border-0 border-b border-[#6A9AB0]/30 focus:ring-0 focus:outline-none focus:border-[#3A6D8C] text-[#001F3F] text-sm transition-colors placeholder:text-[#6A9AB0]/50";
@@ -13,14 +13,14 @@ const labelStyles =
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [studentId, setStudentId] = useState('');
-  const [password, setPassword] = useState('');
+  const [studentId, setStudentId] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     if (!studentId || !password) {
       toast.error("Please enter both ID Number and Password.");
       return;
@@ -31,20 +31,20 @@ export default function Login() {
     try {
       const payload = {
         student_id: studentId,
-        password: password
+        password: password,
       };
       const response = await authService.login(payload);
-      
-      // Store user in context
-      login(response);
 
-      // Role-based redirect
-      if (response.role === 'admin') {
-        toast.success("Welcome to the Admin Dashboard!");
-        navigate('/admin/dashboard');
-      } else {
-        toast.success(`Welcome back, ${response.first_name || 'Student'}!`);
-        navigate('/student/dashboard');
+      if (response) {
+        login(response);
+        // Role-based redirect
+        if (response.role === "admin") {
+          toast.success("Welcome to the Admin Dashboard!");
+          navigate("/admin/dashboard");
+        } else {
+          toast.success(`Welcome back, ${response.first_name || "Student"}!`);
+          navigate("/student/dashboard");
+        }
       }
     } catch (err) {
       toast.error(err.customMessage || "Login failed. Please try again.");
@@ -63,19 +63,24 @@ export default function Login() {
           <div className="absolute inset-0 bg-[#001F3F]/80 rounded-l-2xl" />
           <div className="relative z-10 flex flex-col h-full justify-between">
             <div className="flex-shrink-0">
-                <a href="/" className="flex items-center gap-2">
-                <img src={ccsLogo} alt="CCS Logo" className="h-9 w-9 object-contain" />
+              <a href="/" className="flex items-center gap-2">
+                <img
+                  src={ccsLogo}
+                  alt="CCS Logo"
+                  className="h-9 w-9 object-contain"
+                />
                 <span className="inline-block text-xs font-bold tracking-widest uppercase text-[#EAD8B1]/70">
-                CCS Sit-In Monitoring
+                  CCS Sit-In Monitoring
                 </span>
-                </a>
+              </a>
             </div>
             <div>
               <h3 className="text-2xl font-extrabold text-[#EAD8B1] leading-snug mb-3">
                 Welcome back!
               </h3>
               <p className="text-sm text-[#EAD8B1]/80 leading-relaxed max-w-xs">
-                Sign in to monitor lab sessions, track your sit-in history, and stay connected with the CCS community.
+                Sign in to monitor lab sessions, track your sit-in history, and
+                stay connected with the CCS community.
               </p>
               <a
                 href="/auth/signup"
@@ -89,18 +94,22 @@ export default function Login() {
             </p>
           </div>
         </div>
-<div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
+        <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-1 text-sm text-[#6A9AB0] hover:text-[#001F3F] font-medium mb-8 transition-colors self-start"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
           </button>
-          
+
           <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#001F3F]">Sign in</h2>
-            <p className="mt-1 text-sm text-[#6A9AB0]">Enter your credentials to continue.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#001F3F]">
+              Sign in
+            </h2>
+            <p className="mt-1 text-sm text-[#6A9AB0]">
+              Enter your credentials to continue.
+            </p>
           </div>
 
           {/* 4. Add onSubmit to the form */}
@@ -108,10 +117,10 @@ export default function Login() {
             <div>
               <label className={labelStyles}>ID Number</label>
               {/* 5. Bind value and onChange to state */}
-              <input 
-                type="text" 
-                placeholder="e.g. 12345678" 
-                className={inputStyles} 
+              <input
+                type="text"
+                placeholder="e.g. 12345678"
+                className={inputStyles}
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
               />
@@ -121,7 +130,7 @@ export default function Login() {
               <div className="relative">
                 {/* 5. Bind value and onChange to state */}
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   className={`${inputStyles} pr-8`}
                   value={password}
@@ -129,10 +138,14 @@ export default function Login() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(p => !p)}
+                  onClick={() => setShowPassword((p) => !p)}
                   className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6A9AB0] hover:text-[#001F3F] transition-colors"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -145,34 +158,40 @@ export default function Login() {
                 />
                 Remember me
               </label>
-              <a href="/auth/forgot-password" className="text-[#3A6D8C] hover:underline font-medium">
+              <a
+                href="/auth/forgot-password"
+                className="text-[#3A6D8C] hover:underline font-medium"
+              >
                 Forgot password?
               </a>
             </div>
 
             <hr className="border-[#6A9AB0]/20" />
-            
+
             {/* 6. Update button to show loading state */}
             <button
               type="submit"
               disabled={isLoading}
               className={`w-full text-[#EAD8B1] font-semibold py-3 rounded-lg transition-all duration-300 shadow-md text-sm tracking-wide ${
-                isLoading ? 'bg-[#6A9AB0] cursor-not-allowed' : 'bg-[#3A6D8C] hover:bg-[#001F3F] hover:shadow-lg'
+                isLoading
+                  ? "bg-[#6A9AB0] cursor-not-allowed"
+                  : "bg-[#3A6D8C] hover:bg-[#001F3F] hover:shadow-lg"
               }`}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </form>
           <p className="mt-5 text-xs text-[#6A9AB0]">
-            Don't have an account?{' '}
-            <a href="/auth/signup" className="text-[#3A6D8C] font-semibold hover:underline">
+            Don't have an account?{" "}
+            <a
+              href="/auth/signup"
+              className="text-[#3A6D8C] font-semibold hover:underline"
+            >
               Sign up
             </a>
           </p>
         </div>
-
       </div>
     </div>
   );
 }
-
