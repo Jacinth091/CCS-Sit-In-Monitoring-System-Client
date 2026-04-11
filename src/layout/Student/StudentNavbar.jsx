@@ -1,19 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, NavLink } from 'react-router';
-import { Menu, X, LogOut, Bell, ChevronDown } from 'lucide-react';
+import { useNavigate, NavLink, useLocation } from 'react-router';
+import { Menu, X, LogOut, Bell, ChevronDown, User, LayoutDashboard, Megaphone, History } from 'lucide-react';
 import ccsLogo from '../../assets/images/png/uccslogobg.png';
 import { useAuth } from '../../context/AuthContext';
 
+import StudentNotificationList from '../../components/notifications/StudentNotificationList';
+import notificationService from '../../services/notification.service';
+
 const navItems = [
-  { to: '/student/dashboard', label: 'Home' },
-  {
-    label: 'Profile',
-    children: [
-      { to: '/student/edit-profile', label: 'Edit Profile' },
-      { to: '/student/history', label: 'Sit-in History' },
-    ],
-  },
-  { to: '/student/reservation', label: 'Reservation' },
+  { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/student/announcements', label: 'Announcements', icon: Megaphone },
+  { to: '/student/history', label: 'My History', icon: History },
 ];
 
 /* ── Dropdown hook ── */
@@ -32,43 +29,86 @@ function useDropdown() {
   return { open, setOpen, ref };
 }
 
-/* ── Desktop dropdown ── */
-function NavDropdown({ label, children }) {
+/* ── Profile Dropdown ── */
+function ProfileDropdown() {
   const { open, setOpen, ref } = useDropdown();
-  const isChildActive = children.some((c) => location.pathname.startsWith(c.to));
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/login');
+  };
+
+  const fullName = user
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+    : 'Student';
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1 text-[13px] font-medium transition-colors duration-200 whitespace-nowrap cursor-pointer ${
-          isChildActive
-            ? 'text-[#001F3F] font-semibold'
-            : 'text-[#6A9AB0] hover:text-[#001F3F]'
-        }`}
+        className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-[#EAD8B1]/10 transition-all duration-200 cursor-pointer group"
       >
-        {label}
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3A6D8C] to-[#EAD8B1] p-0.5 shadow-sm group-hover:shadow-md transition-all">
+          <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+            {user?.profile_pic ? (
+              <img 
+                src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="h-4 w-4 text-[#3A6D8C]" />
+            )}
+          </div>
+        </div>
+        <div className="hidden xl:flex flex-col items-start leading-none text-left">
+          <span className="text-[13px] font-extrabold text-[#001F3F]">{fullName}</span>
+          <span className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest mt-0.5">Student Account</span>
+        </div>
+        <ChevronDown className={`h-3.5 w-3.5 text-[#6A9AB0] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-44 bg-white border border-[#6A9AB0]/20 rounded-lg shadow-lg py-1 z-50">
-          {children.map((child) => (
-            <NavLink
-              key={child.to}
-              to={child.to}
-              onClick={() => setOpen(false)}
-              className={({ isActive }) =>
-                `block px-4 py-2 text-[13px] font-medium transition-colors ${
-                  isActive
-                    ? 'text-[#001F3F] bg-[#EAD8B1]/20'
-                    : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
-                }`
-              }
-            >
-              {child.label}
-            </NavLink>
-          ))}
+        <div className="absolute right-0 mt-3 w-56 bg-white border border-[#6A9AB0]/20 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in-up">
+          <div className="px-5 py-3 border-b border-[#6A9AB0]/10 mb-1">
+             <p className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest mb-1">Signed in as</p>
+             <p className="text-[13px] font-extrabold text-[#001F3F] truncate">{user?.email}</p>
+          </div>
+          <NavLink
+            to="/student/edit-profile"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `block px-5 py-3 text-[13px] font-bold transition-colors ${
+                isActive
+                  ? 'text-[#3A6D8C] bg-[#EAD8B1]/10'
+                  : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+              }`
+            }
+          >
+            Edit Profile
+          </NavLink>
+          <NavLink
+            to="/student/history"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `block px-5 py-3 text-[13px] font-bold transition-colors ${
+                isActive
+                  ? 'text-[#3A6D8C] bg-[#EAD8B1]/10'
+                  : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+              }`
+            }
+          >
+            Sit-in History
+          </NavLink>
+          <button
+            onClick={handleLogout}
+            className="w-full text-left px-5 py-3 text-[13px] font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-3 cursor-pointer border-t border-[#6A9AB0]/10 mt-1"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </button>
         </div>
       )}
     </div>
@@ -78,61 +118,72 @@ function NavDropdown({ label, children }) {
 /* ── Notification bell dropdown ── */
 function NotificationBell() {
   const { open, setOpen, ref } = useDropdown();
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const data = await notificationService.getAll();
+      setNotifications(data.slice(0, 5));
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (err) {
+      // Fail silently
+    }
+  };
+
+  const handleClearAll = async () => {
+    await notificationService.markAllAsRead();
+    fetchData();
+  };
+
+  const handleRead = async (n) => {
+    await notificationService.markAsRead(n.id);
+    fetchData();
+  };
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 text-[13px] font-medium text-[#6A9AB0] hover:text-[#001F3F] transition-colors duration-200 cursor-pointer"
+        className={`flex items-center gap-2 text-[13px] font-bold transition-all duration-200 px-3 py-2 rounded-xl cursor-pointer group ${
+          open ? 'bg-[#EAD8B1]/15 text-[#001F3F]' : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
+        }`}
       >
-        <Bell className="h-4 w-4" />
-        <span className="hidden sm:inline">Notification</span>
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border border-[#6A9AB0]/20 rounded-lg shadow-lg z-50 p-4">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-[#6A9AB0]/60 mb-2">
-            Notifications
-          </p>
-          <p className="text-xs text-[#6A9AB0]/70 italic">No new notifications.</p>
+        <div className="relative">
+           <Bell className="h-4 w-4" />
+           {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white flex items-center justify-center text-[8px] font-black text-white">
+                {unreadCount > 9 ? '!' : unreadCount}
+              </span>
+           )}
         </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Mobile accordion ── */
-function MobileAccordion({ label, children, onNavigate }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/15 transition-colors cursor-pointer"
-      >
-        {label}
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <span className="hidden sm:inline">Alerts</span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
+
       {open && (
-        <div className="ml-3 pl-3 border-l border-[#6A9AB0]/20 space-y-0.5 mt-0.5">
-          {children.map((child) => (
-            <NavLink
-              key={child.to}
-              to={child.to}
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `block px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-                  isActive
-                    ? 'text-[#001F3F] bg-[#EAD8B1]/20'
-                    : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
-                }`
-              }
-            >
-              {child.label}
-            </NavLink>
-          ))}
+        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-[#6A9AB0]/15 rounded-2xl shadow-2xl overflow-hidden z-[100] animate-fade-in-up">
+           <StudentNotificationList 
+              notifications={notifications} 
+              onClearAll={handleClearAll}
+              onRead={handleRead}
+           />
+           <div className="bg-gray-50 border-t border-[#6A9AB0]/10 p-4 text-center">
+              <NavLink 
+                to="/student/notifications" 
+                onClick={() => setOpen(false)}
+                className="text-[10px] font-black text-[#3A6D8C] uppercase tracking-[0.2em] hover:text-[#001F3F] transition-colors"
+              >
+                Explore All Notifications →
+              </NavLink>
+           </div>
         </div>
       )}
     </div>
@@ -142,113 +193,152 @@ function MobileAccordion({ label, children, onNavigate }) {
 /* ── Main Navbar ── */
 export default function StudentNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const location = useLocation();
 
-  const handleLogout = () => {
+  const handleMobileLogout = () => {
     logout();
     navigate('/auth/login');
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white border-b border-[#6A9AB0]/20 shadow-sm">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo + Title */}
-          <NavLink to="/student/dashboard" className="flex items-center gap-2.5 flex-shrink-0">
-            <img src={ccsLogo} alt="CCS Logo" className="h-8 w-8 object-contain" />
-            <span className="text-[13px] font-bold tracking-wide text-[#001F3F]">
-              Dashboard
-            </span>
+    <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-[#6A9AB0]/15 shadow-sm">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="flex items-center justify-between h-16 sm:h-20">
+          
+          {/* Logo Section - Matching Admin */}
+          <NavLink to="/student/dashboard" className="flex items-center gap-3 group shrink-0">
+            <div className="bg-[#001F3F] p-1.5 rounded-xl shadow-lg group-hover:rotate-6 transition-transform duration-300">
+               <img src={ccsLogo} alt="CCS Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain brightness-0 invert" />
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="text-[14px] sm:text-[16px] font-black tracking-tight text-[#001F3F]">
+                CCS HUB
+              </span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-[#6A9AB0] uppercase tracking-[0.2em] mt-0.5">
+                Student Portal
+              </span>
+            </div>
           </NavLink>
 
-          {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-6">
-            <NotificationBell />
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-2 xl:gap-4">
+            <div className="flex items-center gap-1 xl:gap-2 mr-4">
+               {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 text-[13px] font-bold px-4 py-2 rounded-xl transition-all duration-200 whitespace-nowrap group relative ${
+                        isActive
+                          ? 'text-[#001F3F]'
+                          : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
+                      }`
+                    }
+                  >
+                    {item.icon && <item.icon className={`h-4 w-4 ${location.pathname === item.to ? 'text-[#3A6D8C]' : 'text-[#6A9AB0] group-hover:text-[#3A6D8C]'}`} />}
+                    {item.label}
+                    {/* Underline for active state */}
+                    {location.pathname === item.to && (
+                       <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#3A6D8C] rounded-full transition-all duration-300 opacity-100" />
+                    )}
+                  </NavLink>
+               ))}
+            </div>
 
-            {navItems.map((item) =>
-              item.children ? (
-                <NavDropdown key={item.label} label={item.label} children={item.children} />
-              ) : (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `text-[13px] font-medium transition-colors duration-200 whitespace-nowrap ${
-                      isActive
-                        ? 'text-[#001F3F] font-semibold'
-                        : 'text-[#6A9AB0] hover:text-[#001F3F]'
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              )
-            )}
+            <div className="h-8 w-[1px] bg-[#6A9AB0]/20 mx-2" />
+
+            <div className="flex items-center gap-4">
+               <NotificationBell />
+               <ProfileDropdown />
+            </div>
           </div>
-
-          {/* Desktop Logout */}
-          <button
-            onClick={handleLogout}
-            className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#001F3F] text-[#EAD8B1] text-sm font-bold hover:bg-[#3A6D8C] transition-colors duration-200 cursor-pointer"
-          >
-            <LogOut className="h-4 w-4" />
-            Log out
-          </button>
 
           {/* Mobile Toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden text-[#001F3F] hover:text-[#3A6D8C] transition-colors cursor-pointer"
+            className="lg:hidden p-2 rounded-xl text-[#001F3F] hover:bg-[#EAD8B1]/20 transition-all cursor-pointer"
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-[#6A9AB0]/15 px-4 pb-4 space-y-1">
-          <button
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/15 transition-colors cursor-pointer"
-          >
-            <Bell className="h-4 w-4" /> Notification
-          </button>
-
-          {navItems.map((item) =>
-            item.children ? (
-              <MobileAccordion
-                key={item.label}
-                label={item.label}
-                children={item.children}
-                onNavigate={() => setMobileOpen(false)}
-              />
-            ) : (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'text-[#001F3F] bg-[#EAD8B1]/20'
-                      : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            )
-          )}
-
-          <div className="border-t border-[#6A9AB0]/15 pt-2 mt-2">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#001F3F] text-[#EAD8B1] text-sm font-bold hover:bg-[#3A6D8C] transition-colors cursor-pointer"
+        <div className="lg:hidden bg-white border-t border-[#6A9AB0]/10 px-4 pt-2 pb-8 space-y-2 animate-fade-in shadow-inner overflow-y-auto max-h-[calc(100vh-64px)]">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  isActive
+                    ? 'text-[#3A6D8C] bg-[#3A6D8C]/5'
+                    : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+                }`
+              }
             >
-              <LogOut className="h-4 w-4" />
-              Log out
-            </button>
+              {item.icon && <item.icon className="h-4 w-4" />}
+              {item.label}
+            </NavLink>
+          ))}
+
+          <NavLink
+            to="/student/notifications"
+            onClick={() => setMobileOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                isActive ? 'text-[#3A6D8C] bg-[#3A6D8C]/5' : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+              }`
+            }
+          >
+            <Bell className="h-4 w-4" /> Notifications
+          </NavLink>
+          
+          <div className="pt-4 mt-2 border-t border-[#6A9AB0]/10">
+             <div className="flex items-center gap-3 px-4 py-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#3A6D8C] to-[#EAD8B1] p-0.5 overflow-hidden">
+                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                      {user?.profile_pic ? (
+                         <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                         <User className="h-5 w-5 text-[#3A6D8C]" />
+                      )}
+                   </div>
+                </div>
+                <div className="flex flex-col leading-tight">
+                   <span className="text-sm font-black text-[#001F3F]">{user?.first_name} {user?.last_name}</span>
+                   <span className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest truncate max-w-[180px]">{user?.email}</span>
+                </div>
+             </div>
+             
+             <div className="grid grid-cols-2 gap-2 mb-4">
+                <NavLink 
+                  to="/student/edit-profile" 
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center py-2.5 rounded-xl border border-[#6A9AB0]/20 text-[11px] font-black text-[#001F3F] uppercase tracking-widest"
+                >
+                  Edit Profile
+                </NavLink>
+                <NavLink 
+                  to="/student/history" 
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center py-2.5 rounded-xl border border-[#6A9AB0]/20 text-[11px] font-black text-[#001F3F] uppercase tracking-widest"
+                >
+                  My History
+                </NavLink>
+             </div>
+
+             <button
+               onClick={handleMobileLogout}
+               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-[#001F3F] text-[#EAD8B1] text-sm font-black hover:bg-[#3A6D8C] transition-all shadow-lg active:scale-95 cursor-pointer"
+             >
+               <LogOut className="h-4 w-4" />
+               Sign Out Securely
+             </button>
           </div>
         </div>
       )}
