@@ -16,7 +16,11 @@ import CurrentSitIn from './pages/Admin/CurrentSitIn';
 import StudentLayout from './layout/StudentLayout';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import EditProfile from './pages/Student/EditProfile';
+import MyHistory from './pages/Student/MyHistory';
+import StudentAnnouncements from './pages/Student/Announcements';
+import Notifications from './pages/Student/Notifications';
 import SitInRecord from './pages/Admin/SitInRecords';
+import SitInHistory from './pages/Admin/SitInHistory';
 
 
 
@@ -28,7 +32,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path='/' element={<Layout/>}>
-              <Route index element={<Home/>}/>
+              <Route path='home' element={<Home/>}/>
               <Route path='about' element={<div>About</div> }/>
               <Route path='community/'>
                 <Route path='forums' element={<div>Forums</div>}/>
@@ -47,13 +51,19 @@ function App() {
               <Route path='dashboard' element={<AdminDashboard/>}/>
               <Route path='announcements' element={<AdminAnnouncements/>}/>
               <Route path='students' element={<AdminStudents/>}/>
-              <Route path='sit-in' element={<CurrentSitIn/>}/>
-              <Route path='sit-in-records' element={<SitInRecord/>}/>
+              <Route path="sit-in">
+                <Route index element={<CurrentSitIn />} /> 
+                <Route path="records" element={<SitInRecord />} />
+                <Route path="history" element={<SitInHistory />} />
+              </Route>
             </Route>
 
             <Route path='/student' element={<StudentLayout/>}>
               <Route path='dashboard' element={<StudentDashboard/>}/>
               <Route path='edit-profile' element={<EditProfile/>}/>
+              <Route path='history' element={<MyHistory/>}/>
+              <Route path='announcements' element={<StudentAnnouncements/>}/>
+              <Route path='notifications' element={<Notifications/>}/>
             </Route>
           </Routes>
         </BrowserRouter>
