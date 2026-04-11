@@ -24,7 +24,7 @@ const sitinService = {
 
     getAllRecords: async () => {
         const response = await api.get('sitin/read.php');
-        return response.data;
+        return response.data.data || [];
     }
 };
 
