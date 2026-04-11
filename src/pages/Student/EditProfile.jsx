@@ -31,23 +31,8 @@ export default function EditProfile() {
   // Load current profile from backend
   useEffect(() => {
     async function fetchProfile() {
-      if (!user?.id) {
-        // Fallback to context data if no id
-        setFormData({
-          first_name: user?.first_name || '',
-          middle_name: user?.middle_name || '',
-          last_name: user?.last_name || '',
-          course: user?.course || '',
-          course_level: user?.course_level || '',
-          email: user?.email || '',
-          address: user?.address || '',
-        });
-        setIsFetching(false);
-        return;
-      }
-
       try {
-        const data = await studentService.getById(user.id);
+        const data = await studentService.getProfile();
         setFormData({
           first_name: data.first_name || '',
           middle_name: data.middle_name || '',
@@ -87,7 +72,6 @@ export default function EditProfile() {
 
     try {
       const fd = new FormData();
-      fd.append('id', user.id);
       fd.append('profile_pic', file);
 
       const res = await studentService.uploadProfilePicture(fd);
@@ -114,13 +98,7 @@ export default function EditProfile() {
     setIsLoading(true);
 
     try {
-      const payload = {
-        id: user.id,
-        student_id: user.student_id,
-        ...formData,
-      };
-
-      await studentService.update(payload);
+      await studentService.updateProfile(formData);
 
       // Update context so the rest of the app reflects the changes
       login({ ...user, ...formData });
