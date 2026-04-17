@@ -3,10 +3,10 @@ import { Users, Clock, MonitorPlay, TimerReset, History } from 'lucide-react';
 
 export default function SitInMetricCards({ stats }) {
   const cards = [
-    { label: 'Total Records', value: stats.totalRecords, icon: Users, color: 'text-[#3A6D8C]', bg: 'bg-[#3A6D8C]/10' },
+    { label: 'Total Records', value: stats.totalRecords, icon: Users, color: 'text-primary-hover', bg: 'bg-primary-hover/10' },
     { label: 'Active Right Now', value: stats.activeNow, icon: MonitorPlay, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { label: 'Average Duration', value: stats.avgDuration, icon: Clock, color: 'text-[#3A6D8C]', bg: 'bg-[#EAD8B1]/30' },
-    { label: 'Most Used Lab', value: stats.mostUsedLab, icon: History, color: 'text-[#001F3F]', bg: 'bg-[#001F3F]/10' },
+    { label: 'Average Duration', value: stats.avgDuration, icon: Clock, color: 'text-primary-hover', bg: 'bg-brand-sand/30' },
+    { label: 'Most Used Lab', value: stats.mostUsedLab, icon: History, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Total Sit-In Time', value: stats.totalDuration, icon: TimerReset, color: 'text-purple-600', bg: 'bg-purple-50' }
   ];
 
@@ -15,14 +15,14 @@ export default function SitInMetricCards({ stats }) {
       {cards.map((card, idx) => {
         const Icon = card.icon;
         return (
-          <div key={idx} className="bg-white rounded-xl border border-[#6A9AB0]/15 shadow-sm p-4 flex flex-col justify-center">
+          <div key={idx} className="bg-bg-primary rounded-none border border-border p-4 flex flex-col justify-center transition-all duration-150">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold text-[#001F3F]/50 uppercase tracking-wide">{card.label}</p>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${card.bg}`}>
+              <p className="text-[10px] font-bold text-primary/50 uppercase tracking-wider">{card.label}</p>
+              <div className={`w-8 h-8 rounded-sm flex items-center justify-center ${card.bg}`}>
                 <Icon className={`h-4 w-4 ${card.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-extrabold text-[#001F3F]">{card.value}</p>
+            <p className="text-2xl font-extrabold text-primary">{card.value}</p>
           </div>
         );
       })}
