@@ -24,6 +24,11 @@ const notificationService = {
   delete: async (id) => {
     const response = await api.delete('student/notifications/delete.php', { data: { id } });
     return response.data;
+  },
+
+  deleteAll: async () => {
+    const response = await api.delete('student/notifications/delete_all.php');
+    return response.data;
   }
 };
 
