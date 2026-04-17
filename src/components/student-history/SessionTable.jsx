@@ -1,7 +1,7 @@
 import React from 'react';
-import { Eye, Clock, FlaskConical, MessageSquare } from 'lucide-react';
+import { Eye, Clock, FlaskConical, MessageSquare, Star, Plus } from 'lucide-react';
 
-export default function SessionTable({ sessions, onOpenFeedback }) {
+export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) {
   return (
     <div className="bg-white rounded-3xl border border-[#6A9AB0]/15 shadow-sm overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
@@ -13,7 +13,7 @@ export default function SessionTable({ sessions, onOpenFeedback }) {
               <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Purpose</th>
               <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Time In/Out</th>
               <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Duration</th>
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60 text-right">Feedback</th>
+              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#6A9AB0]/10">
@@ -35,7 +35,10 @@ export default function SessionTable({ sessions, onOpenFeedback }) {
               </tr>
             ) : (
               sessions.map((session, idx) => {
-                const isActive = !session.end_time;
+                const isActive = session.status === 'ongoing';
+                const hasRated = !!session.studentRating;
+                const hasAdminRemark = !!session.adminRemark;
+
                 return (
                   <tr key={session.id || idx} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="py-5 px-6 font-bold text-[#001F3F] whitespace-nowrap text-[13px]">
@@ -72,17 +75,39 @@ export default function SessionTable({ sessions, onOpenFeedback }) {
                        )}
                     </td>
                     <td className="py-5 px-6 text-right whitespace-nowrap">
-                       {session.feedback ? (
-                          <button
-                            onClick={() => onOpenFeedback(session)}
-                            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[#3A6D8C]/30 text-[#3A6D8C] text-[10px] font-bold uppercase tracking-widest hover:bg-[#3A6D8C] hover:text-white transition-all cursor-pointer shadow-sm"
-                          >
-                             <MessageSquare className="h-3.5 w-3.5" />
-                             View Note
-                          </button>
-                       ) : (
-                          <span className="text-[10px] font-bold text-[#6A9AB0]/40 uppercase tracking-widest">None</span>
-                       )}
+                       <div className="flex items-center justify-end gap-2">
+                          {!isActive && (
+                             <button
+                               onClick={() => onOpenEntry(session)}
+                               className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer shadow-sm ${
+                                 hasRated 
+                                   ? 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100' 
+                                   : 'border-[#6A9AB0]/30 text-[#6A9AB0] hover:bg-gray-50'
+                               }`}
+                               title={hasRated ? "Edit your rating" : "Rate this session"}
+                             >
+                                {hasRated ? (
+                                   <div className="flex items-center gap-1">
+                                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                      <span>{session.studentRating}</span>
+                                   </div>
+                                ) : (
+                                   <Plus className="h-3 w-3" />
+                                )}
+                                {hasRated ? 'Rated' : 'Rate'}
+                             </button>
+                          )}
+                          
+                          {(hasRated || hasAdminRemark) && (
+                             <button
+                               onClick={() => onOpenFeedback(session)}
+                               className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#001F3F] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#3A6D8C] transition-all cursor-pointer shadow-md shadow-[#001F3F]/10"
+                             >
+                                <Eye className="h-3.5 w-3.5" />
+                                Details
+                             </button>
+                          )}
+                       </div>
                     </td>
                   </tr>
                 );

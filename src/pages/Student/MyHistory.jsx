@@ -4,6 +4,7 @@ import sitinService from '../../services/sitin.service';
 import UsageStats from '../../components/student-history/UsageStats';
 import SessionTable from '../../components/student-history/SessionTable';
 import FeedbackViewModal from '../../components/student-history/FeedbackViewModal';
+import StudentFeedbackModal from '../../components/modals/StudentFeedbackModal';
 import { Loader2, ArrowLeft, History } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -12,8 +13,15 @@ export default function MyHistory() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Feedback view modal state
   const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  
+  // Student feedback entry modal state
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
+  const [initialFeedback, setInitialFeedback] = useState({ rating: 0, comment: '' });
 
   const [stats, setStats] = useState({
     totalSessions: 0,
@@ -34,11 +42,24 @@ export default function MyHistory() {
       const res = await sitinService.getStats(user.student_id);
       if (res.status === 'success') {
         const s = res.data;
+        
+        // Robust duration formatting
+        let displayDuration = '0h 0m';
+        if (s.total_duration) {
+          displayDuration = s.total_duration;
+        } else if (s.total_minutes !== undefined) {
+          const mins = parseInt(s.total_minutes);
+          displayDuration = `${Math.floor(mins / 60)}h ${mins % 60}m`;
+        } else if (s.total_hours !== undefined) {
+          const totalMins = Math.round(parseFloat(s.total_hours) * 60);
+          displayDuration = `${Math.floor(totalMins / 60)}h ${totalMins % 60}m`;
+        }
+
         setStats({
           totalSessions: s.total_sessions || 0,
-          totalHours: s.total_duration || '0h 0m',
+          totalHours: displayDuration,
           mostVisitedLab: s.most_visited_lab || '—',
-          lastSessionDate: s.last_session_date ? new Date(s.last_session_date).toLocaleDateString() : '—'
+          lastSessionDate: s.last_session_date ? new Date(s.last_session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
         });
       }
     } catch (err) {
@@ -52,23 +73,34 @@ export default function MyHistory() {
       const res = await sitinService.getHistoryByStudent(user.student_id);
       const rawData = res.data || [];
       
-      const transformed = rawData.map(s => ({
-        id: s.id || s.log_id,
-        date: new Date(s.time_in).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        lab_name: s.lab_name,
-        purpose: s.purpose,
-        start_time: new Date(s.time_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        end_time: s.time_out ? new Date(s.time_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
-        duration: s.duration,
-        duration_minutes: s.duration_minutes || 0,
-        feedback: s.feedback_text ? {
-          message: s.feedback_text,
-          adminName: s.admin_name || 'Lab Supervisor',
-          date: new Date(s.feedback_date || s.time_out || s.time_in).toLocaleDateString()
-        } : null
-      }));
+      const transformed = rawData.map(s => {
+        // Calculate duration if not provided by backend or if we want a nice string
+        let durationStr = s.duration;
+        if (!durationStr && s.duration_minutes) {
+          const mins = parseInt(s.duration_minutes);
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
 
-      setSessions(transformed.reverse());
+        return {
+          id: s.id || s.log_id,
+          date: new Date(s.time_in).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          lab_name: s.lab_name,
+          purpose: s.purpose,
+          status: s.status,
+          start_time: new Date(s.time_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          end_time: s.time_out ? new Date(s.time_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+          duration: durationStr,
+          duration_minutes: s.duration_minutes || 0,
+          studentRating: s.student_rating,
+          studentComment: s.student_comment,
+          adminRemark: s.admin_remark,
+          adminName: s.admin_name || 'Lab Supervisor'
+        };
+      });
+
+      setSessions(transformed);
     } catch (err) {
       toast.error('Failed to load your history.');
     } finally {
@@ -77,8 +109,32 @@ export default function MyHistory() {
   };
 
   const handleOpenFeedback = (session) => {
-    setSelectedFeedback(session.feedback);
-    setIsModalOpen(true);
+    setSelectedFeedback({
+      adminRemark: session.adminRemark,
+      studentRating: session.studentRating,
+      studentComment: session.studentComment,
+      date: session.date,
+      adminName: session.adminName
+    });
+    setIsViewModalOpen(true);
+  };
+
+  const handleOpenEntry = (session) => {
+    setSelectedSessionId(session.id);
+    setInitialFeedback({
+      rating: session.studentRating || 0,
+      comment: session.studentComment || ''
+    });
+    setIsEntryModalOpen(true);
+  };
+
+  const handleSubmitFeedback = async (payload) => {
+    try {
+      await sitinService.submitStudentFeedback(payload);
+      fetchHistory(); // Refresh the list
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (
@@ -112,15 +168,28 @@ export default function MyHistory() {
                   {sessions.length} Records
                </span>
             </div>
-            <SessionTable sessions={sessions} onOpenFeedback={handleOpenFeedback} />
+            <SessionTable 
+              sessions={sessions} 
+              onOpenFeedback={handleOpenFeedback} 
+              onOpenEntry={handleOpenEntry}
+            />
           </div>
         </>
       )}
 
       <FeedbackViewModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)} 
         feedback={selectedFeedback} 
+      />
+
+      <StudentFeedbackModal
+        isOpen={isEntryModalOpen}
+        onClose={() => setIsEntryModalOpen(false)}
+        onSubmit={handleSubmitFeedback}
+        recordId={selectedSessionId}
+        initialRating={initialFeedback.rating}
+        initialComment={initialFeedback.comment}
       />
 
       <div className="mt-16 pt-8 border-t border-[#6A9AB0]/10 flex justify-center">
