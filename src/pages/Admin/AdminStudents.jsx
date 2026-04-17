@@ -465,22 +465,35 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
             
              <div>
               <label className={labelStyles}>Course *</label>
-              <select required value={formData.course} onChange={(e)=>setFormData({...formData, course: e.target.value})} className={inputStyles}>
-                <option value="BSIT">BSIT</option>
-                <option value="BSCS">BSCS</option>
-                <option value="BSIS">BSIS</option>
-                <option value="BSCpE">BSCpE</option>
+              <select 
+                required 
+                value={formData.course} 
+                onChange={(e)=>setFormData({...formData, course: e.target.value})} 
+                className={`${inputStyles} cursor-pointer appearance-none`}
+              >
+                <option value="" disabled>Select a Course</option>
+                <option value="Bachelor of Science in Information Technology">Bachelor of Science in Information Technology</option>
+                <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
+                <option value="Bachelor of Science in Information Systems">Bachelor of Science in Information Systems</option>
+                <option value="Bachelor of Science in Computer Engineering">Bachelor of Science in Computer Engineering</option>
                 <option value="Other">Other</option>
               </select>
             </div>
             
             <div>
               <label className={labelStyles}>Year Level *</label>
-              <select required value={formData.course_level} onChange={(e)=>setFormData({...formData, course_level: e.target.value})} className={inputStyles}>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
+              <select 
+                required 
+                value={formData.course_level} 
+                onChange={(e)=>setFormData({...formData, course_level: e.target.value})} 
+                className={`${inputStyles} cursor-pointer appearance-none`}
+              >
+                <option value="" disabled>Select Year</option>
+                <option value="1st">1st Year</option>
+                <option value="2nd">2nd Year</option>
+                <option value="3rd">3rd Year</option>
+                <option value="4th">4th Year</option>
+                <option value="5th">5th Year</option>
               </select>
             </div>
 
