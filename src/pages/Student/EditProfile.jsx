@@ -221,27 +221,34 @@ export default function EditProfile() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelStyles}>Course</label>
-            <input
-              type="text"
+            <select
               name="course"
               value={formData.course}
               onChange={handleChange}
-              placeholder="BSIT"
-              className={inputStyles}
-            />
+              className={`${inputStyles} cursor-pointer appearance-none`}
+            >
+              <option value="" disabled>Select a Course</option>
+              <option value="Bachelor of Science in Information Technology">Bachelor of Science in Information Technology</option>
+              <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
+              <option value="Bachelor of Science in Information Systems">Bachelor of Science in Information Systems</option>
+              <option value="Bachelor of Science in Computer Engineering">Bachelor of Science in Computer Engineering</option>
+            </select>
           </div>
           <div>
             <label className={labelStyles}>Year Level</label>
-            <input
-              type="number"
+            <select
               name="course_level"
               value={formData.course_level}
               onChange={handleChange}
-              placeholder="4"
-              min="1"
-              max="5"
-              className={inputStyles}
-            />
+              className={`${inputStyles} cursor-pointer appearance-none`}
+            >
+              <option value="" disabled>Select Year</option>
+              <option value="1st">1st Year</option>
+              <option value="2nd">2nd Year</option>
+              <option value="3rd">3rd Year</option>
+              <option value="4th">4th Year</option>
+              <option value="5th">5th Year</option>
+            </select>
           </div>
         </div>
 
