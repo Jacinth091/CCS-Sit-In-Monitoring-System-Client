@@ -7,9 +7,9 @@ import { useAuth } from "../context/AuthContext";
 import authService from "../services/auth.service";
 
 const inputStyles =
-  "w-full px-0 py-2 bg-transparent border-0 border-b border-[#6A9AB0]/30 focus:ring-0 focus:outline-none focus:border-[#3A6D8C] text-[#001F3F] text-sm transition-colors placeholder:text-[#6A9AB0]/50";
+  "w-full px-0 py-2 bg-transparent border-0 border-b border-border focus:ring-0 focus:outline-none focus:border-primary-hover text-primary text-sm transition-colors duration-150 placeholder:text-primary-light/50";
 const labelStyles =
-  "block text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60 mb-1";
+  "block text-[10px] font-bold tracking-wider uppercase text-primary/60 mb-1";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -54,13 +54,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#EAD8B1]/20 p-4 md:p-8">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+    <div className="min-h-screen flex items-center justify-center bg-bg-secondary p-4 md:p-8">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-border overflow-hidden flex flex-col md:flex-row">
         <div
-          className="hidden md:flex flex-col justify-between p-10 md:w-2/5 bg-[#001F3F] bg-cover bg-center relative"
+          className="hidden md:flex flex-col justify-between p-10 md:w-2/5 bg-primary bg-cover bg-center relative"
           style={{ backgroundImage: "url('/login-illustration.jpg')" }}
         >
-          <div className="absolute inset-0 bg-[#001F3F]/80 rounded-l-2xl" />
+          <div className="absolute inset-0 bg-primary/90" />
           <div className="relative z-10 flex flex-col h-full justify-between">
             <div className="flex-shrink-0">
               <a href="/" className="flex items-center gap-2">
@@ -69,54 +69,52 @@ export default function Login() {
                   alt="CCS Logo"
                   className="h-9 w-9 object-contain"
                 />
-                <span className="inline-block text-xs font-bold tracking-widest uppercase text-[#EAD8B1]/70">
+                <span className="inline-block text-xs font-bold tracking-widest uppercase text-brand-sand">
                   CCS Sit-In Monitoring
                 </span>
               </a>
             </div>
             <div>
-              <h3 className="text-2xl font-extrabold text-[#EAD8B1] leading-snug mb-3">
+              <h3 className="text-2xl font-extrabold text-brand-sand leading-snug mb-3">
                 Welcome back!
               </h3>
-              <p className="text-sm text-[#EAD8B1]/80 leading-relaxed max-w-xs">
+              <p className="text-sm text-white/80 leading-relaxed max-w-xs font-medium">
                 Sign in to monitor lab sessions, track your sit-in history, and
                 stay connected with the CCS community.
               </p>
               <a
                 href="/auth/signup"
-                className="mt-6 inline-block text-sm font-medium text-[#EAD8B1] border border-[#EAD8B1]/30 px-4 py-2 rounded-lg hover:bg-[#EAD8B1]/10 transition"
+                className="mt-6 inline-block text-sm font-bold text-brand-sand border border-brand-sand/30 px-6 py-2.5 rounded-md hover:bg-brand-sand/10 transition duration-150 uppercase tracking-wider"
               >
                 Create an account →
               </a>
             </div>
-            <p className="text-xs text-[#6A9AB0]/80">
-              Tip: Use your institutional email to log in.
+            <p className="text-xs text-primary-light font-medium">
+              Tip: Use your institutional ID to log in.
             </p>
           </div>
         </div>
-        <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
+        <div className="flex-1 p-6 md:p-12 flex flex-col justify-center">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-1 text-sm text-[#6A9AB0] hover:text-[#001F3F] font-medium mb-8 transition-colors self-start"
+            className="flex items-center gap-1 text-sm text-primary-light hover:text-primary font-bold mb-8 transition-colors duration-150 self-start uppercase tracking-widest"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
           </button>
 
           <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#001F3F]">
+            <h2 className="text-2xl md:text-3xl font-black text-primary">
               Sign in
             </h2>
-            <p className="mt-1 text-sm text-[#6A9AB0]">
+            <p className="mt-1 text-sm text-primary-light font-medium">
               Enter your credentials to continue.
             </p>
           </div>
 
-          {/* 4. Add onSubmit to the form */}
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className={labelStyles}>ID Number</label>
-              {/* 5. Bind value and onChange to state */}
               <input
                 type="text"
                 placeholder="e.g. 12345678"
@@ -128,7 +126,6 @@ export default function Login() {
             <div>
               <label className={labelStyles}>Password</label>
               <div className="relative">
-                {/* 5. Bind value and onChange to state */}
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
@@ -139,7 +136,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6A9AB0] hover:text-[#001F3F] transition-colors"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -151,41 +148,40 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-[#001F3F]/70 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-primary/70 cursor-pointer select-none font-medium">
                 <input
                   type="checkbox"
-                  className="h-3.5 w-3.5 rounded border-[#6A9AB0]/50 accent-[#3A6D8C]"
+                  className="h-4 w-4 rounded-sm border-border accent-primary-hover shadow-sm"
                 />
                 Remember me
               </label>
               <a
                 href="/auth/forgot-password"
-                className="text-[#3A6D8C] hover:underline font-medium"
+                className="text-primary-hover hover:underline font-bold"
               >
                 Forgot password?
               </a>
             </div>
 
-            <hr className="border-[#6A9AB0]/20" />
+            <hr className="border-border" />
 
-            {/* 6. Update button to show loading state */}
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full text-[#EAD8B1] font-semibold py-3 rounded-lg transition-all duration-300 shadow-md text-sm tracking-wide ${
+              className={`w-full text-brand-sand font-bold py-3.5 rounded-md transition-all duration-150 shadow-md text-sm tracking-widest uppercase ${
                 isLoading
-                  ? "bg-[#6A9AB0] cursor-not-allowed"
-                  : "bg-[#3A6D8C] hover:bg-[#001F3F] hover:shadow-lg"
+                  ? "bg-primary-light cursor-not-allowed"
+                  : "bg-primary hover:bg-primary-hover hover:shadow-lg active:scale-[0.98]"
               }`}
             >
               {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </form>
-          <p className="mt-5 text-xs text-[#6A9AB0]">
+          <p className="mt-6 text-xs text-primary-light font-medium text-center">
             Don't have an account?{" "}
             <a
               href="/auth/signup"
-              className="text-[#3A6D8C] font-semibold hover:underline"
+              className="text-primary-hover font-bold hover:underline"
             >
               Sign up
             </a>
