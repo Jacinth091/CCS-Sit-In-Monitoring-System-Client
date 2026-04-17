@@ -16,7 +16,7 @@ export default function Footer() {
           <div>
             <h4 className="text-xs font-bold tracking-widest uppercase text-[#001F3F]/60 mb-3">Quick Links</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="/home" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors">Home</a></li>
+              <li><a href="/" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors">Home</a></li>
               <li><a href="/about" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors">About</a></li>
               <li><a href="/community" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors">Community</a></li>
               <li><a href="/auth/login" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors">Login</a></li>

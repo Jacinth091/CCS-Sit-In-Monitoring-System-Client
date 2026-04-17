@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import {BrowserRouter, Routes, Route, Link, Outlet} from "react-router";
+import { BrowserRouter, Routes, Route, Link, Outlet, Navigate } from "react-router";
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
@@ -21,6 +21,10 @@ import StudentAnnouncements from './pages/Student/Announcements';
 import Notifications from './pages/Student/Notifications';
 import SitInRecord from './pages/Admin/SitInRecords';
 import SitInHistory from './pages/Admin/SitInHistory';
+import About from './pages/About';
+import Forums from './pages/Community/Forums';
+import Events from './pages/Community/Events';
+import Members from './pages/Community/Members';
 
 
 
@@ -31,43 +35,43 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path='/' element={<Layout/>}>
-              <Route path='home' element={<Home/>}/>
-              <Route path='about' element={<div>About</div> }/>
+            <Route path='/' element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path='home' element={<Navigate to="/" replace />} />
+              <Route path='about' element={<About />} />
               <Route path='community/'>
-                <Route path='forums' element={<div>Forums</div>}/>
-                <Route path='events' element={<div>Events</div>}/>
-                <Route path='members' element={<div>Members</div>}/>
+                <Route path='forums' element={<Forums />} />
+                <Route path='events' element={<Events />} />
+                <Route path='members' element={<Members />} />
               </Route>
             </Route>
-
-            <Route path='/auth' element={<AuthLayout/>}>
-              <Route path='login' element={<Login/>}/>
-              <Route path='signup' element ={<SignUp/>}/>
-              <Route path='forgot'/>
+            <Route path='/auth' element={<AuthLayout />}>
+              <Route path='login' element={<Login />} />
+              <Route path='signup' element={<SignUp />} />
+              <Route path='forgot' />
             </Route>
 
-            <Route path='/admin' element={<AdminLayout/>}>
-              <Route path='dashboard' element={<AdminDashboard/>}/>
-              <Route path='announcements' element={<AdminAnnouncements/>}/>
-              <Route path='students' element={<AdminStudents/>}/>
+            <Route path='/admin' element={<AdminLayout />}>
+              <Route path='dashboard' element={<AdminDashboard />} />
+              <Route path='announcements' element={<AdminAnnouncements />} />
+              <Route path='students' element={<AdminStudents />} />
               <Route path="sit-in">
-                <Route index element={<CurrentSitIn />} /> 
+                <Route index element={<CurrentSitIn />} />
                 <Route path="records" element={<SitInRecord />} />
                 <Route path="history" element={<SitInHistory />} />
               </Route>
             </Route>
 
-            <Route path='/student' element={<StudentLayout/>}>
-              <Route path='dashboard' element={<StudentDashboard/>}/>
-              <Route path='edit-profile' element={<EditProfile/>}/>
-              <Route path='history' element={<MyHistory/>}/>
-              <Route path='announcements' element={<StudentAnnouncements/>}/>
-              <Route path='notifications' element={<Notifications/>}/>
+            <Route path='/student' element={<StudentLayout />}>
+              <Route path='dashboard' element={<StudentDashboard />} />
+              <Route path='edit-profile' element={<EditProfile />} />
+              <Route path='history' element={<MyHistory />} />
+              <Route path='announcements' element={<StudentAnnouncements />} />
+              <Route path='notifications' element={<Notifications />} />
             </Route>
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
+      </AuthProvider >
     </>
   )
 }

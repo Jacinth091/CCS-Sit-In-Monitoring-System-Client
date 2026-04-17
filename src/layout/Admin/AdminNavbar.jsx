@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, NavLink, useLocation } from 'react-router';
 import { Menu, X, LogOut, ChevronDown, User, LayoutDashboard, Megaphone, Users, FlaskConical, ClipboardList, CalendarCheck } from 'lucide-react';
-import ccsLogo from '../../assets/images/png/uccslogobg.png';
+import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
 import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
@@ -192,7 +192,7 @@ function MobileAccordion({ label, children, onNavigate, icon: Icon }) {
 export default function AdminNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -204,11 +204,9 @@ export default function AdminNavbar() {
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between h-16 sm:h-20">
           
-          {/* Logo Section */}
-          <NavLink to="/admin/dashboard" className="flex items-center gap-3 group shrink-0">
-            <div className="bg-[#001F3F] p-1.5 rounded-xl shadow-lg group-hover:rotate-6 transition-transform duration-300">
-               <img src={ccsLogo} alt="CCS Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain brightness-0 invert" />
-            </div>
+          {/* Logo Section - Matching Root Style with Role Labels */}
+          <NavLink to="/admin/dashboard" className="flex items-center gap-3 shrink-0">
+            <img src={ccsLogo} alt="CCS Logo" className="h-9 w-9 object-contain" />
             <div className="flex flex-col leading-none">
               <span className="text-[14px] sm:text-[16px] font-black tracking-tight text-[#001F3F]">
                 CCS ADMIN
@@ -220,8 +218,8 @@ export default function AdminNavbar() {
           </NavLink>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 xl:gap-4">
-            <div className="flex items-center gap-1 xl:gap-2 mr-4">
+          <div className="hidden lg:flex items-center gap-6">
+            <div className="flex items-center space-x-6 mr-2">
                {navItems.map((item) =>
                  item.children ? (
                    <NavDropdown key={item.label} label={item.label} children={item.children} icon={item.icon} />
@@ -230,26 +228,21 @@ export default function AdminNavbar() {
                      key={item.to}
                      to={item.to}
                      className={({ isActive }) =>
-                       `flex items-center gap-2 text-[13px] font-bold px-3 py-2 rounded-xl transition-all duration-200 whitespace-nowrap group relative ${
+                       `text-sm font-medium transition-colors flex items-center gap-2 ${
                          isActive
                            ? 'text-[#001F3F]'
-                           : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
+                           : 'text-[#6A9AB0] hover:text-[#001F3F]'
                        }`
                      }
                    >
-                     {item.icon && <item.icon className={`h-4 w-4 ${location.pathname === item.to ? 'text-[#3A6D8C]' : 'text-[#6A9AB0] group-hover:text-[#3A6D8C]'}`} />}
+                     {item.icon && <item.icon className="h-4 w-4" />}
                      {item.label}
-                     {/* Underline for active state */}
-                     {location.pathname === item.to && (
-                        <div className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#3A6D8C] rounded-full transition-all duration-300 opacity-100" />
-                     )}
                    </NavLink>
                  )
                )}
             </div>
 
-            {/* Account Separation */}
-            <div className="h-8 w-[1px] bg-[#6A9AB0]/20 mx-2 hidden xl:block" />
+            <div className="h-6 w-[1px] bg-[#6A9AB0]/20 mx-2 hidden xl:block" />
             
             <ProfileDropdown />
           </div>
