@@ -21,9 +21,11 @@ export default function SitInHistory() {
   const fetchRecords = async () => {
     setIsLoading(true);
     try {
-      const data = await sitinService.getAllRecords();
-      setRecords(data);
-      setFilteredRecords(data);
+      const res = await sitinService.getAllRecords();
+      // The API returns { status, message, data: { records: [], meta: {} } }
+      const recordsArray = res.data?.records || [];
+      setRecords(recordsArray);
+      setFilteredRecords(recordsArray);
     } catch (err) {
       toast.error('Failed to load sit-in history.');
     } finally {
@@ -87,9 +89,12 @@ export default function SitInHistory() {
 
   const handleOpenFeedback = (record) => {
     setSelectedRecord({
-      id: record.log_id,
+      id: record.id,
       name: `${record.first_name} ${record.last_name}`,
-      studentId: record.student_id
+      studentId: record.student_id,
+      existingRemark: record.admin_remark,
+      studentRating: record.student_rating,
+      studentComment: record.student_comment
     });
     setFeedbackModalOpen(true);
   };
@@ -98,10 +103,10 @@ export default function SitInHistory() {
     try {
       await sitinService.submitFeedback({ log_id: recordId, feedback: text });
       toast.success('Feedback submitted successfully!');
-      fetchRecords(); // Refresh to show updated feedback if needed
+      fetchRecords(); // Refresh to show updated feedback
     } catch (err) {
       toast.error(err.customMessage || 'Failed to submit feedback.');
-      throw err; // Re-throw to keep modal open on error if handled in modal
+      throw err; 
     }
   };
 
@@ -157,7 +162,7 @@ export default function SitInHistory() {
                 </tr>
               ) : (
                 filteredRecords.map(record => (
-                  <tr key={record.log_id} className="hover:bg-[#EAD8B1]/5 transition-colors text-sm">
+                  <tr key={record.id} className="hover:bg-[#EAD8B1]/5 transition-colors text-sm">
                     <td className="py-3 px-4 font-mono text-[#3A6D8C]">{record.student_id}</td>
                     <td className="py-3 px-4 font-bold text-[#001F3F]">
                       <div className="flex items-center gap-3">
@@ -184,10 +189,14 @@ export default function SitInHistory() {
                     <td className="py-3 px-4">
                       <button
                         onClick={() => handleOpenFeedback(record)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#6A9AB0]/20 text-[#3A6D8C] text-[11px] font-bold uppercase tracking-wider hover:bg-[#3A6D8C] hover:text-white transition-colors cursor-pointer"
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                          record.admin_remark 
+                            ? 'bg-[#3A6D8C] text-white border-[#3A6D8C]' 
+                            : 'border-[#6A9AB0]/20 text-[#3A6D8C] hover:bg-[#3A6D8C] hover:text-white'
+                        }`}
                       >
                         <MessageSquarePlus className="h-3.5 w-3.5" />
-                        Feedback
+                        {record.admin_remark ? 'View/Edit' : 'Feedback'}
                       </button>
                     </td>
                   </tr>
@@ -205,6 +214,9 @@ export default function SitInHistory() {
         studentName={selectedRecord?.name}
         idNumber={selectedRecord?.studentId}
         recordId={selectedRecord?.id}
+        initialRemark={selectedRecord?.existingRemark}
+        studentRating={selectedRecord?.studentRating}
+        studentComment={selectedRecord?.studentComment}
       />
     </div>
   );

@@ -25,11 +25,10 @@ function calcDuration(timeIn, timeOut) {
 function StatusBadge({ status }) {
   const isOngoing = status?.toLowerCase() === 'ongoing';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-      isOngoing
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isOngoing
         ? 'bg-emerald-50 text-emerald-600'
         : 'bg-[#EAD8B1]/30 text-[#001F3F]/60'
-    }`}>
+      }`}>
       {isOngoing
         ? <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
         : <CheckCircle2 className="h-3 w-3" />
@@ -93,7 +92,12 @@ function RecordDetailModal({ record, onClose }) {
                 {record.first_name} {record.last_name}
               </p>
               <p className="text-xs font-semibold text-[#3A6D8C]">{record.student_id}</p>
-              <p className="text-xs text-[#6A9AB0] mt-0.5">{record.course} — {record.course_level}</p>
+              <p className="text-xs text-[#6A9AB0] mt-1 leading-tight">
+                {record.course}
+              </p>
+              <p className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-wider mt-0.5">
+                {record.course_level}
+              </p>
             </div>
           </div>
         </div>
@@ -157,22 +161,24 @@ function RecordDetailModal({ record, onClose }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function SitInRecords() {
-  const [records, setRecords]               = useState([]);
-  const [filtered, setFiltered]             = useState([]);
-  const [searchQuery, setSearchQuery]       = useState('');
-  const [statusFilter, setStatusFilter]     = useState('all');
-  const [dateFilter, setDateFilter]         = useState('');
-  const [isLoading, setIsLoading]           = useState(true);
+  const [records, setRecords] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
-  const [currentPage, setCurrentPage]       = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const fetchRecords = async () => {
     setIsLoading(true);
     try {
-      const data = await sitinService.getAllRecords();
-      setRecords(data);
-      setFiltered(data);
+      const res = await sitinService.getAllRecords();
+      // The API returns { status, message, data: { records: [], meta: {} } }
+      const recordsArray = res.data?.records || [];
+      setRecords(recordsArray);
+      setFiltered(recordsArray);
     } catch (err) {
       toast.error('Failed to load sit-in records.');
     } finally {
@@ -190,8 +196,8 @@ export default function SitInRecords() {
       result = result.filter(r =>
         r.student_id?.toLowerCase().includes(q) ||
         r.first_name?.toLowerCase().includes(q) ||
-        r.last_name?.toLowerCase().includes(q)  ||
-        r.lab_name?.toLowerCase().includes(q)   ||
+        r.last_name?.toLowerCase().includes(q) ||
+        r.lab_name?.toLowerCase().includes(q) ||
         r.purpose?.toLowerCase().includes(q)
       );
     }
@@ -211,14 +217,14 @@ export default function SitInRecords() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, dateFilter, records]);
 
-  const indexOfLast  = currentPage * itemsPerPage;
+  const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
-  const currentRows  = filtered.slice(indexOfFirst, indexOfLast);
-  const totalPages   = Math.ceil(filtered.length / itemsPerPage);
+  const currentRows = filtered.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
-  const totalCount     = records.length;
+  const totalCount = records.length;
   const completedCount = records.filter(r => r.status?.toLowerCase() === 'completed').length;
-  const ongoingCount   = records.filter(r => r.status?.toLowerCase() === 'ongoing').length;
+  const ongoingCount = records.filter(r => r.status?.toLowerCase() === 'ongoing').length;
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -371,7 +377,7 @@ export default function SitInRecords() {
                 currentRows.map((record, index) => {
                   const duration = calcDuration(record.time_in, record.time_out);
                   return (
-                    <tr key={record.log_id} className="hover:bg-[#EAD8B1]/5 transition-colors group text-sm">
+                    <tr key={`${record.log_id || 'rec'}-${index}`} className="hover:bg-[#EAD8B1]/5 transition-colors group text-sm">
 
                       {/* Row number — clean, no UUID clutter */}
                       <td className="py-3 px-6 font-mono text-[#3A6D8C] font-semibold text-sm whitespace-nowrap">
@@ -492,11 +498,10 @@ export default function SitInRecords() {
                       <button
                         key={item}
                         onClick={() => setCurrentPage(item)}
-                        className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors cursor-pointer ${
-                          currentPage === item
+                        className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors cursor-pointer ${currentPage === item
                             ? 'bg-[#3A6D8C] text-white'
                             : 'bg-white border border-[#6A9AB0]/20 text-[#001F3F] hover:bg-[#EAD8B1]/30'
-                        }`}
+                          }`}
                       >
                         {item}
                       </button>

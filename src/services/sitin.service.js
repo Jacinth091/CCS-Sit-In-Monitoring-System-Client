@@ -34,6 +34,12 @@ const sitinService = {
         return response.data;
     },
 
+    submitStudentFeedback: async (payload) => {
+        // payload: { sit_in_id, rating, comment }
+        const response = await api.post('student/sitin/feedback.php', payload);
+        return response.data;
+    },
+
     // Admin endpoints
     create: async (payload) => {
         // payload: { student_id, lab_id, purpose }
@@ -46,9 +52,9 @@ const sitinService = {
         return response.data;
     },
 
-    getAllRecords: async () => {
-        const response = await api.get('admin/sitin/read.php');
-        return response.data.data || [];
+    getAllRecords: async (params) => {
+        const response = await api.get('admin/sitin/read_all.php', { params });
+        return response.data;
     },
 
     submitFeedback: async (payload) => {
