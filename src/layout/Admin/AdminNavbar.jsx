@@ -81,7 +81,7 @@ function ProfileDropdown() {
       {open && (
         <div className="absolute right-0 mt-3 w-56 bg-white border border-[#6A9AB0]/20 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in-up">
           <div className="px-5 py-3 border-b border-[#6A9AB0]/10 mb-1">
-             <p className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest mb-1">Authenticated Email</p>
+             <p className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest mb-1">Admin Email</p>
              <p className="text-[13px] font-extrabold text-[#001F3F] truncate">{user?.email || 'admin@ccs.edu.ph'}</p>
           </div>
           <button
@@ -200,26 +200,29 @@ export default function AdminNavbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-[#6A9AB0]/15 shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border shadow-sm">
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-20">
           
-          {/* Logo Section - Matching Root Style with Role Labels */}
-          <NavLink to="/admin/dashboard" className="flex items-center gap-3 shrink-0">
-            <img src={ccsLogo} alt="CCS Logo" className="h-9 w-9 object-contain" />
+          {/* Logo Section */}
+          <NavLink to="/admin/dashboard" className="flex items-center gap-3 shrink-0 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              <img src={ccsLogo} alt="CCS Logo" className="h-10 w-10 object-contain relative z-10" />
+            </div>
             <div className="flex flex-col leading-none">
-              <span className="text-[14px] sm:text-[16px] font-black tracking-tight text-[#001F3F]">
+              <span className="text-[15px] sm:text-[17px] font-black tracking-tighter text-primary">
                 CCS ADMIN
               </span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-[#6A9AB0] uppercase tracking-[0.2em] mt-0.5">
-                Lab Management
+              <span className="text-[9px] font-black text-primary-light/60 uppercase tracking-[0.2em] mt-0.5">
+                Sit-in System
               </span>
             </div>
           </NavLink>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
-            <div className="flex items-center space-x-6 mr-2">
+          <div className="hidden lg:flex items-center gap-8">
+            <div className="flex items-center space-x-1 mr-2">
                {navItems.map((item) =>
                  item.children ? (
                    <NavDropdown key={item.label} label={item.label} children={item.children} icon={item.icon} />
@@ -228,21 +231,21 @@ export default function AdminNavbar() {
                      key={item.to}
                      to={item.to}
                      className={({ isActive }) =>
-                       `text-sm font-medium transition-colors flex items-center gap-2 ${
+                       `px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2.5 ${
                          isActive
-                           ? 'text-[#001F3F]'
-                           : 'text-[#6A9AB0] hover:text-[#001F3F]'
+                           ? 'text-primary bg-primary/5'
+                           : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
                        }`
                      }
                    >
-                     {item.icon && <item.icon className="h-4 w-4" />}
+                     {item.icon && <item.icon className={`h-4 w-4 ${location.pathname === item.to ? 'text-primary' : 'text-primary-light'}`} />}
                      {item.label}
                    </NavLink>
                  )
                )}
             </div>
 
-            <div className="h-6 w-[1px] bg-[#6A9AB0]/20 mx-2 hidden xl:block" />
+            <div className="h-8 w-[1px] bg-border mx-2 hidden xl:block" />
             
             <ProfileDropdown />
           </div>
@@ -307,7 +310,7 @@ export default function AdminNavbar() {
                className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-[#001F3F] text-[#EAD8B1] text-sm font-black hover:bg-[#3A6D8C] transition-all shadow-lg active:scale-95 cursor-pointer"
              >
                <LogOut className="h-4 w-4" />
-               Sign Out Securely
+               Sign Out
              </button>
           </div>
         </div>

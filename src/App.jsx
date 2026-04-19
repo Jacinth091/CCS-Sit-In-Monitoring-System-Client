@@ -19,12 +19,16 @@ import EditProfile from './pages/Student/EditProfile';
 import MyHistory from './pages/Student/MyHistory';
 import StudentAnnouncements from './pages/Student/Announcements';
 import Notifications from './pages/Student/Notifications';
+import AnnouncementDetail from './pages/Student/AnnouncementDetail';
 import SitInRecord from './pages/Admin/SitInRecords';
 import SitInHistory from './pages/Admin/SitInHistory';
+import UnderConstruction from './pages/Admin/UnderConstruction';
 import About from './pages/About';
 import Forums from './pages/Community/Forums';
 import Events from './pages/Community/Events';
 import Members from './pages/Community/Members';
+import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 
 
@@ -51,7 +55,11 @@ function App() {
               <Route path='forgot' />
             </Route>
 
-            <Route path='/admin' element={<AdminLayout />}>
+            <Route path='/admin' element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
               <Route path='dashboard' element={<AdminDashboard />} />
               <Route path='announcements' element={<AdminAnnouncements />} />
               <Route path='students' element={<AdminStudents />} />
@@ -60,15 +68,24 @@ function App() {
                 <Route path="records" element={<SitInRecord />} />
                 <Route path="history" element={<SitInHistory />} />
               </Route>
+              <Route path='feedback-reports' element={<UnderConstruction />} />
+              <Route path='reservation' element={<UnderConstruction />} />
             </Route>
 
-            <Route path='/student' element={<StudentLayout />}>
+            <Route path='/student' element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout />
+              </ProtectedRoute>
+            }>
               <Route path='dashboard' element={<StudentDashboard />} />
               <Route path='edit-profile' element={<EditProfile />} />
               <Route path='history' element={<MyHistory />} />
               <Route path='announcements' element={<StudentAnnouncements />} />
+              <Route path='announcements/:id' element={<AnnouncementDetail />} />
               <Route path='notifications' element={<Notifications />} />
             </Route>
+
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider >

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, NavLink, useLocation } from 'react-router';
-import { Menu, X, LogOut, Bell, ChevronDown, User, LayoutDashboard, Megaphone, History } from 'lucide-react';
+import { Menu, X, LogOut, Bell, ChevronDown, User, LayoutDashboard, Megaphone, History, ChevronRight } from 'lucide-react';
 import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
 import { useAuth } from '../../context/AuthContext';
 
@@ -89,19 +89,6 @@ function ProfileDropdown() {
           >
             Edit Profile
           </NavLink>
-          <NavLink
-            to="/student/history"
-            onClick={() => setOpen(false)}
-            className={({ isActive }) =>
-              `block px-5 py-3 text-[13px] font-bold transition-colors ${
-                isActive
-                  ? 'text-[#3A6D8C] bg-[#EAD8B1]/10'
-                  : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
-              }`
-            }
-          >
-            Sit-in History
-          </NavLink>
           <button
             onClick={handleLogout}
             className="w-full text-left px-5 py-3 text-[13px] font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-3 cursor-pointer border-t border-[#6A9AB0]/10 mt-1"
@@ -173,19 +160,19 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-[#6A9AB0]/15 rounded-2xl shadow-2xl overflow-hidden z-[100] animate-fade-in-up">
+        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-border rounded-xl shadow-2xl overflow-hidden z-[100] animate-fade-in-up">
            <StudentNotificationList 
               notifications={notifications} 
               onClearAll={handleClearAll}
               onRead={handleRead}
            />
-           <div className="bg-gray-50 border-t border-[#6A9AB0]/10 p-4 text-center">
+           <div className="bg-bg-secondary/30 border-t border-border p-3 text-center">
               <NavLink 
                 to="/student/notifications" 
                 onClick={() => setOpen(false)}
-                className="text-[10px] font-black text-[#3A6D8C] uppercase tracking-[0.2em] hover:text-[#001F3F] transition-colors"
+                className="text-[9px] font-black text-primary-hover uppercase tracking-[0.2em] hover:text-primary transition-colors flex items-center justify-center gap-2"
               >
-                Explore All Notifications →
+                Explore All Alerts <ChevronRight className="h-3 w-3" />
               </NavLink>
            </div>
         </div>
@@ -207,45 +194,48 @@ export default function StudentNavbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-[#6A9AB0]/15 shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border shadow-sm">
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-20">
           
-          {/* Logo Section - Matching Root Style with Role Labels */}
-          <NavLink to="/student/dashboard" className="flex items-center gap-3 shrink-0">
-            <img src={ccsLogo} alt="CCS Logo" className="h-9 w-9 object-contain" />
+          {/* Logo Section - Matching Admin Style */}
+          <NavLink to="/student/dashboard" className="flex items-center gap-3 shrink-0 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              <img src={ccsLogo} alt="CCS Logo" className="h-10 w-10 object-contain relative z-10" />
+            </div>
             <div className="flex flex-col leading-none">
-              <span className="text-[14px] sm:text-[16px] font-black tracking-tight text-[#001F3F]">
+              <span className="text-[15px] sm:text-[17px] font-black tracking-tighter text-primary">
                 CCS HUB
               </span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-[#6A9AB0] uppercase tracking-[0.2em] mt-0.5">
+              <span className="text-[9px] font-black text-primary-light/60 uppercase tracking-[0.2em] mt-0.5">
                 Student Portal
               </span>
             </div>
           </NavLink>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
-            <div className="flex items-center space-x-6 mr-2">
+          <div className="hidden lg:flex items-center gap-8">
+            <div className="flex items-center space-x-1 mr-2">
                {navItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
                     className={({ isActive }) =>
-                      `text-sm font-medium transition-colors flex items-center gap-2 ${
+                      `px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2.5 ${
                         isActive
-                          ? 'text-[#001F3F]'
-                          : 'text-[#6A9AB0] hover:text-[#001F3F]'
+                          ? 'text-primary bg-primary/5'
+                          : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
                       }`
                     }
                   >
-                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {item.icon && <item.icon className={`h-4 w-4 ${location.pathname === item.to ? 'text-primary' : 'text-primary-light'}`} />}
                     {item.label}
                   </NavLink>
                ))}
             </div>
 
-            <div className="h-6 w-[1px] bg-[#6A9AB0]/20 mx-2" />
+            <div className="h-8 w-[1px] bg-border mx-2" />
 
             <div className="flex items-center gap-4">
                <NotificationBell />
@@ -256,7 +246,7 @@ export default function StudentNavbar() {
           {/* Mobile Toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-xl text-[#001F3F] hover:bg-[#EAD8B1]/20 transition-all cursor-pointer"
+            className="lg:hidden p-2 rounded-xl text-primary hover:bg-bg-secondary transition-all cursor-pointer"
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -265,7 +255,7 @@ export default function StudentNavbar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-t border-[#6A9AB0]/10 px-4 pt-2 pb-8 space-y-2 animate-fade-in shadow-inner overflow-y-auto max-h-[calc(100vh-64px)]">
+        <div className="lg:hidden bg-white border-t border-border px-4 pt-2 pb-8 space-y-2 animate-fade-in shadow-inner overflow-y-auto max-h-[calc(100vh-64px)]">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -274,8 +264,8 @@ export default function StudentNavbar() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                   isActive
-                    ? 'text-[#3A6D8C] bg-[#3A6D8C]/5'
-                    : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+                    ? 'text-primary bg-primary/5'
+                    : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
                 }`
               }
             >
@@ -289,53 +279,46 @@ export default function StudentNavbar() {
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-                isActive ? 'text-[#3A6D8C] bg-[#3A6D8C]/5' : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+                isActive 
+                  ? 'text-primary bg-primary/5' 
+                  : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
               }`
             }
           >
             <Bell className="h-4 w-4" /> Notifications
           </NavLink>
           
-          <div className="pt-4 mt-2 border-t border-[#6A9AB0]/10">
+          <div className="pt-4 mt-2 border-t border-border">
              <div className="flex items-center gap-3 px-4 py-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#3A6D8C] to-[#EAD8B1] p-0.5 overflow-hidden">
-                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                      {user?.profile_pic ? (
-                         <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                         <User className="h-5 w-5 text-[#3A6D8C]" />
-                      )}
-                   </div>
+                <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center overflow-hidden">
+                   {user?.profile_pic ? (
+                      <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} alt="" className="w-full h-full object-cover" />
+                   ) : (
+                      <User className="h-5 w-5 text-primary" />
+                   )}
                 </div>
-                <div className="flex flex-col leading-tight">
-                   <span className="text-sm font-black text-[#001F3F]">{user?.first_name} {user?.last_name}</span>
-                   <span className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest truncate max-w-[180px]">{user?.email}</span>
+                <div className="flex flex-col">
+                   <span className="text-sm font-black text-primary">{user?.first_name} {user?.last_name}</span>
+                   <span className="text-[10px] font-bold text-primary-light uppercase tracking-widest truncate max-w-[180px]">{user?.email}</span>
                 </div>
              </div>
              
-             <div className="grid grid-cols-2 gap-2 mb-4">
+             <div className="grid grid-cols-1 gap-2 mb-4">
                 <NavLink 
                   to="/student/edit-profile" 
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center py-2.5 rounded-xl border border-[#6A9AB0]/20 text-[11px] font-black text-[#001F3F] uppercase tracking-widest"
+                  className="flex items-center justify-center py-2.5 rounded-xl border border-border text-[11px] font-black text-primary uppercase tracking-widest"
                 >
-                  Edit Profile
-                </NavLink>
-                <NavLink 
-                  to="/student/history" 
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center py-2.5 rounded-xl border border-[#6A9AB0]/20 text-[11px] font-black text-[#001F3F] uppercase tracking-widest"
-                >
-                  My History
+                  Profile Settings
                 </NavLink>
              </div>
 
              <button
                onClick={handleMobileLogout}
-               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-[#001F3F] text-[#EAD8B1] text-sm font-black hover:bg-[#3A6D8C] transition-all shadow-lg active:scale-95 cursor-pointer"
+               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-primary text-white text-sm font-black hover:bg-primary-hover transition-all shadow-lg active:scale-95 cursor-pointer"
              >
                <LogOut className="h-4 w-4" />
-               Sign Out Securely
+               Sign Out
              </button>
           </div>
         </div>
