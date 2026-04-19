@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, BookOpen, GraduationCap, Mail, MapPin, Hash,
-  Megaphone, ShieldCheck, ChevronRight, Clock
+  Megaphone, ShieldCheck, ChevronRight, Clock, Calendar, ArrowRight, AlertCircle, History
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 import announcementService from '../../services/announcement.service';
 import sitinService from '../../services/sitin.service';
+import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { COURSES } from '../../constants/app.constants';
 
 const RULES = [
   'Maintain silence, decorum, and order inside the laboratory. Turn off or keep on silent mode all mobile phones and personal electronic devices.',
@@ -23,6 +25,7 @@ const RULES = [
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('announcements');
   const [announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +47,7 @@ export default function StudentDashboard() {
           id: a.id,
           title: a.title || 'Administrative Update',
           body: a.content || a.body || '',
+          isImportant: a.is_important,
           date: new Date(a.created_at || a.date).toLocaleString('en-US', { 
             month: 'short', 
             day: 'numeric', 
@@ -81,22 +85,22 @@ export default function StudentDashboard() {
 
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">
 
       {/* ───── PREMIUM HERO BANNER (DIGITAL ID CARD) ───── */}
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-md">
+      <div className="relative overflow-hidden rounded-2xl bg-primary border border-border shadow-lg">
         {/* Dynamic Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary-hover opacity-90" />
-        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand-sand/10 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-primary-light/20 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
+        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-brand-sand/10 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-primary-light/10 blur-3xl" />
 
         <div className="relative z-10 p-6 sm:p-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
 
             {/* Left: Avatar & Name */}
-            <div className="flex items-center gap-5 sm:gap-6">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary-hover to-brand-sand p-1 shadow-sm shrink-0">
-                <div className="w-full h-full rounded-full bg-primary flex items-center justify-center border-2 border-primary overflow-hidden relative">
+            <div className="flex items-center gap-5 sm:gap-7">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl shrink-0">
+                <div className="w-full h-full rounded-[0.9rem] bg-primary flex items-center justify-center border border-primary overflow-hidden relative">
                   <div className="absolute inset-0 bg-primary-hover/20" />
                   {user?.profile_pic ? (
                     <img 
@@ -110,50 +114,43 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <div className="inline-block px-3 py-1 rounded-md bg-bg-primary/10 backdrop-blur-md border border-bg-primary/10 text-[10px] font-bold tracking-wider uppercase text-brand-sand">
-                  Student Portal
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+              <div className="space-y-3">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                   {fullName}
                 </h1>
-                <p className="text-sm sm:text-base font-medium text-primary-light">
-                  {user?.course || 'Bachelor of Science in Information Technology'} <span className="mx-2 opacity-50">•</span> {user?.course_level || '1st'} Year
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 text-primary-light/80">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
+                    <GraduationCap className="h-4 w-4 text-brand-sand" /> 
+                    {user?.course || COURSES[0]}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
+                    <BookOpen className="h-3.5 w-3.5 text-brand-sand" /> 
+                    {user?.course_level || '1st'} Year
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Right: ID Info Glass Panel */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 lg:pl-8 lg:border-l lg:border-white/10 w-full lg:w-auto">
-              <div className="flex items-center gap-3 p-3.5 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition duration-150">
-                <div className="w-9 h-9 rounded-md bg-brand-sand/10 flex items-center justify-center shrink-0">
-                  <Hash className="h-4 w-4 text-brand-sand" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:pl-8 lg:border-l lg:border-white/10 w-full lg:w-auto">
+              {[
+                { label: 'Student ID', value: user?.student_id || '—', icon: Hash },
+                { label: 'Email Account', value: user?.email || '—', icon: Mail, truncate: true },
+                { label: 'Current Address', value: user?.address || '—', icon: MapPin, full: true }
+              ].map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className={`flex items-center gap-3.5 p-3.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300 group ${item.full ? 'sm:col-span-2' : ''}`}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-brand-sand/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <item.icon className="h-3.5 w-3.5 text-brand-sand" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-primary-light font-black mb-0.5">{item.label}</p>
+                    <p className={`text-xs font-bold text-white ${item.truncate ? 'truncate max-w-[160px]' : ''}`} title={item.value}>{item.value}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-primary-light font-semibold mb-0.5">Student ID</p>
-                  <p className="text-sm font-bold text-white truncate">{user?.student_id || '—'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3.5 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition duration-150">
-                <div className="w-9 h-9 rounded-md bg-brand-sand/10 flex items-center justify-center shrink-0">
-                  <Mail className="h-4 w-4 text-brand-sand" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-primary-light font-semibold mb-0.5">Email Account</p>
-                  <p className="text-sm font-bold text-white truncate max-w-[150px]" title={user?.email || ''}>{user?.email || '—'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3.5 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition duration-150 sm:col-span-2">
-                <div className="w-9 h-9 rounded-md bg-brand-sand/10 flex items-center justify-center shrink-0">
-                  <MapPin className="h-4 w-4 text-brand-sand" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-primary-light font-semibold mb-0.5">Current Address</p>
-                  <p className="text-sm font-bold text-white truncate w-full">{user?.address || '—'}</p>
-                </div>
-              </div>
+              ))}
             </div>
 
           </div>
@@ -163,10 +160,10 @@ export default function StudentDashboard() {
       {/* ───── TAB SWITCHER + CONTENT ───── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left: Tabbed panel (announcements / rules) */}
-        <div className="lg:col-span-3">
-          <div className="bg-bg-primary rounded-lg border border-border shadow-sm overflow-hidden">
+        <div className="lg:col-span-3 flex flex-col gap-6">
+          <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[450px]">
             {/* Tabs */}
-            <div className="flex border-b border-border">
+            <div className="flex border-b border-border bg-bg-secondary/30">
               {[
                 { id: 'announcements', label: 'Announcements', icon: Megaphone },
                 { id: 'rules', label: 'Rules & Regulations', icon: ShieldCheck },
@@ -174,57 +171,76 @@ export default function StudentDashboard() {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-all duration-150 border-b-2 cursor-pointer ${activeTab === id
-                      ? 'border-primary-hover text-primary bg-bg-secondary'
+                  className={`flex items-center gap-2 px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.12em] transition-all duration-300 border-b-2 cursor-pointer ${activeTab === id
+                      ? 'border-primary-hover text-primary bg-white shadow-[0_-4px_10px_-5px_rgba(0,0,0,0.05)]'
                       : 'border-transparent text-primary-light hover:text-primary hover:bg-bg-secondary'
                     }`}
                 >
-                  <TabIcon className="h-4 w-4" />
+                  <TabIcon className="h-3.5 w-3.5" />
                   {label}
                 </button>
               ))}
             </div>
 
             {/* Tab Content */}
-            <div className="p-5">
+            <div className="p-6 grow flex flex-col">
               {activeTab === 'announcements' && (
-                <div className="space-y-4 pr-1">
+                <div className="space-y-5 grow">
                   {isLoading ? (
-                    <div className="flex justify-center py-10">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary-hover" />
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 grow">
+                      <div className="w-10 h-10 rounded-full border-4 border-primary-hover/10 border-t-primary-hover animate-spin" />
+                      <p className="text-[9px] font-black uppercase tracking-widest text-primary-light">Syncing Feed...</p>
                     </div>
                   ) : announcements.length === 0 ? (
-                    <p className="text-sm text-primary-light/60 italic py-8 text-center">
-                      No announcements yet.
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-16 text-center grow">
+                      <Megaphone className="h-10 w-10 text-primary-light/20 mb-3" />
+                      <p className="text-xs text-primary-light font-bold uppercase tracking-widest">
+                        No announcements at the moment
+                      </p>
+                    </div>
                   ) : (
                     <>
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4">
                         {announcements.slice(0, 3).map((a) => (
                           <div
                             key={a.id}
-                            className="group/card relative border border-border rounded-lg px-5 py-4 hover:border-primary-hover/25 hover:shadow-sm transition-all duration-150"
+                            onClick={() => navigate(`/student/announcements/${a.id}`)}
+                            className="group/card relative border border-border rounded-xl p-4.5 hover:border-primary-hover/30 hover:shadow-md transition-all duration-300 bg-white cursor-pointer"
                           >
-                            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg bg-gradient-to-b from-primary-hover to-primary-light" />
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-bold text-primary">{a.author || 'CCS Admin'}</span>
-                              <span className="w-1 h-1 rounded-full bg-primary-light/40" />
-                              <span className="text-[11px] text-primary-light">{a.date}</span>
+                            <div className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary-hover scale-y-0 group-hover/card:scale-y-100 transition-transform duration-300" />
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-black text-primary-hover uppercase tracking-widest bg-primary-hover/5 px-2 py-0.5 rounded-md">{a.author || 'CCS Admin'}</span>
+                                {a.isImportant && (
+                                  <span className="flex items-center gap-1 bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border border-red-100 animate-pulse">
+                                    <AlertCircle className="h-2 w-2" />
+                                    Important
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[9px] font-bold text-primary-light">
+                                <Clock className="h-3 w-3" /> {a.date}
+                              </div>
                             </div>
-                            <h4 className="text-sm font-bold text-primary mb-1">{a.title || 'Announcement'}</h4>
-                            <p className="text-sm text-primary/75 leading-relaxed line-clamp-2 whitespace-pre-wrap">{a.body}</p>
+                            <h4 className="text-sm font-black text-primary mb-1.5 tracking-tight group-hover:card:text-primary-hover transition-colors">{a.title || 'Announcement'}</h4>
+                            <div className="text-xs text-primary-light font-medium leading-relaxed line-clamp-2">
+                               <RichTextRenderer text={a.body} />
+                            </div>
+                            <div className="mt-3 flex items-center gap-1 text-[9px] font-black text-primary-hover uppercase tracking-widest opacity-0 group-hover/card:opacity-100 transition-opacity">
+                               Read Full Story <ArrowRight className="h-3 w-3" />
+                            </div>
                           </div>
                         ))}
                       </div>
                       
                       {announcements.length > 3 && (
-                        <div className="mt-6 pt-4 border-t border-border">
+                        <div className="mt-auto pt-6">
                           <Link
                             to="/student/announcements" 
-                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md border border-primary-hover/30 text-primary-hover text-xs font-bold uppercase tracking-wider hover:bg-primary-hover hover:text-white transition-all duration-150 group"
+                            className="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-xl border-2 border-primary-hover/10 text-primary-hover text-[10px] font-black uppercase tracking-[0.15em] hover:bg-primary-hover hover:text-white hover:border-primary-hover transition-all duration-300 group shadow-sm active:scale-[0.98]"
                           >
-                            View All Announcements
-                            <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                            Explore University Feed
+                            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1.5 transition-transform" />
                           </Link>
                         </div>
                       )}
@@ -234,21 +250,27 @@ export default function StudentDashboard() {
               )}
 
               {activeTab === 'rules' && (
-                <div className="space-y-0 max-h-[400px] overflow-y-auto pr-1">
-                  <p className="text-[11px] font-medium text-primary-light mb-4">
-                    University of Cebu — College of Information &amp; Computer Studies
-                  </p>
-                  {RULES.map((rule, i) => (
-                    <div
-                      key={i}
-                      className="flex gap-3.5 py-3 border-b border-border last:border-0"
-                    >
-                      <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-primary-hover/10 to-primary-light/10 text-[11px] font-bold text-primary-hover mt-0.5">
-                        {i + 1}
-                      </span>
-                      <p className="text-sm text-primary/75 leading-relaxed">{rule}</p>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar grow">
+                  <div className="flex items-center gap-2.5 mb-5 p-3.5 rounded-xl bg-primary/5 border border-primary/10">
+                    <ShieldCheck className="h-4 w-4 text-primary-hover" />
+                    <div>
+                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">Laboratory Policy</p>
+                      <p className="text-[9px] font-bold text-primary-light uppercase tracking-widest">University Of Cebu - CCS Lab Management</p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {RULES.map((rule, i) => (
+                      <div
+                        key={i}
+                        className="flex gap-3.5 p-3.5 rounded-xl border border-border/60 hover:border-primary-hover/20 hover:bg-bg-secondary/30 transition-all duration-200"
+                      >
+                        <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg bg-primary text-white text-[10px] font-black mt-0.5">
+                          {i + 1}
+                        </span>
+                        <p className="text-[13px] text-primary/80 font-medium leading-relaxed">{rule}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -256,69 +278,85 @@ export default function StudentDashboard() {
         </div>
 
         {/* Right: Quick-access sidebar */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Hours Logged Counter */}
-          <div className="bg-white rounded-lg p-5 shadow-sm text-primary border border-border">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-emerald-600" />
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            {/* Hours Logged Counter */}
+            <div className="bg-white rounded-xl p-5 shadow-sm text-primary border border-border relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                <Clock className="w-20 h-20" />
               </div>
-              <p className="text-[10px] font-bold tracking-wider uppercase text-primary-light">
-                Total Hours in Lab
-              </p>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <p className="text-[10px] font-black tracking-[0.15em] uppercase text-primary-light">
+                    Lab Time Logged
+                  </p>
+                </div>
+                <div className="flex items-end gap-2.5">
+                  <span className="text-4xl font-black leading-none text-primary tracking-tighter">
+                    {stats.totalHours}
+                  </span>
+                  <span className="text-[9px] font-black text-primary-light mb-1 uppercase tracking-widest">Accumulated</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-extrabold leading-none text-primary">
-                {stats.totalHours}
-              </span>
-              <span className="text-xs font-bold text-primary-light mb-1 uppercase tracking-widest">Logged</span>
-            </div>
-          </div>
 
-          {/* Session counter */}
-          <div className="bg-gradient-to-br from-primary-hover to-primary rounded-lg p-5 shadow-sm text-white border border-border">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-brand-sand/60 mb-1">
-              Remaining Sessions
-            </p>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-extrabold leading-none">
-                {user?.session || '26'}
-              </span>
-              <span className="text-sm text-brand-sand/70 mb-1">/ 30</span>
-            </div>
-            <div className="mt-3 w-full h-2 rounded-full bg-white/15 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-brand-sand transition-all duration-150"
-                style={{ width: `${((user?.session || 26) / 30) * 100}%` }}
-              />
+            {/* Session counter */}
+            <div className="bg-gradient-to-br from-primary-hover to-primary rounded-xl p-5 shadow-lg shadow-primary-hover/10 text-white relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <Calendar className="w-20 h-20" />
+              </div>
+              <div className="relative z-10">
+                <p className="text-[10px] font-black tracking-[0.15em] uppercase text-brand-sand/60 mb-0.5">
+                  Available Sessions
+                </p>
+                <div className="flex items-end gap-2.5">
+                  <span className="text-4xl font-black leading-none tracking-tighter">
+                    {user?.session || '26'}
+                  </span>
+                  <span className="text-base font-bold text-brand-sand/40 mb-1">/ 30</span>
+                </div>
+                <div className="mt-4 w-full h-2 rounded-full bg-white/10 overflow-hidden border border-white/5">
+                  <div
+                    className="h-full rounded-full bg-brand-sand shadow-[0_0_15px_rgba(234,216,177,0.5)] transition-all duration-500"
+                    style={{ width: `${((user?.session || 26) / 30) * 100}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Quick links */}
-          <div className="bg-bg-primary rounded-lg border border-border shadow-sm divide-y divide-border">
+          <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden divide-y divide-border">
             {[
-              { label: 'View Sit-in History', to: '/student/history' },
-              { label: 'Edit Profile', to: '/student/edit-profile' },
-              { label: 'Make a Reservation', to: '/student/reservation' },
-            ].map((item) => (
-              <a
-                key={item.to}
-                href={item.to}
-                className="flex items-center justify-between px-5 py-3.5 text-sm font-medium text-primary hover:bg-bg-secondary transition-colors duration-150 group"
+              { label: 'View Sit-in History', to: '/student/history', icon: History },
+              { label: 'Edit Account Profile', to: '/student/edit-profile', icon: User },
+              { label: 'Laboratory Reservation', to: '/student/reservation', icon: MapPin },
+            ].map((item, idx) => (
+              <Link
+                key={idx}
+                to={item.to}
+                className="flex items-center justify-between px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.12em] text-primary hover:bg-bg-secondary transition-all duration-300 group"
               >
-                {item.label}
-                <ChevronRight className="h-4 w-4 text-primary-light group-hover:translate-x-0.5 transition-transform" />
-              </a>
+                <span className="flex items-center gap-3">
+                  <ChevronRight className="h-3.5 w-3.5 text-primary-hover group-hover:translate-x-1 transition-transform" />
+                  {item.label}
+                </span>
+                <ArrowRight className="h-3 w-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+              </Link>
             ))}
           </div>
 
           {/* Mini profile card */}
-          <div className="bg-bg-primary rounded-lg border border-border shadow-sm p-5">
-            <h4 className="text-[10px] font-bold tracking-wider uppercase text-primary-light mb-3">
-              Your Profile
+          <div className="bg-bg-primary rounded-xl border border-border shadow-sm p-5">
+            <h4 className="text-[9px] font-black tracking-[0.15em] uppercase text-primary-light mb-4 ml-1">
+              Account Overview
             </h4>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-hover/10 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-lg bg-primary-hover/10 flex items-center justify-center overflow-hidden shrink-0 border border-primary-hover/10">
                 {user?.profile_pic ? (
                     <img 
                       src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} 
@@ -330,8 +368,8 @@ export default function StudentDashboard() {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-primary truncate">{fullName}</p>
-                <p className="text-[11px] text-primary-light truncate">{user?.email || '—'}</p>
+                <p className="text-xs font-black text-primary truncate tracking-tight">{fullName}</p>
+                <p className="text-[10px] font-bold text-primary-light truncate uppercase tracking-widest">{user?.email || '—'}</p>
               </div>
             </div>
           </div>
