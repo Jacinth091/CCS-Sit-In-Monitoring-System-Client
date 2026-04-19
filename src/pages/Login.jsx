@@ -1,6 +1,6 @@
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { toast } from "sonner";
 import ccsLogo from "../assets/images/png/uccslogobg.png";
 import { useAuth } from "../context/AuthContext";
@@ -17,7 +17,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  const from = location.state?.from?.pathname || null;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -37,13 +40,17 @@ export default function Login() {
 
       if (response) {
         login(response);
-        // Role-based redirect
-        if (response.role === "admin") {
+        
+        // Use intended destination if available, otherwise role-based default
+        if (from) {
+          toast.success(`Welcome back, ${response.first_name || "User"}!`);
+          navigate(from, { replace: true });
+        } else if (response.role === "admin") {
           toast.success("Welcome to the Admin Dashboard!");
-          navigate("/admin/dashboard");
+          navigate("/admin/dashboard", { replace: true });
         } else {
           toast.success(`Welcome back, ${response.first_name || "Student"}!`);
-          navigate("/student/dashboard");
+          navigate("/student/dashboard", { replace: true });
         }
       }
     } catch (err) {

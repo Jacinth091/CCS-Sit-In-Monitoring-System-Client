@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import ccsLogo from '../assets/images/png/uccslogobg.png';
 import authService from '../services/auth.service';
 import { toast } from 'sonner';
+import { COURSES, ACADEMIC_YEARS } from '../constants/app.constants';
 
 export default function SignUp() {
   const inputStyles =
@@ -148,10 +149,9 @@ export default function SignUp() {
                   className={`${inputStyles} cursor-pointer appearance-none`}
                 >
                   <option value="" disabled>Select a Course</option>
-                  <option value="Bachelor of Science in Information Technology">Bachelor of Science in Information Technology</option>
-                  <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
-                  <option value="Bachelor of Science in Information Systems">Bachelor of Science in Information Systems</option>
-                  <option value="Bachelor of Science in Computer Engineering">Bachelor of Science in Computer Engineering</option>
+                  {COURSES.map(course => (
+                    <option key={course} value={course}>{course}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -163,11 +163,9 @@ export default function SignUp() {
                   className={`${inputStyles} cursor-pointer appearance-none`}
                 >
                   <option value="" disabled>Select Year</option>
-                  <option value="1st">1st Year</option>
-                  <option value="2nd">2nd Year</option>
-                  <option value="3rd">3rd Year</option>
-                  <option value="4th">4th Year</option>
-                  <option value="5th">5th Year</option>
+                  {ACADEMIC_YEARS.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
                 </select>
               </div>
             </div>
