@@ -1,24 +1,37 @@
 import React from 'react';
+import { ShieldAlert, Pin } from 'lucide-react';
 
 export default function AnnouncementCard({ announcement, isSelected, onClick }) {
-  const { title, body, status, date, authorInitials, authorName } = announcement;
+  const { title, body, status, date, authorInitials, authorName, isImportant, isPinned } = announcement;
   
   return (
     <div 
       onClick={onClick}
       className={`rounded-xl border p-4 shadow-sm transition-all duration-200 cursor-pointer ${
         isSelected 
-          ? 'border-[#3A6D8C] bg-[#3A6D8C]/5 ring-1 ring-[#3A6D8C]/30' 
-          : 'border-[#6A9AB0]/15 bg-white hover:shadow-md hover:-translate-y-0.5'
+          ? 'border-primary bg-primary/5 ring-1 ring-primary/30' 
+          : 'border-border bg-white hover:shadow-md hover:-translate-y-0.5'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-          status === 'Published' ? 'bg-emerald-50 text-emerald-600' : 'bg-yellow-50 text-yellow-600'
-        }`}>
-          {status}
-        </span>
-        <span className="text-[10px] font-medium text-[#6A9AB0]">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          {isImportant && (
+             <div className="w-6 h-6 rounded-lg bg-red-50/50 flex items-center justify-center border border-red-100/50 shadow-sm" title="Priority">
+               <ShieldAlert className="h-3 w-3 fill-red-600 text-red-600" />
+             </div>
+          )}
+          {isPinned && (
+             <div className="w-6 h-6 rounded-lg bg-amber-50/50 flex items-center justify-center border border-amber-100/50 shadow-sm" title="Pinned">
+               <Pin className="h-3 w-3 fill-amber-600 text-amber-600 rotate-45" />
+             </div>
+          )}
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+            status === 'Published' ? 'bg-emerald-50 text-emerald-600' : 'bg-yellow-50 text-yellow-600'
+          }`}>
+            {status}
+          </span>
+        </div>
+        <span className="text-[9px] font-medium text-primary-light whitespace-nowrap">
           {date}
         </span>
       </div>

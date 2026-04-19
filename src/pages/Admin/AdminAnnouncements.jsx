@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Inbox, Send, Loader2, AlertCircle } from 'lucide-react';
-import AnnouncementCard from '../../components/announcements/AnnouncementCard';
+import { 
+  Plus, Inbox, Send, Loader2, AlertCircle, Pin, Trash2, 
+  Megaphone, ShieldAlert, Clock, ChevronRight, ArrowLeft,
+  Filter, Search, Hash, PanelLeftClose, PanelLeftOpen
+} from 'lucide-react';
 import announcementService from '../../services/announcement.service';
+import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { toast } from 'sonner';
 
 export default function AdminAnnouncements() {
@@ -9,16 +13,21 @@ export default function AdminAnnouncements() {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [isListLoading, setIsListLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, lastPage: 1, total: 0 });
   
-  // Form State
+  // View State
   const [showForm, setShowForm] = useState(false);
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Form State
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
+  const [isImportant, setIsImportant] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
 
-  useEffect(() => {
-    fetchAnnouncements(pagination.page);
-  }, [pagination.page]);
+  useEffect(() => { fetchAnnouncements(pagination.page); }, [pagination.page]);
 
   const fetchAnnouncements = async (page = 1) => {
     setIsListLoading(true);
@@ -26,187 +35,276 @@ export default function AdminAnnouncements() {
       const response = await announcementService.getAdminAnnouncements(page);
       const rawData = response.data || response;
       const meta = response.meta || { page: 1, last_page: 1, total: rawData.length };
-
-      const transformed = rawData.map(a => ({
-        id: a.id,
-        title: a.title || 'Admin Update',
-        body: a.content || a.body || '',
-        status: (a.status || 'Published').charAt(0).toUpperCase() + (a.status || 'Published').slice(1),
-        date: new Date(a.created_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        authorName: a.admin_username || a.author || 'CCS Admin',
-        authorInitials: (a.admin_username || a.author || 'CA').split(' ').map(n => n[0]).join('').toUpperCase()
-      }));
-
+      const transformed = Array.isArray(rawData) ? rawData.map(a => ({ 
+        id: a.id, 
+        title: a.title || 'Update', 
+        body: a.content || a.body || '', 
+        status: (a.status || 'Published').charAt(0).toUpperCase() + (a.status || 'Published').slice(1), 
+        isImportant: !!(a.is_important || a.isImportant), 
+        isPinned: !!(a.is_pinned || a.isPinned), 
+        date: new Date(a.created_at || a.date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }), 
+        authorName: a.admin_username || a.author || 'Admin', 
+        authorInitials: (a.admin_username || a.author || 'CA').split(' ').map(n => n[0]).join('').toUpperCase() 
+      })) : [];
       setAnnouncements(transformed);
-      setPagination({
-        page: meta.page,
-        lastPage: meta.last_page,
-        total: meta.total
-      });
-    } catch (err) {
-      toast.error('Failed to load announcements');
-    } finally {
-      setIsListLoading(false);
-    }
+      setPagination({ page: meta.page, lastPage: meta.last_page, total: meta.total });
+      
+      if (window.innerWidth >= 1024 && transformed.length > 0 && !selectedAnnouncement && !showForm) { 
+        setSelectedAnnouncement(transformed[0]); 
+      }
+    } catch (err) { toast.error('Failed to load'); } finally { setIsListLoading(false); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newTitle.trim() || !newBody.trim()) return;
-
     setIsSubmitting(true);
     try {
-      await announcementService.create({
-        title: newTitle.trim(),
-        content: newBody.trim()
-      });
-      toast.success('Announcement broadcasted!');
-      setNewTitle('');
-      setNewBody('');
-      setShowForm(false);
+      await announcementService.create({ title: newTitle.trim(), content: newBody.trim(), is_important: isImportant, is_pinned: isPinned });
+      toast.success('Posted!');
+      setNewTitle(''); setNewBody(''); setIsImportant(false); setIsPinned(false); setShowForm(false);
+      setIsMobileDetailOpen(false);
       fetchAnnouncements();
-    } catch (err) {
-      toast.error('Failed to post announcement');
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch (err) { toast.error('Failed'); } finally { setIsSubmitting(false); }
+  };
+
+  const handleTogglePin = async () => {
+    if (!selectedAnnouncement) return;
+    setIsUpdating(true);
+    try {
+      const status = !selectedAnnouncement.isPinned;
+      await announcementService.update({ id: selectedAnnouncement.id, is_pinned: status });
+      setAnnouncements(prev => prev.map(a => a.id === selectedAnnouncement.id ? { ...a, isPinned: status } : a));
+      setSelectedAnnouncement(prev => ({ ...prev, isPinned: status }));
+      toast.success(status ? 'Pinned' : 'Unpinned');
+    } catch (err) { toast.error('Failed'); } finally { setIsUpdating(false); }
+  };
+
+  const handleToggleImportant = async () => {
+    if (!selectedAnnouncement) return;
+    setIsUpdating(true);
+    try {
+      const status = !selectedAnnouncement.isImportant;
+      await announcementService.update({ id: selectedAnnouncement.id, is_important: status });
+      setAnnouncements(prev => prev.map(a => a.id === selectedAnnouncement.id ? { ...a, isImportant: status } : a));
+      setSelectedAnnouncement(prev => ({ ...prev, isImportant: status }));
+      toast.success(status ? 'Priority set' : 'Priority removed');
+    } catch (err) { toast.error('Failed'); } finally { setIsUpdating(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedAnnouncement || !window.confirm('Delete this announcement?')) return;
+    try {
+      await announcementService.delete(selectedAnnouncement.id);
+      toast.success('Deleted');
+      setSelectedAnnouncement(null);
+      setIsMobileDetailOpen(false);
+      fetchAnnouncements();
+    } catch (err) { toast.error('Failed'); }
+  };
+
+  const openForm = () => {
+    setShowForm(true);
+    setSelectedAnnouncement(null);
+    setIsMobileDetailOpen(true);
+  };
+
+  const selectAnnouncement = (ann) => {
+    setSelectedAnnouncement(ann);
+    setShowForm(false);
+    setIsMobileDetailOpen(true);
+  };
+
+  const closeMobileDetail = () => {
+    setIsMobileDetailOpen(false);
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 h-[calc(100vh-64px)] flex flex-col">
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 h-full min-h-0">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 h-[calc(100vh-80px)] flex flex-col gap-6 overflow-hidden">
+      
+      {/* ───── HERO BANNER ───── */}
+      <div className={`relative overflow-hidden rounded-xl bg-primary border border-border shadow-lg shrink-0 ${isMobileDetailOpen ? 'hidden lg:block' : 'block'}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-light/10 blur-3xl animate-pulse" />
+        
+        <div className="relative z-10 p-5 sm:p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl shrink-0">
+                <div className="w-full h-full rounded-xl bg-primary flex items-center justify-center border-2 border-primary relative overflow-hidden">
+                  <Megaphone className="h-6 w-6 text-brand-sand relative z-10" />
+                  <div className="absolute inset-0 bg-primary-hover/20" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                   <span className="text-[10px] font-black text-brand-sand uppercase tracking-[0.2em]">Bulletin Board</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tighter leading-none">Announcements</h1>
+                <p className="text-[11px] font-bold text-primary-light/80 max-w-md leading-relaxed">Post updates for students and laboratory sessions.</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all min-w-[140px] group">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Inbox className="h-3.5 w-3.5 text-brand-sand" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-primary-light/60 font-black mb-0.5">Total Posts</p>
+                    <p className="text-base font-black text-white tracking-tighter">{pagination.total}</p>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`grid grid-cols-1 ${isSidebarCollapsed ? 'lg:grid-cols-[64px_1fr]' : 'lg:grid-cols-[350px_1fr]'} gap-6 flex-1 min-h-0 overflow-hidden relative transition-all duration-300 ease-in-out`}>
         
         {/* Left Column - List */}
-        <div className="flex flex-col bg-white rounded-xl border border-[#6A9AB0]/15 shadow-sm overflow-hidden h-full">
-          <div className="p-4 border-b border-[#6A9AB0]/15 bg-[#EAD8B1]/5">
-            <h2 className="text-lg font-extrabold text-[#001F3F] mb-3">Announcements</h2>
+        <div className={`flex flex-col bg-white rounded-xl border border-border shadow-sm overflow-hidden h-full transition-all duration-300 ${isMobileDetailOpen ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`p-3 border-b border-border bg-bg-secondary/30 flex flex-col transition-all ${isSidebarCollapsed ? 'items-center' : ''} gap-3 shrink-0`}>
+            <div className="flex justify-between items-center w-full px-1">
+              {!isSidebarCollapsed && (
+                <>
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">Post Stream</span>
+                  <button onClick={() => setIsSidebarCollapsed(true)} className="p-1 hover:bg-primary/5 rounded-md text-primary-light transition-colors" title="Minimize Stream"><PanelLeftClose className="h-4 w-4" /></button>
+                </>
+              )}
+              {isSidebarCollapsed && (
+                <button onClick={() => setIsSidebarCollapsed(false)} className="mx-auto p-1 hover:bg-primary/5 rounded-md text-primary-light transition-colors" title="Expand Stream"><PanelLeftOpen className="h-4 w-4" /></button>
+              )}
+            </div>
+            
             <button 
-              onClick={() => { setShowForm(true); setSelectedAnnouncement(null); }}
-              className="w-full flex items-center justify-center gap-2 bg-[#001F3F] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#001F3F]/90 transition-colors cursor-pointer"
+              onClick={openForm} 
+              className={`flex items-center justify-center bg-primary text-white rounded-xl font-black uppercase tracking-widest hover:bg-primary-hover shadow-lg active:scale-95 transition-all ${isSidebarCollapsed ? 'w-10 h-10 p-0' : 'w-full py-3 gap-2 text-[10px]'}`}
+              title="New Announcement"
             >
-              <Plus className="h-4 w-4" /> New Announcement
+              <Plus className="h-4 w-4" /> 
+              {!isSidebarCollapsed && "New Announcement"}
             </button>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white">
-            {isListLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-6 w-6 animate-spin text-[#3A6D8C]" />
-              </div>
-            ) : announcements.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-sm text-[#6A9AB0]/60 italic">No announcements found.</p>
-              </div>
-            ) : (
-              <>
-                {announcements.map(ann => (
-                  <AnnouncementCard 
-                    key={ann.id} 
-                    announcement={ann} 
-                    isSelected={selectedAnnouncement?.id === ann.id}
-                    onClick={() => { setSelectedAnnouncement(ann); setShowForm(false); }} 
-                  />
-                ))}
 
-                {/* Pagination Controls */}
-                {pagination.lastPage > 1 && (
-                  <div className="flex justify-center items-center gap-3 mt-6 pt-4 border-t border-[#6A9AB0]/10">
-                    <button
-                      disabled={pagination.page <= 1}
-                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                      className="p-2 rounded-lg border border-[#6A9AB0]/20 text-xs font-bold text-[#001F3F] disabled:opacity-30 hover:bg-[#EAD8B1]/10 transition-colors"
-                    >
-                      Prev
-                    </button>
-                    <span className="text-[10px] font-bold text-[#6A9AB0]">
-                      {pagination.page} / {pagination.lastPage}
-                    </span>
-                    <button
-                      disabled={pagination.page >= pagination.lastPage}
-                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                      className="p-2 rounded-lg border border-[#6A9AB0]/20 text-xs font-bold text-[#001F3F] disabled:opacity-30 hover:bg-[#EAD8B1]/10 transition-colors"
-                    >
-                      Next
-                    </button>
+          <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+            {isListLoading ? (
+              <div className="py-20 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary/20" /></div>
+            ) : announcements.length === 0 ? (
+              <div className="py-20 text-center opacity-30"><Inbox className="h-10 w-10 mx-auto mb-2" /><p className={`text-[10px] font-black uppercase ${isSidebarCollapsed ? 'hidden' : ''}`}>No posts.</p></div>
+            ) : announcements.map(ann => (
+              <div 
+                key={ann.id} 
+                onClick={() => selectAnnouncement(ann)} 
+                className={`rounded-xl border transition-all cursor-pointer relative group ${isSidebarCollapsed ? 'p-2 flex justify-center' : 'p-4'} ${selectedAnnouncement?.id === ann.id ? 'bg-primary border-primary shadow-md' : 'bg-white border-border hover:bg-bg-secondary'}`}
+                title={isSidebarCollapsed ? ann.title : ""}
+              >
+                {!isSidebarCollapsed ? (
+                  <>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${selectedAnnouncement?.id === ann.id ? 'bg-white/10 text-brand-sand' : 'bg-primary/5 text-primary'}`}>{ann.authorInitials}</span>
+                      <span className={`text-[8px] font-bold ${selectedAnnouncement?.id === ann.id ? 'text-white/40' : 'text-primary-light/60'}`}>{ann.date.split(',')[0]}</span>
+                    </div>
+                    <h4 className={`text-xs font-black truncate ${selectedAnnouncement?.id === ann.id ? 'text-white' : 'text-primary'}`}>{ann.title}</h4>
+                    <p className={`text-[10px] line-clamp-1 ${selectedAnnouncement?.id === ann.id ? 'text-white/60' : 'text-primary-light'}`}>{ann.body.replace(/[#*[\]()]/g, '')}</p>
+                  </>
+                ) : (
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black uppercase ${selectedAnnouncement?.id === ann.id ? 'bg-white/10 text-brand-sand' : 'bg-primary/5 text-primary'}`}>
+                    {ann.authorInitials}
                   </div>
                 )}
-              </>
+                
+                {/* Active Indicator bar */}
+                {selectedAnnouncement?.id === ann.id && isSidebarCollapsed && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-brand-sand" />
+                )}
+              </div>
+            ))}
+
+            {!isSidebarCollapsed && pagination.lastPage > 1 && (
+              <div className="flex justify-between items-center pt-4 border-t border-border/50 px-1 shrink-0">
+                <button disabled={pagination.page <= 1} onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))} className="p-2 text-primary-light disabled:opacity-30"><ChevronRight className="h-4 w-4 rotate-180" /></button>
+                <span className="text-[9px] font-black uppercase text-primary-light">{pagination.page} / {pagination.lastPage}</span>
+                <button disabled={pagination.page >= pagination.lastPage} onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))} className="p-2 text-primary-light disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
+              </div>
             )}
           </div>
         </div>
 
         {/* Right Column - Detail or Form */}
-        <div className="bg-white rounded-xl border border-[#6A9AB0]/15 shadow-sm hidden lg:flex flex-col h-full overflow-hidden">
+        <div className={`bg-white rounded-xl border border-border shadow-sm flex flex-col h-full overflow-hidden ${isMobileDetailOpen ? 'flex' : 'hidden lg:flex'}`}>
+          
+          <div className="lg:hidden p-4 border-b border-border flex items-center gap-4 bg-bg-secondary/30 shrink-0">
+            <button onClick={closeMobileDetail} className="p-2 rounded-lg bg-white border border-border text-primary shadow-sm"><ArrowLeft className="h-4 w-4" /></button>
+            <span className="text-xs font-black uppercase text-primary tracking-widest">{showForm ? 'New Post' : 'Announcement'}</span>
+          </div>
+
           {showForm ? (
-            <div className="p-8 max-w-2xl">
-              <h2 className="text-xl font-extrabold text-[#001F3F] mb-6">Create New Announcement</h2>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#001F3F]/50 mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Announcement Title"
-                    className="w-full rounded-lg border border-[#6A9AB0]/20 bg-white px-4 py-2.5 text-sm text-[#001F3F] focus:outline-none focus:ring-2 focus:ring-[#3A6D8C]/30"
-                  />
+            <div className="p-6 sm:p-8 h-full flex flex-col animate-fade-in overflow-y-auto relative">
+              <h2 className="hidden lg:block text-lg font-black text-primary uppercase tracking-tight mb-6">Draft Post</h2>
+              <form onSubmit={handleSubmit} className="space-y-5 max-w-3xl">
+                <div><label className="text-[9px] font-black uppercase text-primary-light ml-1">Title</label><input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-xl border border-border bg-bg-secondary/30 px-4 py-2.5 text-sm font-bold text-primary focus:bg-white transition-all" placeholder="Enter title..." /></div>
+                <div><label className="text-[9px] font-black uppercase text-primary-light ml-1">Content</label><textarea value={newBody} onChange={(e) => setNewBody(e.target.value)} rows={8} className="w-full rounded-xl border border-border bg-bg-secondary/30 px-4 py-2.5 text-sm font-medium text-primary focus:bg-white transition-all resize-none" placeholder="Details..." /></div>
+                
+                <div className="flex flex-wrap gap-6 px-1">
+                  <div onClick={() => setIsImportant(!isImportant)} className="flex items-center gap-2 cursor-pointer group select-none">
+                    <div className={`w-8 h-5 rounded-full relative transition-all duration-300 ${isImportant ? 'bg-red-500' : 'bg-primary-light/20'}`}>
+                       <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${isImportant ? 'left-4' : 'left-1'}`} />
+                    </div>
+                    <span className="text-[9px] font-black text-primary-light uppercase tracking-widest group-hover:text-primary transition-colors">Important</span>
+                  </div>
+
+                  <div onClick={() => setIsPinned(!isPinned)} className="flex items-center gap-2 cursor-pointer group select-none">
+                    <div className={`w-8 h-5 rounded-full relative transition-all duration-300 ${isPinned ? 'bg-amber-500' : 'bg-primary-light/20'}`}>
+                       <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${isPinned ? 'left-4' : 'left-1'}`} />
+                    </div>
+                    <span className="text-[9px] font-black text-primary-light uppercase tracking-widest group-hover:text-primary transition-colors">Pin to Top</span>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#001F3F]/50 mb-2">Content</label>
-                  <textarea
-                    value={newBody}
-                    onChange={(e) => setNewBody(e.target.value)}
-                    rows={8}
-                    placeholder="Write your announcement message here..."
-                    className="w-full rounded-lg border border-[#6A9AB0]/20 bg-white px-4 py-2.5 text-sm text-[#001F3F] focus:outline-none focus:ring-2 focus:ring-[#3A6D8C]/30 resize-none"
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="px-6 py-2.5 rounded-lg border border-[#6A9AB0]/30 text-sm font-bold text-[#001F3F] hover:bg-[#EAD8B1]/25 transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !newTitle.trim() || !newBody.trim()}
-                    className="flex items-center gap-2 px-8 py-2.5 rounded-lg bg-[#3A6D8C] text-white text-sm font-bold hover:bg-[#001F3F] transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
-                  >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Broadcast Now
+
+                <div className="flex gap-3 pt-4">
+                  <button type="button" onClick={() => { setShowForm(false); setIsMobileDetailOpen(false); }} className="px-6 py-2 rounded-xl border border-border text-[10px] font-black uppercase text-primary-light hover:text-primary transition-all">Cancel</button>
+                  <button type="submit" disabled={isSubmitting || !newTitle.trim()} className="px-8 py-2 rounded-xl bg-primary text-white text-[10px] font-black uppercase hover:bg-primary-hover shadow-lg active:scale-95 disabled:opacity-50 flex items-center gap-2">
+                    {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                    Post Now
                   </button>
                 </div>
               </form>
             </div>
           ) : selectedAnnouncement ? (
-            <div className="p-8 h-full flex flex-col">
-              <div className="mb-6 border-b border-[#6A9AB0]/10 pb-6">
-                <h1 className="text-2xl font-extrabold text-[#001F3F] mb-2">{selectedAnnouncement.title}</h1>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#3A6D8C]/10 flex items-center justify-center text-xs font-bold text-[#3A6D8C]">
-                    {selectedAnnouncement.authorInitials}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#001F3F]">{selectedAnnouncement.authorName}</p>
-                    <p className="text-xs text-[#6A9AB0]">{selectedAnnouncement.date}</p>
-                  </div>
+            <div className="p-6 sm:p-8 h-full flex flex-col animate-fade-in overflow-hidden relative">
+              {/* ───── FLOATING HEADER CONTROLS ───── */}
+              
+              <div className="absolute top-6 left-6 z-10 hidden lg:block">
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-border shadow-sm">
+                  <Clock className="h-3 w-3 text-primary-light" />
+                  <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">{selectedAnnouncement.date}</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto text-sm text-[#001F3F]/90 whitespace-pre-wrap leading-relaxed">
-                {selectedAnnouncement.body}
+
+              <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
+                 <div className="hidden sm:flex gap-1 mr-1">
+                    {selectedAnnouncement.isImportant && <span className="px-2 py-1 rounded bg-red-50 text-red-600 text-[8px] font-black uppercase border border-red-100 shadow-sm">Important</span>}
+                    {selectedAnnouncement.isPinned && <span className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-[8px] font-black uppercase border border-amber-100 shadow-sm">Pinned</span>}
+                 </div>
+                 <div className="flex gap-1.5 bg-white/80 backdrop-blur-md p-1 rounded-xl border border-border shadow-sm">
+                   <button onClick={handleTogglePin} disabled={isUpdating} className="p-2 rounded-lg text-primary-light hover:text-primary transition-colors" title="Toggle Pin">{isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pin className={`h-4 w-4 ${selectedAnnouncement.isPinned ? 'fill-amber-500 text-amber-500' : ''}`} />}</button>
+                   <button onClick={handleToggleImportant} disabled={isUpdating} className="p-2 rounded-lg text-primary-light hover:text-primary transition-colors" title="Toggle Priority">{isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className={`h-4 w-4 ${selectedAnnouncement.isImportant ? 'fill-red-500 text-red-500' : ''}`} />}</button>
+                   <button onClick={handleDelete} className="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-all" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                 </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pt-10 lg:pt-14">
+                <h1 className="text-2xl sm:text-3xl font-black text-primary tracking-tighter mb-6 leading-tight max-w-[85%] lg:max-w-[75%]">{selectedAnnouncement.title}</h1>
+                <div className="prose prose-sm text-primary/80 leading-relaxed max-w-none pb-20 selection:bg-brand-sand/30">
+                  <RichTextRenderer text={selectedAnnouncement.body} />
+                </div>
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-[#6A9AB0]/60">
-              <Inbox className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-sm font-bold">Select an announcement to view details</p>
-              <p className="text-xs mt-1">Or click 'New Announcement' to create one.</p>
-            </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-primary-light/20"><Megaphone className="h-10 w-10 mb-2" /><p className="text-[10px] font-black uppercase tracking-widest">Select an announcement</p></div>
           )}
         </div>
-
       </div>
     </div>
   );
