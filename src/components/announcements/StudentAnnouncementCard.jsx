@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Calendar, Pin, ChevronDown, ChevronUp } from 'lucide-react';
+import React from 'react';
+import { Clock, Pin, ChevronRight, ShieldAlert, User } from 'lucide-react';
+import RichTextRenderer from '../ui/RichTextRenderer';
+import { useNavigate } from 'react-router';
 
 /**
  * @typedef {Object} Announcement
@@ -8,8 +10,9 @@ import { Calendar, Pin, ChevronDown, ChevronUp } from 'lucide-react';
  * @property {string} body
  * @property {string} date
  * @property {string} authorName
- * @property {string} authorInitials
+ * @property {string} author
  * @property {boolean} isPinned
+ * @property {boolean} isImportant
  * @property {boolean} isUnread
  */
 
@@ -19,66 +22,60 @@ import { Calendar, Pin, ChevronDown, ChevronUp } from 'lucide-react';
  * @param {Announcement} props.announcement
  */
 export default function StudentAnnouncementCard({ announcement }) {
-  const { title, body, date, authorName, authorInitials, isPinned, isUnread } = announcement;
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const bodyIsLong = body.length > 200;
+  const { id, title, body, date, authorName, author, isPinned, isImportant, isUnread } = announcement;
+  const navigate = useNavigate();
+  const displayAuthor = authorName || author || 'CCS Admin';
 
   return (
-    <div 
-      className={`relative rounded-2xl border p-6 shadow-sm transition-all duration-300 bg-white hover:shadow-md hover:-translate-y-0.5 ${
-        isPinned ? 'border-amber-100 ring-1 ring-amber-50' : 'border-[#6A9AB0]/15'
-      }`}
+    <div
+      onClick={() => navigate(`/student/announcements/${id}`)}
+      className={`group relative rounded-xl border p-5 shadow-sm transition-all duration-300 bg-white hover:shadow-md hover:-translate-y-0.5 cursor-pointer flex flex-col h-full ${isPinned ? 'border-brand-sand/40 bg-bg-secondary/40' : 'border-border'
+        }`}
     >
-      {/* Pinned Badge */}
-      {isPinned && (
-        <div className="absolute top-4 right-4 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-          <Pin className="h-3 w-3 text-amber-500 fill-amber-500 rotate-45" />
-          <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Pinned</span>
-        </div>
-      )}
-
-      {/* Unread Indicator */}
-      {isUnread && !isPinned && (
-        <div className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-[#3A6D8C] shadow-sm animate-pulse" />
-      )}
-
+      {/* Logos Container */}
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-[10px] font-bold text-[#6A9AB0] flex items-center gap-1 bg-[#6A9AB0]/5 px-2 py-1 rounded-lg uppercase tracking-widest">
-          <Calendar className="h-3 w-3" /> {date}
-        </span>
+        {isImportant && (
+          <div className="w-7 h-7 rounded-lg bg-red-50/50 flex items-center justify-center border border-red-100/50 shadow-sm" title="Priority Update">
+            <ShieldAlert className="h-3.5 w-3.5 fill-red-600 text-red-600" />
+          </div>
+        )}
+
+        {isPinned && (
+          <div className="w-7 h-7 rounded-lg bg-amber-50/50 flex items-center justify-center border border-amber-100/50 shadow-sm" title="Pinned to Top">
+            <Pin className="h-3.5 w-3.5 fill-amber-600 text-amber-600 rotate-45" />
+          </div>
+        )}
+
+        {isUnread && !isPinned && !isImportant && (
+          <div className="w-1.5 h-1.5 rounded-full bg-primary-hover ml-1" />
+        )}
       </div>
 
-      <h3 className="text-lg font-extrabold text-[#001F3F] leading-tight mb-3">
-        {title || 'Administrative Update'}
-      </h3>
-      
-      <div className={`text-sm text-[#001F3F]/70 leading-relaxed transition-all duration-300 whitespace-pre-wrap ${!isExpanded && bodyIsLong ? 'line-clamp-3' : ''}`}>
-        {body}
-      </div>
+      <div className="flex-1">
+        <h3 className="text-base font-black text-primary leading-tight mb-2 tracking-tight group-hover:text-primary-hover transition-colors">
+          {title || 'Administrative Update'}
+        </h3>
 
-      {bodyIsLong && (
-        <button 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-3 text-[11px] font-extrabold text-[#3A6D8C] uppercase tracking-widest flex items-center gap-1 hover:text-[#001F3F] transition-colors cursor-pointer"
-        >
-          {isExpanded ? (
-            <>Show Less <ChevronUp className="h-3 w-3" /></>
-          ) : (
-            <>Read Full Story <ChevronDown className="h-3 w-3" /></>
-          )}
-        </button>
-      )}
-
-      <div className="flex items-center gap-3 mt-6 pt-4 border-t border-[#6A9AB0]/5">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3A6D8C] to-[#001F3F] p-0.5">
-           <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[10px] font-extrabold text-[#3A6D8C]">
-             {authorInitials}
-           </div>
+        <div className="text-xs text-primary/60 font-medium leading-relaxed line-clamp-3 mb-4">
+          <RichTextRenderer text={body} />
         </div>
-        <div>
-           <p className="text-[11px] font-extrabold text-[#001F3F] leading-none mb-0.5">{authorName}</p>
-           <p className="text-[9px] font-bold text-[#6A9AB0] uppercase tracking-widest">Lab Administrator</p>
+      </div>
+
+      <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-3">
+        <div className="flex items-center gap-3 text-[9px] font-bold text-primary-light/50 uppercase tracking-widest">
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <Clock className="h-3 w-3 opacity-60" />
+            {date}
+          </div>
+          <span className="opacity-20">•</span>
+          <div className="flex items-center gap-1.5 text-primary-hover/60 truncate">
+            <User className="h-3 w-3" />
+            {displayAuthor}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-[9px] font-black text-primary-hover uppercase tracking-[0.15em] group-hover:gap-2 transition-all">
+          Read full story <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>
     </div>
