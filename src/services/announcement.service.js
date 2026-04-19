@@ -24,7 +24,8 @@ const announcementService = {
   },
 
   update: async (payload) => {
-    const response = await api.post('admin/announcements/update.php', payload);
+    const { id, ...data } = payload;
+    const response = await api.post(`admin/announcements/update.php?id=${id}`, data);
     return response.data;
   },
 

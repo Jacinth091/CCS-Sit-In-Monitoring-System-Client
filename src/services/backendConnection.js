@@ -19,9 +19,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error("Session expired.");
+      console.error("Session expired or unauthorized.");
       sessionStorage.removeItem("authToken");
-      //   window.location.href = "/auth/login";
+      sessionStorage.removeItem("user");
+      // Use window.location for a hard redirect to the login page on auth failure
+      if (!window.location.pathname.includes('/auth/login')) {
+        window.location.href = "/auth/login";
+      }
     }
 
     let msg = error.response?.data?.message || error.message;
