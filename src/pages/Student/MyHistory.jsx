@@ -5,7 +5,7 @@ import UsageStats from '../../components/student-history/UsageStats';
 import SessionTable from '../../components/student-history/SessionTable';
 import FeedbackViewModal from '../../components/student-history/FeedbackViewModal';
 import StudentFeedbackModal from '../../components/modals/StudentFeedbackModal';
-import { Loader2, ArrowLeft, History } from 'lucide-react';
+import { Loader2, ArrowLeft, History, Clock, FlaskConical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
@@ -138,35 +138,66 @@ export default function MyHistory() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative pb-24">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">
       
-      <div className="mb-10 flex flex-col items-center text-center">
-        <div className="w-16 h-16 rounded-full bg-[#3A6D8C]/10 flex items-center justify-center mb-4">
-           <History className="h-8 w-8 text-[#3A6D8C]" />
+      {/* ───── HERO SECTION ───── */}
+      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-md">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-brand-sand/10 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-primary-light/10 blur-3xl" />
+
+        <div className="relative z-10 p-6 sm:p-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div className="space-y-2">
+              <Link 
+                to="/student/dashboard" 
+                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors uppercase tracking-[0.2em]"
+              >
+                <ArrowLeft className="h-3 w-3" /> Back to Dashboard
+              </Link>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                 Activity Journal
+              </h1>
+              <p className="text-primary-light/80 text-xs sm:text-sm font-medium max-w-md leading-relaxed">
+                A comprehensive log of your laboratory usage, hours, and administrative feedback.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+              <div className="w-14 h-14 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                 <History className="h-7 w-7 text-brand-sand" />
+              </div>
+            </div>
+          </div>
         </div>
-        <h1 className="text-3xl font-extrabold text-[#001F3F] tracking-tight">Your Activity Journal</h1>
-        <p className="text-sm text-[#6A9AB0] mt-1 max-w-md">
-           A comprehensive log of your laboratory usage, hours, and administrative feedback.
-        </p>
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-           <Loader2 className="h-10 w-10 animate-spin text-[#3A6D8C]" />
-           <p className="text-xs font-bold text-[#3A6D8C] animate-pulse uppercase tracking-widest">Retrieving logs...</p>
+        <div className="flex flex-col items-center justify-center py-24 gap-5">
+           <div className="relative">
+             <div className="w-12 h-12 rounded-full border-4 border-primary-hover/10 border-t-primary-hover animate-spin" />
+             <Clock className="h-5 w-5 text-primary-hover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+           </div>
+           <div className="text-center space-y-1">
+             <p className="text-xs font-bold text-primary uppercase tracking-[0.15em]">Retrieving Logs</p>
+             <p className="text-[10px] text-primary-light font-medium uppercase tracking-widest">Compiling your history...</p>
+           </div>
         </div>
       ) : (
-        <>
+        <div className="flex flex-col gap-8">
           <UsageStats stats={stats} />
           
-          <div className="mt-12">
-            <div className="flex items-center justify-between mb-6 px-2">
-               <h3 className="text-sm font-bold tracking-[0.15em] uppercase text-[#001F3F]/60">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between px-1">
+               <h3 className="text-[10px] font-black tracking-[0.15em] uppercase text-primary-light">
                   Detailed Session History
                </h3>
-               <span className="text-[10px] font-bold text-[#6A9AB0] bg-white border border-[#6A9AB0]/20 px-3 py-1 rounded-full uppercase tracking-widest">
+               <div className="flex items-center gap-2.5 text-primary-light">
+                <div className="h-px w-6 bg-border" />
+                <span className="text-[9px] font-bold uppercase tracking-[0.15em] whitespace-nowrap">
                   {sessions.length} Records
-               </span>
+                </span>
+              </div>
             </div>
             <SessionTable 
               sessions={sessions} 
@@ -174,7 +205,7 @@ export default function MyHistory() {
               onOpenEntry={handleOpenEntry}
             />
           </div>
-        </>
+        </div>
       )}
 
       <FeedbackViewModal 
@@ -192,15 +223,16 @@ export default function MyHistory() {
         initialComment={initialFeedback.comment}
       />
 
-      <div className="mt-16 pt-8 border-t border-[#6A9AB0]/10 flex justify-center">
-         <Link 
-            to="/student/dashboard" 
-            className="group inline-flex items-center gap-2 text-xs font-bold text-[#3A6D8C] hover:text-[#001F3F] transition-all uppercase tracking-widest"
-          >
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" /> 
-            Back to Hub
-          </Link>
-      </div>
+      {/* ───── FOOTER INFO ───── */}
+      {!isLoading && (
+        <div className="mt-12 flex flex-col items-center">
+           <div className="h-1 w-10 bg-brand-sand/30 rounded-full mb-5" />
+           <p className="text-[9px] font-bold text-primary-light uppercase tracking-[0.2em] text-center leading-loose">
+             CCS Sit-In Monitoring <br /> 
+             <span className="text-primary/40">University Of Cebu - CCS Lab Management</span>
+           </p>
+        </div>
+      )}
     </div>
   );
 }

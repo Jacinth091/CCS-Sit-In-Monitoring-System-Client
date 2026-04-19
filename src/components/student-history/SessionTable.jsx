@@ -3,30 +3,30 @@ import { Eye, Clock, FlaskConical, MessageSquare, Star, Plus } from 'lucide-reac
 
 export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) {
   return (
-    <div className="bg-white rounded-3xl border border-[#6A9AB0]/15 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-[#EAD8B1]/10 border-b border-[#6A9AB0]/15 whitespace-nowrap">
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Date</th>
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Lab Room</th>
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Purpose</th>
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Time In/Out</th>
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60">Duration</th>
-              <th className="py-5 px-6 text-[10px] font-bold tracking-widest uppercase text-[#001F3F]/60 text-right">Action</th>
+            <tr className="bg-bg-secondary/50 border-b border-border whitespace-nowrap">
+              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Date</th>
+              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Lab Room</th>
+              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Purpose</th>
+              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Time In/Out</th>
+              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Duration</th>
+              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#6A9AB0]/10">
+          <tbody className="divide-y divide-border/60">
             {sessions.length === 0 ? (
               <tr>
-                <td colSpan="6" className="py-24 text-center bg-gray-50/30">
+                <td colSpan="6" className="py-16 text-center bg-gray-50/10">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-[#EAD8B1]/10 flex items-center justify-center">
-                       <FlaskConical className="h-10 w-10 text-[#6A9AB0]/30" />
+                    <div className="w-16 h-16 rounded-2xl bg-bg-secondary flex items-center justify-center border border-border">
+                       <FlaskConical className="h-8 w-8 text-primary-light/30" />
                     </div>
-                    <div className="max-w-xs mx-auto">
-                       <h4 className="text-lg font-extrabold text-[#001F3F]">No history found</h4>
-                       <p className="text-sm text-[#6A9AB0] mt-1 leading-relaxed">
+                    <div className="max-w-xs mx-auto px-4">
+                       <h4 className="text-lg font-black text-primary tracking-tight">No history found</h4>
+                       <p className="text-xs text-primary-light font-medium mt-1 leading-relaxed">
                           You haven't had any sit-in sessions yet. Visit a laboratory to get started!
                        </p>
                     </div>
@@ -40,59 +40,59 @@ export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) 
                 const hasAdminRemark = !!session.adminRemark;
 
                 return (
-                  <tr key={session.id || idx} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="py-5 px-6 font-bold text-[#001F3F] whitespace-nowrap text-[13px]">
+                  <tr key={session.id || idx} className="hover:bg-bg-secondary/30 transition-colors group">
+                    <td className="py-3 px-4 font-bold text-primary whitespace-nowrap text-xs">
                       {session.date}
                     </td>
-                    <td className="py-5 px-6 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#3A6D8C]/10 text-[#3A6D8C] text-[10px] font-bold uppercase tracking-widest">
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-primary/5 text-primary-hover text-[9px] font-black uppercase tracking-widest border border-primary/10">
                         {session.lab_name || 'Lab'}
                       </span>
                     </td>
-                    <td className="py-5 px-6 text-[#6A9AB0] max-w-[150px] truncate font-bold text-xs">
+                    <td className="py-3 px-4 text-primary-light max-w-[150px] truncate font-bold text-[11px] uppercase tracking-wide">
                       {session.purpose}
                     </td>
-                    <td className="py-5 px-6 whitespace-nowrap">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-[13px] font-bold text-[#001F3F]">{session.start_time}</span>
+                        <span className="text-xs font-bold text-primary">{session.start_time}</span>
                         {isActive ? (
-                           <span className="inline-flex items-center gap-1.5 text-emerald-600 font-bold uppercase tracking-wider text-[9px] mt-0.5 animate-pulse">
-                              Ongoing
+                           <span className="inline-flex items-center gap-1 text-emerald-600 font-black uppercase tracking-widest text-[8px] mt-0.5 animate-pulse">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" /> Ongoing
                            </span>
                         ) : (
-                           <span className="text-[11px] font-bold text-[#6A9AB0]">{session.end_time}</span>
+                           <span className="text-[10px] font-bold text-primary-light">{session.end_time}</span>
                         )}
                       </div>
                     </td>
-                    <td className="py-5 px-6">
+                    <td className="py-3 px-4">
                        {session.duration ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#EAD8B1]/20 text-[#001F3F]">
-                             <Clock className="h-3.5 w-3.5" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-brand-sand/10 text-primary border border-brand-sand/20">
+                             <Clock className="h-3 w-3 text-primary/60" />
                              {session.duration}
                           </span>
                        ) : (
-                          <span className="text-[11px] font-bold text-[#6A9AB0]/40">—</span>
+                          <span className="text-[10px] font-bold text-primary-light/40">—</span>
                        )}
                     </td>
-                    <td className="py-5 px-6 text-right whitespace-nowrap">
-                       <div className="flex items-center justify-end gap-2">
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                       <div className="flex items-center justify-end gap-2.5">
                           {!isActive && (
                              <button
                                onClick={() => onOpenEntry(session)}
-                               className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer shadow-sm ${
+                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95 ${
                                  hasRated 
-                                   ? 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100' 
-                                   : 'border-[#6A9AB0]/30 text-[#6A9AB0] hover:bg-gray-50'
+                                   ? 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 shadow-amber-200/20' 
+                                   : 'border-border bg-white text-primary-light hover:text-primary hover:bg-bg-secondary'
                                }`}
                                title={hasRated ? "Edit your rating" : "Rate this session"}
                              >
                                 {hasRated ? (
                                    <div className="flex items-center gap-1">
-                                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                      <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
                                       <span>{session.studentRating}</span>
                                    </div>
                                 ) : (
-                                   <Plus className="h-3 w-3" />
+                                   <Plus className="h-2.5 w-2.5" />
                                 )}
                                 {hasRated ? 'Rated' : 'Rate'}
                              </button>
@@ -101,9 +101,9 @@ export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) 
                           {(hasRated || hasAdminRemark) && (
                              <button
                                onClick={() => onOpenFeedback(session)}
-                               className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#001F3F] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#3A6D8C] transition-all cursor-pointer shadow-md shadow-[#001F3F]/10"
+                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary-hover transition-all cursor-pointer shadow-md shadow-primary/10 active:scale-95"
                              >
-                                <Eye className="h-3.5 w-3.5" />
+                                <Eye className="h-3 w-3" />
                                 Details
                              </button>
                           )}
