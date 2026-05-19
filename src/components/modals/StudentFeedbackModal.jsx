@@ -43,8 +43,8 @@ export default function StudentFeedbackModal({ isOpen, onClose, onSubmit, record
         {/* Header */}
         <div className="px-8 py-6 border-b border-[#6A9AB0]/10 flex items-center justify-between bg-[#3A6D8C]/5">
           <div>
-            <h3 className="text-xl font-extrabold text-[#001F3F]">Rate Your Session</h3>
-            <p className="text-xs text-[#6A9AB0] mt-1 font-bold uppercase tracking-widest">How was your laboratory experience?</p>
+            <h3 className="text-xl font-bold text-[#001F3F]">Rate Your Session</h3>
+            <p className="text-xs text-[#6A9AB0] mt-1 font-bold">How was your laboratory experience?</p>
           </div>
           <button onClick={onClose} className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors cursor-pointer p-1">
             <X className="h-5 w-5" />
@@ -76,7 +76,7 @@ export default function StudentFeedbackModal({ isOpen, onClose, onSubmit, record
                   </button>
                 ))}
              </div>
-             <p className="text-xs font-extrabold text-[#3A6D8C] uppercase tracking-[0.2em]">
+             <p className="text-xs font-bold text-[#3A6D8C]">
                 {rating === 5 ? 'Excellent!' : 
                  rating === 4 ? 'Very Good' : 
                  rating === 3 ? 'Good' : 
@@ -87,7 +87,7 @@ export default function StudentFeedbackModal({ isOpen, onClose, onSubmit, record
 
           {/* Comment */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#001F3F]/50 mb-3 ml-1">
+            <label className="block text-[10px] font-bold text-[#001F3F]/50 mb-3 ml-1">
               Any specific remarks? (Optional)
             </label>
             <textarea
