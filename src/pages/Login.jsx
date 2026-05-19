@@ -54,7 +54,7 @@ export default function Login() {
         }
       }
     } catch (err) {
-      toast.error(err.customMessage || "Login failed. Please try again.");
+      toast.error(err.customMessage || err.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +101,7 @@ export default function Login() {
             </p>
           </div>
         </div>
-        <div className="flex-1 p-6 md:p-12 flex flex-col justify-center">
+        <div className="flex-1 p-6 md:p-12 flex flex-col justify-center bg-white">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-1 text-sm text-primary-light hover:text-primary font-bold mb-8 transition-colors duration-150 self-start uppercase tracking-widest"
