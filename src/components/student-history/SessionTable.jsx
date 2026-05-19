@@ -8,12 +8,12 @@ export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) 
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-bg-secondary/50 border-b border-border whitespace-nowrap">
-              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Date</th>
-              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Lab Room</th>
-              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Purpose</th>
-              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Time In/Out</th>
-              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light">Duration</th>
-              <th className="py-3 px-4 text-[9px] font-black tracking-[0.2em] uppercase text-primary-light text-right">Action</th>
+              <th className="py-3 px-4 text-[10px] font-bold text-primary-light">Date</th>
+              <th className="py-3 px-4 text-[10px] font-bold text-primary-light">Lab Room</th>
+              <th className="py-3 px-4 text-[10px] font-bold text-primary-light">Purpose</th>
+              <th className="py-3 px-4 text-[10px] font-bold text-primary-light">Time In/Out</th>
+              <th className="py-3 px-4 text-[10px] font-bold text-primary-light">Duration</th>
+              <th className="py-3 px-4 text-[10px] font-bold text-primary-light text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
@@ -45,18 +45,25 @@ export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) 
                       {session.date}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-primary/5 text-primary-hover text-[9px] font-black uppercase tracking-widest border border-primary/10">
-                        {session.lab_name || 'Lab'}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-primary/5 text-primary-hover text-[9px] font-bold border border-primary/10 w-fit">
+                          {session.lab_code ? `${session.lab_code} - ${session.name}` : session.name || 'Lab'}
+                        </span>
+                        {session.pc_number && (
+                          <span className="text-[8px] font-bold text-primary-light/60 ml-1">
+                            PC #{session.pc_number}
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-3 px-4 text-primary-light max-w-[150px] truncate font-bold text-[11px] uppercase tracking-wide">
+                    <td className="py-3 px-4 text-primary-light max-w-[150px] truncate font-bold text-[11px]">
                       {session.purpose}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-primary">{session.start_time}</span>
                         {isActive ? (
-                           <span className="inline-flex items-center gap-1 text-emerald-600 font-black uppercase tracking-widest text-[8px] mt-0.5 animate-pulse">
+                           <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-[8px] mt-0.5 animate-pulse">
                               <span className="w-1 h-1 rounded-full bg-emerald-500" /> Ongoing
                            </span>
                         ) : (
@@ -79,7 +86,7 @@ export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) 
                           {!isActive && (
                              <button
                                onClick={() => onOpenEntry(session)}
-                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95 ${
+                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[9px] font-bold transition-all cursor-pointer shadow-sm active:scale-95 ${
                                  hasRated 
                                    ? 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 shadow-amber-200/20' 
                                    : 'border-border bg-white text-primary-light hover:text-primary hover:bg-bg-secondary'
@@ -101,7 +108,7 @@ export default function SessionTable({ sessions, onOpenFeedback, onOpenEntry }) 
                           {(hasRated || hasAdminRemark) && (
                              <button
                                onClick={() => onOpenFeedback(session)}
-                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary-hover transition-all cursor-pointer shadow-md shadow-primary/10 active:scale-95"
+                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-[9px] font-bold hover:bg-primary-hover transition-all cursor-pointer shadow-md shadow-primary/10 active:scale-95"
                              >
                                 <Eye className="h-3 w-3" />
                                 Details
