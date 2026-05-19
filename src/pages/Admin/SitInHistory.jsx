@@ -106,7 +106,7 @@ function RecordDetailModal({ record, onClose }) {
               <div className="w-full h-full rounded-[0.65rem] bg-white flex items-center justify-center overflow-hidden">
                 {record.profile_pic ? (
                   <img
-                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/${record.profile_pic}`}
+                    src={`${import.meta.env.VITE_API_URL}/${record.profile_pic}`}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -557,7 +557,7 @@ export default function SitInHistory() {
                           <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
                             {record.profile_pic ? (
                               <img
-                                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/${record.profile_pic}`}
+                                src={`${import.meta.env.VITE_API_URL}/${record.profile_pic}`}
                                 alt=""
                                 className="w-full h-full object-cover rounded-md"
                               />

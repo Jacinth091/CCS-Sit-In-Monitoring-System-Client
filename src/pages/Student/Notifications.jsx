@@ -17,7 +17,9 @@ export default function Notifications() {
     session: { bg: 'bg-amber-50', text: 'text-amber-600' },
     reservation: { bg: 'bg-sky-50', text: 'text-sky-600' },
     system: { bg: 'bg-slate-100', text: 'text-slate-600' },
-    success: { bg: 'bg-emerald-50', text: 'text-emerald-600' }
+    success: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    software: { bg: 'bg-purple-50', text: 'text-purple-600' },
+    testimonial: { bg: 'bg-rose-50', text: 'text-rose-600' }
   };
 
   const handleMarkRead = async (id) => {

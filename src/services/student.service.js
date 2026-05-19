@@ -13,11 +13,7 @@ const studentService = {
   },
 
   uploadProfilePicture: async (formData) => {
-    const response = await api.post("student/profile/upload_pic.php", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await api.post("student/profile/upload_pic.php", formData);
     return response.data;
   },
 

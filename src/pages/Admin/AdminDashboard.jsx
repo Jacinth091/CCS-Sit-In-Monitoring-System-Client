@@ -154,25 +154,31 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20">
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-lg">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
-        <div className="relative z-10 p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl shrink-0"><div className="w-full h-full rounded-xl bg-primary flex items-center justify-center border-2 border-primary relative overflow-hidden"><ShieldCheck className="h-8 w-8 text-brand-sand relative z-10" /></div></div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                   <span className="text-[10px] font-bold text-primary-light/60 uppercase tracking-[0.2em]">CCS Sit-in Monitoring</span>
+      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary-hover" />
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light">CCS Sit-in Monitoring</p>
+            </div>
+            <h1 className="text-xl font-black text-primary tracking-tight">Admin Dashboard</h1>
+            <p className="text-[11px] font-bold text-primary-light mt-0.5">Overview of {stats.total_students} students and {stats.total_labs} computer laboratories.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {[
+              { label: 'Active Now', value: stats.current_sitin, icon: UserCheck, color: 'text-emerald-500' },
+              { label: 'Total Sit-ins', value: stats.total_sitin, icon: ClipboardList, color: 'text-brand-sand' }
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-bg-secondary border border-border min-w-[150px]">
+                <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center shrink-0">
+                  <item.icon className={`h-4 w-4 ${item.color}`} />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter leading-none">Admin Dashboard</h1>
-                <p className="text-xs font-bold text-primary-light/80 max-w-md">Overview of {stats.total_students} students and {stats.total_labs} computer laboratories.</p>
+                <div>
+                  <p className="text-[8px] uppercase tracking-[0.2em] text-primary-light font-black mb-0.5">{item.label}</p>
+                  <p className="text-base font-black text-primary tracking-tighter">{item.value}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {[ { label: 'Active Now', value: stats.current_sitin, icon: UserCheck, color: 'text-emerald-400' }, { label: 'Total Sit-ins', value: stats.total_sitin, icon: ClipboardList, color: 'text-brand-sand' } ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all min-w-[160px] group"><div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><item.icon className={`h-4 w-4 ${item.color}`} /></div><div><p className="text-[9px] uppercase tracking-[0.2em] text-primary-light/60 font-black mb-0.5">{item.label}</p><p className="text-lg font-black text-white tracking-tighter">{item.value}</p></div></div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>

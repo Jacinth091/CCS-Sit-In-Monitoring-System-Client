@@ -78,9 +78,14 @@ export default function EditProfile() {
 
       const res = await studentService.uploadProfilePicture(fd);
       
-      // Update global context
-      login({ ...user, profile_pic: res.profile_pic });
-      toast.success('Profile picture updated successfully!');
+      // Update global context - access the nested data object
+      const newPic = res.data?.profile_pic;
+      if (newPic) {
+        login({ ...user, profile_pic: newPic });
+        toast.success('Profile picture updated successfully!');
+      } else {
+        throw new Error('No profile picture path returned from server.');
+      }
     } catch (err) {
       toast.error(err.customMessage || 'Failed to upload profile picture.');
     } finally {
@@ -153,7 +158,7 @@ export default function EditProfile() {
                 <div className="w-full h-full rounded-[0.9rem] bg-primary flex items-center justify-center border border-primary overflow-hidden relative group/avatar">
                   {user?.profile_pic ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} 
+                      src={`${import.meta.env.VITE_API_URL}/${user.profile_pic}`} 
                       alt="Profile" 
                       className="w-full h-full object-cover relative z-10"
                     />

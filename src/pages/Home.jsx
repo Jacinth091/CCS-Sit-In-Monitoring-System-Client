@@ -325,7 +325,7 @@ export default function Home() {
                   <div className="w-10 h-10 rounded-xl bg-primary-hover border border-white/20 flex items-center justify-center text-[10px] font-black text-white uppercase shadow-lg overflow-hidden">
                     {testimony.profile_pic ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/${testimony.profile_pic}`}
+                        src={`${import.meta.env.VITE_API_URL}/${testimony.profile_pic}`}
                         className="w-full h-full object-cover"
                       />
                     ) : (

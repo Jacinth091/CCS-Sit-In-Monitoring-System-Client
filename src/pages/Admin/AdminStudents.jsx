@@ -407,7 +407,7 @@ export default function AdminStudents() {
                         <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 overflow-hidden border border-primary/10">
                           {student.profile_pic ? (
                             <img 
-                              src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${student.profile_pic}`} 
+                              src={`${import.meta.env.VITE_API_URL}/${student.profile_pic}`} 
                               alt="" 
                               className="w-full h-full object-cover"
                             />
@@ -583,15 +583,44 @@ function DeleteConfirmationModal({ isOpen, student, onClose, onConfirm }) {
 
 function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
   const isEditing = !!student;
-  const [formData, setFormData] = useState({ student_id: '', first_name: '', last_name: '', middle_name: '', course: '', course_level: '1st', email: '', password: '' });
+  const [formData, setFormData] = useState({ student_id: '', first_name: '', last_name: '', middle_name: '', course: '', course_level: '1st', email: '', password: '', address: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [profileFile, setProfileFile] = useState(null);
+  const [profilePreview, setProfilePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      if (student) setFormData({ id: student.id, student_id: student.student_id || '', first_name: student.first_name || '', last_name: student.last_name || '', middle_name: student.middle_name || '', course: student.course || '', course_level: student.course_level || '1st', email: student.email || '', password: '' });
-      else setFormData({ student_id: '', first_name: '', last_name: '', middle_name: '', course: '', course_level: '1st', email: '', password: '' });
+      if (student) {
+        setFormData({ 
+          id: student.id, 
+          student_id: student.student_id || '', 
+          first_name: student.first_name || '', 
+          last_name: student.last_name || '', 
+          middle_name: student.middle_name || '', 
+          course: student.course || '', 
+          course_level: student.course_level || '1st', 
+          email: student.email || '', 
+          password: '',
+          address: student.address || ''
+        });
+        setProfilePreview(student.profile_pic ? `${import.meta.env.VITE_API_URL}/${student.profile_pic}` : null);
+      } else {
+        setFormData({ student_id: '', first_name: '', last_name: '', middle_name: '', course: '', course_level: '1st', email: '', password: '', address: '' });
+        setProfilePreview(null);
+      }
+      setProfileFile(null);
     }
   }, [isOpen, student]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileFile(file);
+      setProfilePreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -601,14 +630,30 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
     }
     setIsSubmitting(true);
     try {
-      if (isEditing) await studentService.adminUpdate(formData);
-      else {
+      let studentId = formData.id;
+      if (isEditing) {
+        await studentService.adminUpdate(formData);
+      } else {
         if(!formData.password) { toast.error("Password required"); setIsSubmitting(false); return; }
-        await studentService.adminCreate(formData);
+        const res = await studentService.adminCreate(formData);
+        studentId = res.data?.id;
       }
-      toast.success(isEditing ? "Updated" : "Added");
+
+      // Upload profile pic if selected
+      if (profileFile && studentId) {
+        const fd = new FormData();
+        fd.append('profile_pic', profileFile);
+        fd.append('id', studentId);
+        await studentService.uploadProfilePicture(fd);
+      }
+
+      toast.success(isEditing ? "Student updated successfully" : "Student added successfully");
       onSuccess();
-    } catch (err) { toast.error("Action failed"); } finally { setIsSubmitting(false); }
+    } catch (err) { 
+      toast.error(err.response?.data?.message || "Action failed"); 
+    } finally { 
+      setIsSubmitting(false); 
+    }
   };
 
   if (!isOpen) return null;
@@ -621,9 +666,51 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-visible border border-border">
         <div className="px-6 py-4 border-b border-border bg-bg-secondary/30 flex items-center justify-between">
           <h3 className="text-lg font-black text-primary uppercase tracking-tight">{isEditing ? 'Edit Student' : 'Add Student'}</h3>
-          <button onClick={onClose} className="p-2 rounded-lg text-primary-light hover:text-primary"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="p-2 rounded-lg text-primary-light hover:text-primary transition-colors border border-transparent hover:border-border cursor-pointer"><X className="h-5 w-5" /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          
+          {/* Profile Picture Section */}
+          <div className="flex flex-col items-center gap-4 pb-4 border-b border-border/50">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl overflow-hidden">
+                <div className="w-full h-full rounded-[0.9rem] bg-white flex items-center justify-center border border-primary overflow-hidden relative">
+                  {profilePreview ? (
+                    <img src={profilePreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="h-10 w-10 text-primary/20" />
+                  )}
+                  
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 bg-primary/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <Camera className="h-5 w-5 text-white mb-1" />
+                    <span className="text-[8px] font-black text-white uppercase tracking-widest">Change</span>
+                  </button>
+                </div>
+              </div>
+              {profileFile && (
+                <button 
+                  type="button"
+                  onClick={() => { setProfileFile(null); setProfilePreview(isEditing && student.profile_pic ? `${import.meta.env.VITE_API_URL}/${student.profile_pic}` : null); }}
+                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <p className="text-[9px] font-black text-primary-light uppercase tracking-widest">Student Profile Picture</p>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+              accept="image/*"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div className="md:col-span-2 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -664,11 +751,19 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
                   <input required type="password" value={formData.password} onChange={(e)=>setFormData({...formData, password: e.target.value})} className={inputStyles} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
                </div>
              )}
+
+             <div className="md:col-span-2">
+                <label className={labelStyles}>Current Address</label>
+                <input type="text" value={formData.address} onChange={(e)=>setFormData({...formData, address: e.target.value})} className={inputStyles} placeholder="Cebu City, Philippines" />
+             </div>
           </div>
         </form>
         <div className="px-6 py-4 bg-bg-secondary border-t border-border flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase text-primary-light hover:text-primary transition-all">Cancel</button>
-          <button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="px-6 py-2.5 rounded-xl bg-primary text-white text-[10px] font-black uppercase hover:bg-primary-hover shadow-lg active:scale-95 disabled:opacity-50">Save Changes</button>
+          <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase text-primary-light hover:text-primary transition-all cursor-pointer">Cancel</button>
+          <button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="px-6 py-2.5 rounded-xl bg-primary text-white text-[10px] font-black uppercase hover:bg-primary-hover shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-all">
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isEditing ? 'Save Changes' : 'Create Student'}
+          </button>
         </div>
       </div>
     </div>
@@ -709,7 +804,7 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
           <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div className="w-28 h-28 shrink-0 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl overflow-hidden">
-                 {student.profile_pic ? <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${student.profile_pic}`} alt="" className="w-full h-full object-cover rounded-[0.9rem]" /> : <div className="w-full h-full bg-white rounded-[0.9rem] flex items-center justify-center"><User className="h-12 w-12 text-primary" /></div>}
+                 {student.profile_pic ? <img src={`${import.meta.env.VITE_API_URL}/${student.profile_pic}`} alt="" className="w-full h-full object-cover rounded-[0.9rem]" /> : <div className="w-full h-full bg-white rounded-[0.9rem] flex items-center justify-center"><User className="h-12 w-12 text-primary" /></div>}
               </div>
               <div className="flex-1 text-center sm:text-left">
                 <h3 className="text-2xl font-black text-primary tracking-tighter">{student.first_name} {student.last_name}</h3>
@@ -838,7 +933,7 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-sm shrink-0">
             <div className="w-full h-full rounded-[0.4rem] bg-white flex items-center justify-center overflow-hidden">
               {student?.profile_pic
-                ? <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${student.profile_pic}`} alt="" className="w-full h-full object-cover" />
+                ? <img src={`${import.meta.env.VITE_API_URL}/${student.profile_pic}`} alt="" className="w-full h-full object-cover" />
                 : <User className="h-4 w-4 text-primary" />}
             </div>
           </div>

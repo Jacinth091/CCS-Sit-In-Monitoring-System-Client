@@ -48,6 +48,11 @@ api.interceptors.request.use((config) => {
     config.headers = {};
   }
 
+  // Handle FormData: Remove Content-Type to let browser set it with boundary
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
+
   if (authRequest || config._retryWithoutAuth) {
     delete config.headers.Authorization;
     delete config.headers["X-Auth-Token"];

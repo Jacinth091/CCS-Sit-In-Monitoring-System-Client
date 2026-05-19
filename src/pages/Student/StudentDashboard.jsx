@@ -118,7 +118,7 @@ export default function StudentDashboard() {
                   <div className="absolute inset-0 bg-primary-hover/20" />
                   {user?.profile_pic ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} 
+                      src={`${import.meta.env.VITE_API_URL}/${user.profile_pic}`} 
                       alt="Profile" 
                       className="w-full h-full object-cover relative z-10"
                     />
@@ -402,7 +402,7 @@ export default function StudentDashboard() {
               <div className="w-10 h-10 rounded-lg bg-primary-hover/10 flex items-center justify-center overflow-hidden shrink-0 border border-primary-hover/10">
                 {user?.profile_pic ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} 
+                      src={`${import.meta.env.VITE_API_URL}/${user.profile_pic}`} 
                       alt="Profile" 
                       className="w-full h-full object-cover"
                     />

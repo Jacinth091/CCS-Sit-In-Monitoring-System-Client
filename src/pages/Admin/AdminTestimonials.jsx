@@ -438,7 +438,7 @@ export default function AdminTestimonials() {
                     <div className="h-10 w-10 rounded-[10px] bg-white border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-inner p-0.5">
                       {t.profile_pic ? (
                         <img
-                          src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/${t.profile_pic}`}
+                          src={`${import.meta.env.VITE_API_URL}/${t.profile_pic}`}
                           className="w-full h-full object-cover rounded-[8px]"
                           alt="Profile"
                         />
