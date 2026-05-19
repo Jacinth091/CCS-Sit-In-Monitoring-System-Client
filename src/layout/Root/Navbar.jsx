@@ -1,123 +1,136 @@
 import React, { useState } from 'react';
+import { NavLink } from 'react-router';
+import { Menu, X, House, CircleHelp, Users, MessageSquare, CalendarDays, UsersRound, LogIn, UserPlus, Trophy } from 'lucide-react';
 import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
-import { ChevronDown } from 'lucide-react';
+
+const navItems = [
+  { to: '/', label: 'Home', icon: House, group: 1 },
+  { to: '/about', label: 'About', icon: CircleHelp, group: 1 },
+  { to: '/community/forums', label: 'Forums', icon: MessageSquare, group: 2 },
+  { to: '/community/events', label: 'Events', icon: CalendarDays, group: 2 },
+  { to: '/community/members', label: 'Members', icon: UsersRound, group: 2 },
+  { to: '/community/leaderboards', label: 'Leaderboards', icon: Trophy, group: 2 }
+];
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [communityOpen, setCommunityOpen] = useState(false);
-  const [mobileCommunityOpen, setMobileCommunityOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white border-b border-[#6A9AB0]/20 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex-shrink-0">
-            <a href="/" className="flex items-center gap-2">
-              <img src={ccsLogo} alt="CCS Logo" className="h-9 w-9 object-contain" />
-              <span className="text-base font-bold text-[#001F3F] tracking-tight hidden sm:block">
-                CCS Sit-In Monitoring System
-              </span>
-            </a>
-          </div>
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="/" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors text-sm font-medium">
-              Home
-            </a>
-            <a href="/about" className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors text-sm font-medium">
-              About
-            </a>
-            <div className="relative">
-              <button
-                onClick={() => setCommunityOpen(!communityOpen)}
-                className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors text-sm font-medium flex items-center gap-1"
-              >
-                Community
-                <ChevronDown className={`h-4 w-4 transition-transform ${communityOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {communityOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white border border-[#6A9AB0]/20 rounded-lg shadow-lg z-10">
-                  <a href="/community/forums" className="block px-4 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 text-sm font-medium rounded-t-lg">
-                    Forums
-                  </a>
-                  <a href="/community/events" className="block px-4 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 text-sm font-medium">
-                    Events
-                  </a>
-                  <a href="/community/members" className="block px-4 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 text-sm font-medium rounded-b-lg">
-                    Members
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="hidden md:flex items-center space-x-3">
-            <a
-              href="/auth/login"
-              className="text-[#6A9AB0] hover:text-[#001F3F] transition-colors text-sm font-medium"
-            >
-              Login
-            </a>
-            <a
-              href="/auth/signup"
-              className="bg-[#001F3F] text-[#EAD8B1] px-4 py-2 rounded-lg hover:bg-[#3A6D8C] transition-colors text-sm font-medium"
-            >
-              Sign Up
-            </a>
-          </div>
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => { setIsOpen(!isOpen); setMobileCommunityOpen(false); }}
-              className="text-[#6A9AB0] hover:text-[#001F3F] focus:outline-none"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-
-        </div>
-        {isOpen && (
-          <div className="md:hidden pb-4 space-y-1">
-            <a href="/" className="block px-3 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium">
-              Home
-            </a>
-            <a href="/about" className="block px-3 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium">
-              About
-            </a>
-            <button
-              type="button"
-              onClick={() => setMobileCommunityOpen((prev) => !prev)}
-              className="w-full px-3 py-2 text-left text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium flex items-center justify-between"
-            >
-              <span>Community</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${mobileCommunityOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {mobileCommunityOpen && (
-              <div className="pl-4 space-y-1">
-                <a href="/community/forums" className="block px-3 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium">
-                  Forums
-                </a>
-                <a href="/community/events" className="block px-3 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium">
-                  Events
-                </a>
-                <a href="/community/members" className="block px-3 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium">
-                  Members
-                </a>
+    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-border">
+      <div className="mx-auto max-w-[1536px] h-[58px] px-4 sm:px-6 xl:px-12">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center h-full">
+          <div className="flex items-center gap-2.5 pr-4 h-full" style={{ borderRight: '1px solid var(--color-border)' }}>
+            <NavLink to="/" className="flex items-center gap-2.5 h-full">
+              <img src={ccsLogo} alt="CCS Logo" className="w-[26px] h-[26px] rounded-[6px]" />
+              <div className="flex flex-col leading-none">
+                <span className="text-[13px] font-black tracking-tight text-primary">CCS HUB</span>
+                <span className="mt-1 text-[9px] font-bold text-primary-light/70 uppercase tracking-[0.18em]">Sit-in Portal</span>
               </div>
-            )}
+            </NavLink>
+          </div>
 
-            <div className="border-t border-[#6A9AB0]/20 pt-2 mt-2 space-y-2">
-              <a href="/auth/login" className="block px-3 py-2 text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/20 rounded-lg text-sm font-medium">
-                Login
-              </a>
-              <a href="/auth/signup" className="block px-3 py-2 bg-[#001F3F] text-[#EAD8B1] rounded-lg text-sm font-medium text-center hover:bg-[#3A6D8C] transition-colors">
-                Sign Up
-              </a>
+          <div className="hidden md:flex items-center justify-center h-full px-4">
+            <div className="flex items-center justify-center">
+              {navItems.map((item, idx) => {
+                const prevGroup = navItems[idx - 1]?.group;
+                const showDivider = idx > 0 && prevGroup !== item.group;
+                const Icon = item.icon;
+
+                return (
+                  <React.Fragment key={item.to}>
+                    {showDivider && <span className="w-px h-4 mx-1.5 bg-border-strong" />}
+                    <NavLink
+                      to={item.to}
+                      end={item.to === '/'}
+                      className={({ isActive }) =>
+                        `inline-flex items-center gap-2 text-[12.5px] px-[11px] py-[5px] rounded-[7px] transition-colors ${
+                          isActive ? 'font-bold text-primary bg-primary/10' : 'font-semibold text-primary-light hover:text-primary hover:bg-bg-secondary'
+                        }`
+                      }
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {item.label}
+                    </NavLink>
+                  </React.Fragment>
+                );
+              })}
+
             </div>
           </div>
-        )}
+
+          <div className="flex items-center gap-1.5 pl-4 h-full justify-end" style={{ borderLeft: '1px solid var(--color-border)' }}>
+            <div className="hidden md:flex items-center gap-1.5">
+              <NavLink
+                to="/auth/login"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Login
+              </NavLink>
+              <NavLink
+                to="/auth/signup"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-[0.12em] bg-primary text-brand-sand hover:bg-primary-hover transition-colors"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Sign Up
+              </NavLink>
+            </div>
+
+            <button
+              onClick={() => {
+                setMobileOpen((prev) => !prev);
+              }}
+              className="md:hidden w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-primary-light hover:text-primary hover:bg-bg-secondary cursor-pointer transition-colors"
+            >
+              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
       </div>
+
+      {mobileOpen && (
+        <div className="md:hidden bg-white border-t border-border">
+          <div className="mx-auto max-w-[1536px] px-4 sm:px-6 xl:px-12 py-3 space-y-1.5">
+            {navItems.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/'}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] transition-colors ${
+                    isActive ? 'font-bold text-primary bg-primary/10' : 'font-semibold text-primary-light hover:text-primary hover:bg-bg-secondary'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </NavLink>
+            ))}
+
+            <div className="h-px my-2 bg-border" />
+
+            <div className="grid grid-cols-2 gap-2">
+              <NavLink
+                to="/auth/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-[12px] text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                <LogIn className="h-4 w-4" />
+                Login
+              </NavLink>
+              <NavLink
+                to="/auth/signup"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-[12px] font-semibold text-brand-sand bg-primary hover:bg-primary-hover transition-colors"
+              >
+                <UserPlus className="h-4 w-4" />
+                Sign Up
+              </NavLink>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
