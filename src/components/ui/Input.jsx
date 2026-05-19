@@ -15,40 +15,40 @@ const Input = ({
       {label && (
         <label 
           htmlFor={id} 
-          className="text-[10px] font-bold tracking-widest uppercase text-primary/60 ml-1"
+          className="text-[9px] font-black tracking-[0.15em] uppercase text-primary-light ml-1"
         >
           {label}
         </label>
       )}
       <div className="relative group">
         {leftIcon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-label-secondary group-focus-within:text-primary-light transition-colors">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-light/40 group-focus-within:text-primary-hover transition-colors">
             {leftIcon}
           </div>
         )}
         <input
           id={id}
           className={`
-            w-full py-3.5 bg-bg-primary border border-border-strong rounded-md text-sm 
-            font-medium text-label-primary placeholder:text-label-tertiary
-            transition-all duration-150 focus:outline-none 
-            focus:border-primary focus:ring-1 focus:ring-primary
-            ${leftIcon ? 'pl-12' : 'pl-4'}
-            ${rightIcon ? 'pr-12' : 'pr-4'}
-            ${error ? 'border-error focus:border-error focus:ring-error' : ''}
+            w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm 
+            font-bold text-primary placeholder:text-primary-light/30
+            transition-all duration-200 focus:bg-white focus:outline-none 
+            focus:ring-4 focus:ring-primary/5
+            ${leftIcon ? 'pl-11' : 'pl-4'}
+            ${rightIcon ? 'pr-11' : 'pr-4'}
+            ${error ? 'border-red-400 focus:ring-red-400/5' : ''}
           `}
           {...props}
         />
         {rightIcon && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-light/40">
             {rightIcon}
           </div>
         )}
       </div>
       {error ? (
-        <span className="text-xs text-error font-medium">{error}</span>
+        <span className="text-[10px] text-red-500 font-bold ml-1">{error}</span>
       ) : helperText ? (
-        <span className="text-xs text-label-secondary font-medium">{helperText}</span>
+        <span className="text-[10px] text-primary-light/60 font-bold ml-1 tracking-tight">{helperText}</span>
       ) : null}
     </div>
   );
