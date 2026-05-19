@@ -1,11 +1,12 @@
 import React from 'react';
-import { Bell, Clock, MessageSquare, Megaphone, Trash2, ChevronRight } from 'lucide-react';
+import { Bell, Clock, MessageSquare, Megaphone, Trash2, ChevronRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router';
 
 export default function StudentNotificationList({ notifications, onClearAll, onRead }) {
   const typeStyles = {
     feedback: { icon: <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />, bg: 'bg-emerald-50/50' },
     session: { icon: <Clock className="h-3.5 w-3.5 text-primary-hover" />, bg: 'bg-primary/5' },
+    reservation: { icon: <Calendar className="h-3.5 w-3.5 text-sky-600" />, bg: 'bg-sky-50/50' },
     announcement: { icon: <Megaphone className="h-3.5 w-3.5 text-amber-600" />, bg: 'bg-amber-50/50' },
     system: { icon: <Bell className="h-3.5 w-3.5 text-primary-light" />, bg: 'bg-bg-secondary' }
   };

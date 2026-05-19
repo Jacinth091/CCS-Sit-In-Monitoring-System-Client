@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router';
-import { Menu, X, LogOut, Bell, User, LayoutDashboard, Megaphone, History, CalendarPlus, MessageCircle, Monitor, Sun, Moon, Clock3, Info, CheckCircle2, ArrowRight, CheckCheck, Trash2 } from 'lucide-react';
+import { Menu, X, LogOut, Bell, User, LayoutDashboard, Calendar,  Megaphone, History, CalendarPlus, MessageCircle, Monitor, Sun, Moon, Clock3, Info, CheckCircle2, ArrowRight, CheckCheck, Trash2 } from 'lucide-react';
 import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
 import { useAuth } from '../../context/AuthContext';
 import notificationService from '../../services/notification.service';
@@ -120,11 +120,11 @@ function ThemeToggle() {
   );
 }
 
+import { useNotifications } from '../../hooks/useNotifications';
+
 function NotificationBell() {
   const { open, setOpen, ref } = useDropdown();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { notifications, unreadCount, isLoading, markAsRead, markAllRead, clearAll } = useNotifications(15000);
   const [isWorking, setIsWorking] = useState(false);
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -133,69 +133,31 @@ function NotificationBell() {
     feedback: { icon: MessageCircle, badge: 'bg-emerald-50 text-emerald-600' },
     announcement: { icon: Megaphone, badge: 'bg-blue-50 text-blue-600' },
     session: { icon: Clock3, badge: 'bg-amber-50 text-amber-600' },
+    reservation: { icon: Calendar, badge: 'bg-sky-50 text-sky-600' },
     system: { icon: Info, badge: 'bg-slate-100 text-slate-600' },
     success: { icon: CheckCircle2, badge: 'bg-emerald-50 text-emerald-600' }
   };
 
-  const fetchTrayData = async () => {
-    try {
-      const [count, list] = await Promise.all([
-        notificationService.getUnreadCount(),
-        notificationService.getAll()
-      ]);
-      setUnreadCount(Number(count) || 0);
-      setNotifications(Array.isArray(list) ? list.slice(0, 6) : []);
-    } catch (err) {
-      console.error('Failed to load notification tray data', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTrayData();
-    const interval = setInterval(fetchTrayData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleNotificationClick = async (notification) => {
-    try {
-      if (notification.isUnread) {
-        await notificationService.markAsRead(notification.id);
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notification.id ? { ...n, isUnread: false } : n))
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
-    } catch (err) {
-      console.error(`Failed to mark notification ${notification.id} as read`, err);
-    } finally {
-      setOpen(false);
-      navigate('/student/notifications');
+    if (notification.isUnread) {
+      await markAsRead(notification.id);
     }
+    setOpen(false);
+    navigate('/student/notifications');
   };
 
-  const handleMarkAllRead = async () => {
+  const handleMarkAllReadClick = async () => {
     if (unreadCount === 0 || isWorking) return;
     setIsWorking(true);
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Failed to mark all notifications as read', err);
-    } finally {
-      setIsWorking(false);
-    }
+    await markAllRead();
+    setIsWorking(false);
   };
 
   const handleClearAll = async () => {
     if (notifications.length === 0 || isWorking) return;
     setIsWorking(true);
     try {
-      await notificationService.deleteAll();
-      setNotifications([]);
-      setUnreadCount(0);
+      await clearAll();
     } catch (err) {
       console.error('Failed to clear notifications', err);
     } finally {
@@ -209,13 +171,7 @@ function NotificationBell() {
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => {
-          const nextOpen = !open;
-          setOpen(nextOpen);
-          if (nextOpen) {
-            fetchTrayData();
-          }
-        }}
+        onClick={() => setOpen(!open)}
         className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer relative"
       >
         <Bell className="h-4 w-4" />
@@ -240,7 +196,7 @@ function NotificationBell() {
             </div>
             <div className="mt-2 flex items-center gap-1.5">
               <button
-                onClick={handleMarkAllRead}
+                onClick={handleMarkAllReadClick}
                 disabled={unreadCount === 0 || isWorking}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[9px] font-bold text-primary-light hover:text-primary hover:bg-white border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >

@@ -11,6 +11,7 @@ import studentService from '../../services/student.service';
 import sitinService from '../../services/sitin.service';
 import labService from '../../services/lab.service';
 import pcService from '../../services/pc.service';
+import notificationService from '../../services/notification.service';
 import { COURSES as COURSE_LIST, SITIN_PURPOSES } from '../../constants/app.constants';
 
 const COURSES = COURSE_LIST;
@@ -753,17 +754,13 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
   const [pcs, setPcs] = useState([]);
   const [isLoadingPcs, setIsLoadingPcs] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && labs.length === 0) {
+  useEffect(() => { 
+    if (isOpen && (!Array.isArray(labs) || labs.length === 0)) {
       labService.getAll().then(res => {
-        // Handle API wrapper { success, data } vs direct array return
-        const labList = Array.isArray(res) ? res : res.data;
-        if (Array.isArray(labList)) {
-          setLabs(labList);
-        } else {
-          setLabs([]);
-        }
-      }).catch(() => {});
+        setLabs(res.data || []);
+      }).catch(() => {
+        setLabs([]);
+      });
     }
   }, [isOpen]);
 
@@ -791,8 +788,25 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
     if (formData.purpose === 'Other' && !formData.customPurpose.trim()) { toast.error('Please specify the purpose'); return; }
     setIsSubmitting(true);
     try {
-      await sitinService.create({ student_id: student.student_id, lab_id: formData.lab_id, purpose: finalPurpose, pc_number: formData.pc_number || null });
-      toast.success('Session assigned');
+      await sitinService.create({ 
+        student_id: student.student_id, 
+        lab_id: formData.lab_id, 
+        purpose: finalPurpose,
+        pc_number: formData.pc_number || null
+      });
+      toast.success('Assigned');
+
+      // Notify Student
+      try {
+        await notificationService.create({
+          student_id: student.student_id,
+          type: 'session',
+          message: `Administrative Action: You have been assigned a sit-in session in ${selectedLab?.name || 'the laboratory'}${formData.pc_number ? ` at PC #${formData.pc_number}` : ''}.`
+        });
+      } catch (notifyErr) {
+        console.error("Failed to send notification:", notifyErr);
+      }
+
       onSuccess();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to assign'); }
     finally { setIsSubmitting(false); }
@@ -800,8 +814,9 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
 
   if (!isOpen) return null;
 
-  const selectedLab = labs.find(l => l.id == formData.lab_id);
-  const capacity    = Number(selectedLab?.capacity || 0);
+  const labsArray = Array.isArray(labs) ? labs : [];
+  const selectedLab = labsArray.find(l => l.id == formData.lab_id);
+  const capacity = Number(selectedLab?.capacity || 0);
 
   return (
     <div className="fixed inset-0 bg-primary/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fade-in">
@@ -846,7 +861,7 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                   className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary appearance-none cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
                 >
                   <option value="" disabled>Select Lab...</option>
-                  {labs.map(lab => (
+                  {labsArray.map(lab => (
                     <option key={lab.id} value={lab.id}>
                       {lab.lab_code ? `${lab.lab_code} — ${lab.name}` : lab.name} ({lab.capacity} PCs)
                     </option>

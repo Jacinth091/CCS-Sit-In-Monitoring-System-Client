@@ -25,6 +25,7 @@ import { Badge, Button, Select } from "../../components/ui";
 import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import reservationService from "../../services/reservation.service";
+import notificationService from "../../services/notification.service";
 import BulkPcModal from "../../components/modals/BulkPcModal";
 
 const RESERVATION_TABS = [
@@ -680,6 +681,18 @@ export default function AdminReservations() {
         throw new Error(result?.message || "Failed to update reservation");
       }
       toast.success(`Reservation ${nextStatus}`);
+
+      // Notify Student (Silent fail to avoid blocking main flow)
+      try {
+        await notificationService.create({
+          student_id: reservation.student_id,
+          type: 'reservation',
+          message: `Your reservation #${reservation.id} for PC ${reservation.pc_number} has been ${nextStatus}.`
+        });
+      } catch (notifyErr) {
+        console.error("Failed to send notification:", notifyErr);
+      }
+
       setApprovalWarningId(null);
       await Promise.all([
         fetchReservations(reservationTab),
@@ -712,6 +725,18 @@ export default function AdminReservations() {
         throw new Error(result?.message || "Failed to request reschedule");
       }
       toast.success("Student notified to reschedule");
+
+      // Notify Student (Silent fail)
+      try {
+        await notificationService.create({
+          student_id: reservation.student_id,
+          type: 'reservation',
+          message: `Administrative adjustment: Please reschedule your reservation #${reservation.id}. Reason: ${reason}`
+        });
+      } catch (notifyErr) {
+        console.error("Failed to send notification:", notifyErr);
+      }
+
       await Promise.all([
         fetchReservations(reservationTab),
         fetchAuditLog(1, auditFilters),

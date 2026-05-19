@@ -1,10 +1,11 @@
 import React from 'react';
-import { Bell, MessageSquare, Megaphone, Clock, Info, CheckCircle2 } from 'lucide-react';
+import { Bell, MessageSquare, Megaphone, Clock, Info, CheckCircle2, Calendar } from 'lucide-react';
 
 const icons = {
   feedback: <MessageSquare className="h-4 w-4" />,
   announcement: <Megaphone className="h-4 w-4" />,
   session: <Clock className="h-4 w-4" />,
+  reservation: <Calendar className="h-4 w-4" />,
   system: <Info className="h-4 w-4" />,
   success: <CheckCircle2 className="h-4 w-4" />
 };
