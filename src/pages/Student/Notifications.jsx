@@ -5,53 +5,29 @@ import notificationService from '../../services/notification.service';
 import StudentNotificationCard from '../../components/notifications/StudentNotificationCard';
 import { toast } from 'sonner';
 
+import { useNotifications } from '../../hooks/useNotifications';
+
 export default function Notifications() {
-  const [notifications, setNotifications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { notifications, isLoading, unreadCount, markAsRead, markAllRead, refresh } = useNotifications(20000);
   const [filter, setFilter] = useState('all'); // all, unread
 
   const typeConfig = {
     feedback: { bg: 'bg-indigo-50', text: 'text-indigo-600' },
     announcement: { bg: 'bg-blue-50', text: 'text-blue-600' },
     session: { bg: 'bg-amber-50', text: 'text-amber-600' },
+    reservation: { bg: 'bg-sky-50', text: 'text-sky-600' },
     system: { bg: 'bg-slate-100', text: 'text-slate-600' },
     success: { bg: 'bg-emerald-50', text: 'text-emerald-600' }
   };
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const data = await notificationService.getAll();
-      setNotifications(data || []);
-    } catch (err) {
-      toast.error('Failed to load notifications');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleMarkRead = async (id) => {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isUnread: false } : n));
-    } catch (err) {
-      // Optimistic update fallback or silent fail
-    }
+    await markAsRead(id);
   };
 
   const handleMarkAllRead = async () => {
-    if (!notifications.some(n => n.isUnread)) return;
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
-      toast.success('All notifications marked as read');
-    } catch (err) {
-      toast.error('Failed to mark all as read');
-    }
+    if (unreadCount === 0) return;
+    await markAllRead();
+    toast.success('All notifications marked as read');
   };
 
   const handleClearAll = async () => {
@@ -59,7 +35,7 @@ export default function Notifications() {
     if (!window.confirm('Are you sure you want to clear your notification history?')) return;
     try {
       await notificationService.deleteAll();
-      setNotifications([]);
+      refresh();
       toast.success('Notification history cleared');
     } catch (err) {
       toast.error('Failed to clear notifications');
@@ -67,7 +43,6 @@ export default function Notifications() {
   };
 
   const filtered = notifications.filter(n => filter === 'all' || (filter === 'unread' && n.isUnread));
-  const unreadCount = notifications.filter(n => n.isUnread).length;
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import studentService from '../../services/student.service';
 import sitinService from '../../services/sitin.service';
 import labService from '../../services/lab.service';
+import notificationService from '../../services/notification.service';
 import { COURSES as COURSE_LIST, SITIN_PURPOSES } from '../../constants/app.constants';
 
 const COURSES = COURSE_LIST;
@@ -562,7 +563,13 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
   const [isLoadingPcs, setIsLoadingPcs] = useState(false);
 
   useEffect(() => { 
-    if (isOpen && labs.length === 0) labService.getAll().then(setLabs).catch(() => {}); 
+    if (isOpen && (!Array.isArray(labs) || labs.length === 0)) {
+      labService.getAll().then(res => {
+        setLabs(res.data || []);
+      }).catch(() => {
+        setLabs([]);
+      });
+    }
   }, [isOpen]);
 
   useEffect(() => {
@@ -605,6 +612,18 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
         pc_number: formData.pc_number || null
       });
       toast.success('Assigned');
+
+      // Notify Student
+      try {
+        await notificationService.create({
+          student_id: student.student_id,
+          type: 'session',
+          message: `Administrative Action: You have been assigned a sit-in session in ${selectedLab?.name || 'the laboratory'}${formData.pc_number ? ` at PC #${formData.pc_number}` : ''}.`
+        });
+      } catch (notifyErr) {
+        console.error("Failed to send notification:", notifyErr);
+      }
+
       onSuccess();
     } catch (err) { 
       toast.error(err.response?.data?.message || 'Failed to assign'); 
@@ -615,7 +634,8 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
 
   if (!isOpen) return null;
 
-  const selectedLab = labs.find(l => l.id == formData.lab_id);
+  const labsArray = Array.isArray(labs) ? labs : [];
+  const selectedLab = labsArray.find(l => l.id == formData.lab_id);
   const capacity = Number(selectedLab?.capacity || 0);
 
   return (
@@ -633,7 +653,7 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                 <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Target Laboratory</label>
                 <select value={formData.lab_id} onChange={(e) => setFormData({...formData, lab_id: e.target.value, pc_number: ''})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary appearance-none cursor-pointer">
                   <option value="" disabled>Select Lab...</option>
-                  {labs.map(lab => (<option key={lab.id} value={lab.id}>{lab.lab_code ? `${lab.lab_code} - ${lab.name}` : lab.name} ({lab.capacity} PCs)</option>))}
+                  {labsArray.map(lab => (<option key={lab.id} value={lab.id}>{lab.lab_code ? `${lab.lab_code} - ${lab.name}` : lab.name} ({lab.capacity} PCs)</option>))}
                 </select>
               </div>
 

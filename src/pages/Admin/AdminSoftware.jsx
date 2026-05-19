@@ -20,6 +20,7 @@ import backendAPI from "../../services/backendConnection";
 import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import softwareService from "../../services/software.service";
+import notificationService from "../../services/notification.service";
 
 export default function AdminSoftware() {
   const [activeTab, setActiveTab] = useState("labs"); // 'labs' | 'software'
@@ -757,6 +758,16 @@ function SoftwareTab() {
       } else {
         await softwareService.create(formData);
         toast.success("Software added to catalog");
+        
+        // Notify All Students (Silent fail)
+        try {
+          notificationService.notifyAllStudents(
+            'system', 
+            `Infrastructure Update: New software "${formData.name}" v${formData.version} has been added to the university catalogue.`
+          );
+        } catch (notifyErr) {
+          console.error("Failed to notify students:", notifyErr);
+        }
       }
       setIsEditing(false);
       fetchData();
@@ -805,6 +816,17 @@ function SoftwareTab() {
         ),
       );
       toast.success(`Successfully imported ${items.length} items`);
+      
+      // Notify All Students of new catalogue items (Summary notification)
+      try {
+        notificationService.notifyAllStudents(
+          'system', 
+          `Infrastructure Update: ${items.length} new software assets have been added to the university catalogue.`
+        );
+      } catch (notifyErr) {
+        console.error("Failed to notify students:", notifyErr);
+      }
+
       setBulkData("");
       setShowBulkImport(false);
       fetchData();
@@ -894,6 +916,17 @@ function SoftwareTab() {
         ),
       );
       toast.success(`Imported ${items.length} items successfully`);
+      
+      // Notify All Students (Summary notification)
+      try {
+        notificationService.notifyAllStudents(
+          'system', 
+          `Infrastructure Update: ${items.length} new software entries have been imported into the university catalogue.`
+        );
+      } catch (notifyErr) {
+        console.error("Failed to notify students:", notifyErr);
+      }
+
       setUploadFile(null);
       setUploadPreview(null);
       setShowBulkImport(false);

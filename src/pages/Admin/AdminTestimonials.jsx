@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import testimonialService from "../../services/testimonial.service";
+import notificationService from "../../services/notification.service";
 
 export default function AdminTestimonials() {
   const [testimonials, setTestimonials] = useState([]);
@@ -53,6 +54,21 @@ export default function AdminTestimonials() {
     try {
       await testimonialService.updateStatus(id, newStatus);
       toast.success(`Testimonial ${newStatus ? "published" : "unpublished"}`);
+      
+      const testimonial = testimonials.find(t => t.id === id);
+      if (newStatus && testimonial?.student_id) {
+        // Notify Student (Silent fail)
+        try {
+          await notificationService.create({
+            student_id: testimonial.student_id,
+            type: 'feedback',
+            message: `Your testimonial has been published! Thank you for sharing your experience.`
+          });
+        } catch (notifyErr) {
+          console.error("Failed to send notification:", notifyErr);
+        }
+      }
+
       setTestimonials((prev) =>
         prev.map((t) => (t.id === id ? { ...t, is_approved: newStatus ? 1 : 0 } : t))
       );
@@ -116,7 +132,19 @@ export default function AdminTestimonials() {
 
       for (const id of idsArray) {
         try {
-          if (action === "approve") await testimonialService.updateStatus(id, true);
+          if (action === "approve") {
+            await testimonialService.updateStatus(id, true);
+            const testimonial = testimonials.find(t => t.id === id);
+            if (testimonial?.student_id) {
+              try {
+                await notificationService.create({
+                  student_id: testimonial.student_id,
+                  type: 'feedback',
+                  message: `Your testimonial has been published! Thank you for sharing your experience.`
+                });
+              } catch (notifyErr) { /* Silent fail */ }
+            }
+          }
           else if (action === "unapprove") await testimonialService.updateStatus(id, false);
           else if (action === "delete") await testimonialService.delete(id);
           successCount++;
