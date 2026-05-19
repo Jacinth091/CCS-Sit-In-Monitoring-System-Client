@@ -3,8 +3,8 @@ import {
   Search, Users, User, Clock, ChevronRight, X, 
   PlusCircle, AlertCircle, Loader2, Edit, Trash2, 
   RotateCcw, ChevronLeft, Filter, GraduationCap,
-  Mail, MapPin, Hash, ShieldCheck, AlertTriangle, FlaskConical, Inbox,
-  ChevronDown, RefreshCcw
+  Mail, MapPin, Hash, AlertTriangle, FlaskConical, Inbox,
+  ChevronDown, RefreshCcw, Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import studentService from '../../services/student.service';
@@ -203,50 +203,28 @@ export default function AdminStudents() {
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20 relative">
       
-      {/* ───── HERO BANNER ───── */}
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-lg">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-light/10 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-brand-sand/5 blur-3xl" />
+      <div className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light">Admin Access</p>
+            <h1 className="text-base sm:text-lg font-black text-primary tracking-tight">Student List</h1>
+          </div>
 
-        <div className="relative z-10 p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl shrink-0">
-                <div className="w-full h-full rounded-xl bg-primary flex items-center justify-center border-2 border-primary relative overflow-hidden">
-                  <Users className="h-8 w-8 text-brand-sand relative z-10" />
-                  <div className="absolute inset-0 bg-primary-hover/20" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                   <span className="text-[10px] font-black text-brand-sand uppercase tracking-[0.2em]">Admin Access</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter leading-none">
-                  Student List
-                </h1>
-                <p className="text-xs font-bold text-primary-light/80 max-w-md leading-relaxed">
-                   Manage student profiles and session balances.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-               <button 
-                onClick={openAddStudent}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-sand text-primary text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg active:scale-95 cursor-pointer"
-               >
-                 <PlusCircle className="h-4 w-4" />
-                 Add Student
-               </button>
-               <button 
-                onClick={() => setIsResetModalOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 text-brand-sand border border-white/20 text-[10px] font-black uppercase hover:bg-white/20 transition-all shadow-lg active:scale-95 cursor-pointer"
-               >
-                 <RotateCcw className="h-4 w-4" />
-                 Reset Sessions
-               </button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={openAddStudent}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-hover transition-all shadow-sm cursor-pointer"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Student
+            </button>
+            <button
+              onClick={() => setIsResetModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-primary-light text-[10px] font-black uppercase tracking-widest hover:text-primary hover:bg-bg-secondary transition-all cursor-pointer"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset Sessions
+            </button>
           </div>
         </div>
       </div>
@@ -567,7 +545,7 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
           <button onClick={() => setIsSitInModalOpen(true)} disabled={student.session <= 0} className="w-full py-4 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-xl active:scale-95 disabled:opacity-30">Assign Sit-in</button>
           <div className="space-y-4">
              <h4 className="text-[10px] font-black text-primary-light uppercase tracking-[0.2em] border-b border-border pb-2">Recent Logs</h4>
-             {isLoading ? <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary/20" /></div> : history.length === 0 ? <div className="py-10 text-center bg-bg-secondary/30 rounded-xl border border-dashed border-border"><p className="text-[10px] font-black text-primary-light uppercase tracking-widest">No logs found.</p></div> : <div className="space-y-3">{history.map(log => (<div key={log.id} className="p-4 bg-white rounded-xl border border-border shadow-sm flex justify-between items-center"><div className="space-y-1"><p className="text-xs font-black text-primary uppercase">{log.lab_name}</p><p className="text-[10px] text-primary-light font-bold uppercase">{log.purpose}</p></div><div className="text-right"><p className="text-[10px] font-black text-primary">{new Date(log.time_in).toLocaleDateString()}</p><p className="text-[9px] text-primary-light font-bold uppercase">{log.status}</p></div></div>))}</div>}
+             {isLoading ? <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary/20" /></div> : history.length === 0 ? <div className="py-10 text-center bg-bg-secondary/30 rounded-xl border border-dashed border-border"><p className="text-[10px] font-black text-primary-light uppercase tracking-widest">No logs found.</p></div> : <div className="space-y-3">{history.map(log => (<div key={log.id} className="p-4 bg-white rounded-xl border border-border shadow-sm flex justify-between items-center"><div className="space-y-1"><p className="text-xs font-black text-primary uppercase">{log.name}</p><p className="text-[10px] text-primary-light font-bold uppercase">{log.purpose}</p></div><div className="text-right"><p className="text-[10px] font-black text-primary">{new Date(log.time_in).toLocaleDateString()}</p><p className="text-[9px] text-primary-light font-bold uppercase">{log.status}</p></div></div>))}</div>}
           </div>
         </div>
       </div>
@@ -578,10 +556,35 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
 
 function SitInModal({ isOpen, onClose, student, onSuccess }) {
   const [labs, setLabs] = useState([]);
-  const [formData, setFormData] = useState({ lab_id: '', purpose: SITIN_PURPOSES[0], customPurpose: '' });
+  const [formData, setFormData] = useState({ lab_id: '', purpose: SITIN_PURPOSES[0], customPurpose: '', pc_number: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [occupiedInfo, setOccupiedInfo] = useState({ occupied: [], active: [], reserved: [] });
+  const [isLoadingPcs, setIsLoadingPcs] = useState(false);
 
-  useEffect(() => { if (isOpen && labs.length === 0) labService.getAll().then(setLabs).catch(() => {}); }, [isOpen]);
+  useEffect(() => { 
+    if (isOpen && labs.length === 0) labService.getAll().then(setLabs).catch(() => {}); 
+  }, [isOpen]);
+
+  useEffect(() => {
+    const fetchOccupied = async () => {
+      if (!formData.lab_id) {
+        setOccupiedInfo({ occupied: [], active: [], reserved: [] });
+        return;
+      }
+      setIsLoadingPcs(true);
+      try {
+        const result = await sitinService.getOccupiedPcsAdmin(formData.lab_id);
+        if (result.status === 'success') {
+          setOccupiedInfo(result.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch occupied PCs:", err);
+      } finally {
+        setIsLoadingPcs(false);
+      }
+    };
+    fetchOccupied();
+  }, [formData.lab_id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -598,56 +601,145 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
       await sitinService.create({ 
         student_id: student.student_id, 
         lab_id: formData.lab_id, 
-        purpose: finalPurpose 
+        purpose: finalPurpose,
+        pc_number: formData.pc_number || null
       });
       toast.success('Assigned');
       onSuccess();
-    } catch (err) { toast.error('Failed'); } finally { setIsSubmitting(false); }
+    } catch (err) { 
+      toast.error(err.response?.data?.message || 'Failed to assign'); 
+    } finally { 
+      setIsSubmitting(false); 
+    }
   };
 
   if (!isOpen) return null;
 
+  const selectedLab = labs.find(l => l.id == formData.lab_id);
+  const capacity = Number(selectedLab?.capacity || 0);
+
   return (
     <div className="fixed inset-0 bg-primary/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-border">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden border border-border flex flex-col max-h-[95vh]">
         <div className="px-6 py-4 border-b border-border bg-bg-secondary/30 flex items-center justify-between">
-          <h3 className="text-lg font-black text-primary uppercase tracking-tight">Assign Lab</h3>
+          <h3 className="text-lg font-black text-primary uppercase tracking-tight">Assign Lab Session</h3>
           <button onClick={onClose} className="p-2 rounded-lg text-primary-light hover:text-primary"><X className="h-5 w-5" /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Laboratory</label>
-            <select value={formData.lab_id} onChange={(e) => setFormData({...formData, lab_id: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary appearance-none cursor-pointer">
-              <option value="" disabled>Select...</option>
-              {labs.map(lab => (<option key={lab.id} value={lab.id}>{lab.lab_name}</option>))}
-            </select>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Purpose</label>
-              <select value={formData.purpose} onChange={(e) => setFormData({...formData, purpose: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary appearance-none cursor-pointer">
-                {SITIN_PURPOSES.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-            
-            {formData.purpose === 'Other' && (
-              <div className="animate-fade-in-up">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Specify Purpose</label>
-                <input 
-                  type="text" 
-                  value={formData.customPurpose} 
-                  onChange={(e) => setFormData({...formData, customPurpose: e.target.value})} 
-                  placeholder="Enter custom purpose..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-sm font-bold text-primary focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
-                  autoFocus
-                />
+        
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Target Laboratory</label>
+                <select value={formData.lab_id} onChange={(e) => setFormData({...formData, lab_id: e.target.value, pc_number: ''})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary appearance-none cursor-pointer">
+                  <option value="" disabled>Select Lab...</option>
+                  {labs.map(lab => (<option key={lab.id} value={lab.id}>{lab.lab_code ? `${lab.lab_code} - ${lab.name}` : lab.name} ({lab.capacity} PCs)</option>))}
+                </select>
               </div>
-            )}
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Purpose</label>
+                <select value={formData.purpose} onChange={(e) => setFormData({...formData, purpose: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary appearance-none cursor-pointer">
+                  {SITIN_PURPOSES.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {formData.purpose === 'Other' && (
+                <div className="animate-fade-in-up">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">Specify Purpose</label>
+                  <input 
+                    type="text" 
+                    value={formData.customPurpose} 
+                    onChange={(e) => setFormData({...formData, customPurpose: e.target.value})} 
+                    placeholder="Enter custom purpose..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-sm font-bold text-primary focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* PC Selection Grid */}
+            <div className="flex flex-col">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-primary-light mb-1.5 ml-1">
+                Workstation Selection {formData.pc_number && <span className="text-primary font-black ml-2 text-[8px] bg-primary/5 px-2 py-0.5 rounded">PC #{formData.pc_number} SELECTED</span>}
+              </label>
+              <div className="flex-1 bg-bg-secondary/30 rounded-2xl border border-border p-4 relative min-h-[250px]">
+                {!formData.lab_id ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 opacity-40">
+                    <FlaskConical className="h-10 w-10 text-primary-light mb-3" />
+                    <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">Select a laboratory to <br /> view available stations</p>
+                  </div>
+                ) : isLoadingPcs ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary/20" />
+                    <p className="text-[8px] font-black uppercase tracking-widest text-primary-light">Scanning availability...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-5 gap-2">
+                      {Array.from({ length: capacity }, (_, i) => i + 1).map((pcNum) => {
+                        const isActive = occupiedInfo.active.includes(pcNum);
+                        const isReserved = occupiedInfo.reserved.includes(pcNum);
+                        const isOccupied = isActive || isReserved;
+                        const isSelected = formData.pc_number === pcNum;
+
+                        return (
+                          <button
+                            key={pcNum}
+                            type="button"
+                            disabled={isOccupied}
+                            onClick={() => setFormData(prev => ({ ...prev, pc_number: pcNum }))}
+                            className={`
+                              aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all relative group
+                              ${isActive ? 'bg-amber-100 text-amber-600 border border-amber-200 cursor-not-allowed' :
+                                isReserved ? 'bg-red-100 text-red-600 border border-red-200 cursor-not-allowed' :
+                                isSelected ? 'bg-primary text-white shadow-lg scale-110 z-10' :
+                                'bg-white text-primary-light border border-border hover:border-primary/30 hover:text-primary hover:shadow-md'
+                              }
+                            `}
+                            title={isActive ? 'Currently in use' : isReserved ? 'Reserved for now' : `Station ${pcNum}`}
+                          >
+                            {pcNum}
+                            {isOccupied && (
+                              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white flex items-center justify-center">
+                                <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-amber-500' : 'bg-red-500'}`} />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-4 pt-4 border-t border-border mt-auto">
+                       <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-white border border-border" />
+                          <span className="text-[8px] font-black uppercase text-primary-light">Available</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                          <span className="text-[8px] font-black uppercase text-primary-light">Active</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                          <span className="text-[8px] font-black uppercase text-primary-light">Reserved</span>
+                       </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="pt-2 flex gap-3"><button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl border border-border text-[10px] font-black uppercase text-primary-light transition-all">Cancel</button><button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white text-[10px] font-black uppercase hover:bg-primary-hover shadow-lg disabled:opacity-50">Assign</button></div>
         </form>
+
+        <div className="p-4 bg-bg-secondary border-t border-border flex gap-3">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-3 rounded-xl border border-border text-[10px] font-black uppercase text-primary-light hover:text-primary hover:bg-white transition-all">Cancel</button>
+          <button type="submit" onClick={handleSubmit} disabled={isSubmitting || !formData.lab_id} className="flex-[1.5] px-4 py-3 rounded-xl bg-primary text-white text-[10px] font-black uppercase hover:bg-primary-hover shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start Session"}
+          </button>
+        </div>
       </div>
     </div>
   );
