@@ -100,7 +100,7 @@ export default function SignUp() {
           </div>
         </div>
 
-        <div className="flex-1 p-6 md:p-10 overflow-y-auto">
+        <div className="flex-1 p-6 md:p-10 overflow-y-auto bg-white">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-1 text-sm text-primary-light hover:text-primary font-medium mb-8 transition-colors duration-150"

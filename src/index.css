@@ -12,7 +12,7 @@
   
   /* Neutral scale - moving away from pure white to warmer tones */
   --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #FDFBF7;    /* Warm white tint */
+  --color-bg-secondary: #faf8f5;    /* Softer Warm Stone tint */
   --color-bg-tertiary: #FFFFFF;
   --color-border: rgba(0, 31, 63, 0.1); /* Navy-tinted border */
   --color-border-strong: rgba(0, 31, 63, 0.2);
@@ -30,13 +30,13 @@
   --radius-none: 0px;
   --radius-sm: 4px;
   --radius-md: 6px;   /* Buttons/Inputs */
-  --radius-lg: 10px;  /* Cards */
-  --radius-xl: 16px;  /* Modals/Hero sections */
+  --radius-lg: 12px;  /* Cards */
+  --radius-xl: 18px;  /* Modals/Hero sections */
   --radius-full: 9999px;
 
   /* Natural Elevation */
-  --shadow-sm: 0 1px 3px rgba(0, 31, 63, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 31, 63, 0.05), 0 1px 2px rgba(0, 31, 63, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 31, 63, 0.05);
+  --shadow-md: 0 4px 10px rgba(0, 31, 63, 0.04), 0 1px 2px rgba(0, 31, 63, 0.08);
 
   /* Fast Animations */
   @keyframes fade-in {
@@ -44,7 +44,7 @@
     to { opacity: 1; }
   }
   @keyframes zoom-in {
-    from { opacity: 0; transform: scale(0.95); }
+    from { opacity: 0; transform: scale(0.98); }
     to { opacity: 1; transform: scale(1); }
   }
   --animate-fade-in: fade-in 150ms ease-out;
@@ -53,7 +53,8 @@
 
 :root {
   font-family: 'Poppins', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.6;
   font-weight: 400;
   
   /* Restore the original warm background tint */
@@ -69,6 +70,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* Custom Scrollbar for Navy/Sand theme */
@@ -85,3 +87,108 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #6A9AB0;
 }
+
+/* ═══════════════════════════════════════════
+   DARK MODE ARCHITECTURE
+   ═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  /* Core Semantic Palette (Deep Navy Midnight) */
+  --color-primary: #f0f7ff;           /* Crisp Cloud White */
+  --color-primary-hover: #5ba6d2;     /* Bright Ocean */
+  --color-primary-light: #94b8d1;     /* Muted Steel */
+  --color-brand-sand: #dcc497;        /* Warm Gold contrast */
+
+  --color-bg-primary: #0f1d33;        /* Surface: Dark Navy Card */
+  --color-bg-secondary: #060d1a;      /* Background: Deep Midnight */
+  --color-bg-tertiary: #16263f;       /* Elevated: Lighter Navy */
+  
+  --color-border: rgba(148, 184, 209, 0.12);
+  --color-border-strong: rgba(148, 184, 209, 0.24);
+
+  --color-label-primary: #f0f7ff;
+  --color-label-secondary: #94b8d1;
+  --color-label-tertiary: #6a9ab0;
+
+  --color-success: #4ade80;           /* Vibrant Emerald */
+  --color-error: #f87171;             /* Vibrant Coral */
+  --color-warning: #fbbf24;           /* Vibrant Amber */
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.5);
+
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+/* ── Technical Utility Overrides for Dark Mode ── */
+[data-theme="dark"] .bg-primary { background-color: var(--color-bg-tertiary) !important; }
+[data-theme="dark"] .bg-white { background-color: var(--color-bg-primary) !important; }
+[data-theme="dark"] .text-primary { color: var(--color-primary) !important; }
+
+/* In dark mode, 'text-white' usually refers to elements that should remain light/white 
+   against dark backgrounds, but often we want them to use the primary light color. 
+   We'll be careful here. */
+[data-theme="dark"] .text-white:not(.btn-text) { color: var(--color-primary) !important; }
+
+/* Specific Navbar Adjustments for Dark Mode */
+[data-theme="dark"] nav {
+  background-color: rgba(6, 13, 26, 0.8) !important;
+  border-bottom-color: var(--color-border-strong) !important;
+}
+
+[data-theme="dark"] .mobile-menu {
+  background-color: var(--color-bg-primary) !important;
+  border-top-color: var(--color-border-strong) !important;
+}
+
+/* Ensure Gradients use High-Contrast Navy instead of inversions */
+[data-theme="dark"] .from-primary { --tw-gradient-from: #112642 !important; }
+[data-theme="dark"] .to-primary { --tw-gradient-to: #091526 !important; }
+[data-theme="dark"] .from-primary-hover { --tw-gradient-from: #214d7a !important; }
+[data-theme="dark"] .bg-primary\/5 { background-color: rgba(148, 184, 209, 0.05) !important; }
+
+/* Hero Gradient / Glow Fix */
+[data-theme="dark"] .hero-glow {
+  background-color: rgba(58, 109, 140, 0.1) !important;
+}
+
+[data-theme="dark"] .hero-banner {
+  background-color: var(--color-bg-tertiary) !important;
+  background-image: linear-gradient(135deg, var(--color-bg-tertiary) 0%, var(--color-bg-primary) 100%) !important;
+}
+
+[data-theme="dark"] .hero-banner > div:first-child {
+  opacity: 0.3 !important;
+  background-image: linear-gradient(to bottom right, var(--color-primary-hover), transparent) !important;
+}
+
+/* Table and interactive adjustments */
+[data-theme="dark"] .bg-bg-secondary\/30 { background-color: rgba(6, 13, 26, 0.4) !important; }
+[data-theme="dark"] .bg-bg-secondary\/20 { background-color: rgba(6, 13, 26, 0.3) !important; }
+[data-theme="dark"] .bg-bg-secondary\/40 { background-color: rgba(6, 13, 26, 0.5) !important; }
+[data-theme="dark"] .hover\:bg-bg-secondary:hover { background-color: rgba(22, 38, 63, 0.6) !important; }
+
+/* Form control harmonization */
+[data-theme="dark"] input, 
+[data-theme="dark"] select, 
+[data-theme="dark"] textarea {
+  background-color: #0c182b !important;
+  color: var(--color-primary) !important;
+}
+[data-theme="dark"] input:focus {
+  background-color: #12223b !important;
+}
+
+/* ── Common Tint Overrides for Dark Mode ── */
+[data-theme="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.1) !important; }
+[data-theme="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; }
+[data-theme="dark"] .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; }
+[data-theme="dark"] .bg-sky-50 { background-color: rgba(14, 165, 233, 0.1) !important; }
+[data-theme="dark"] .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.1) !important; }
+[data-theme="dark"] .bg-slate-50 { background-color: rgba(148, 184, 209, 0.05) !important; }
+
+/* ── Dark scrollbar ── */
+[data-theme="dark"] ::-webkit-scrollbar-track { background: #060d1a; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #1b3252; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #264571; }
+

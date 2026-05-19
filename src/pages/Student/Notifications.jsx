@@ -73,24 +73,24 @@ export default function Notifications() {
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">
       
       {/* ───── HERO SECTION ───── */}
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-md">
+      <div className="relative overflow-hidden rounded-xl bg-primary hero-banner border border-border shadow-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-brand-sand/10 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-primary-light/10 blur-3xl" />
 
-        <div className="relative z-10 p-6 sm:p-10">
+        <div className="relative z-10 p-5 sm:p-7">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="space-y-2">
               <Link 
                 to="/student/dashboard" 
-                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors uppercase tracking-[0.2em]"
+                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" /> Back to Dashboard
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                  Your Alerts
                  {unreadCount > 0 && (
-                   <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-sand text-primary text-[9px] font-black uppercase tracking-widest animate-pulse">
+                   <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-sand text-primary text-[9px] font-bold animate-pulse">
                      {unreadCount} New
                    </span>
                  )}
@@ -101,8 +101,8 @@ export default function Notifications() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-              <div className="w-14 h-14 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                 <Bell className="h-7 w-7 text-brand-sand" />
+              <div className="w-11 h-11 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                 <Bell className="h-5 w-5 text-brand-sand" />
               </div>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function Notifications() {
              <button
                key={t.id}
                onClick={() => setFilter(t.id)}
-               className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-[0.12em] transition-all cursor-pointer grow sm:grow-0 ${
+               className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-[10px] font-bold transition-all cursor-pointer grow sm:grow-0 ${
                  filter === t.id 
                    ? 'bg-primary-hover text-white shadow-md' 
                    : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
@@ -135,7 +135,7 @@ export default function Notifications() {
           <button 
             onClick={handleMarkAllRead}
             disabled={unreadCount === 0}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-primary-hover/20 bg-white text-primary-hover text-[10px] font-black uppercase tracking-[0.12em] hover:bg-primary-hover hover:text-white transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm group"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-primary-hover/20 bg-white text-primary-hover text-[10px] font-bold hover:bg-primary-hover hover:text-white transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm group"
           >
             <CheckCheck className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" /> Mark All Read
           </button>
@@ -161,8 +161,8 @@ export default function Notifications() {
                  <Bell className="h-5 w-5 text-primary-hover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                </div>
                <div className="text-center space-y-1">
-                 <p className="text-xs font-bold text-primary uppercase tracking-[0.15em]">Synchronizing</p>
-                 <p className="text-[10px] text-primary-light font-medium uppercase tracking-widest">Checking your inbox...</p>
+                 <p className="text-xs font-bold text-primary">Synchronizing</p>
+                 <p className="text-[10px] text-primary-light font-medium">Checking your inbox...</p>
                </div>
             </div>
           ) : filtered.length === 0 ? (
@@ -170,7 +170,7 @@ export default function Notifications() {
                <div className="w-20 h-20 rounded-2xl bg-bg-secondary flex items-center justify-center mb-6 border border-border">
                   <Inbox className="h-8 w-8 text-primary-light/40" />
                </div>
-               <h3 className="text-xl font-black text-primary tracking-tight">Your inbox is empty</h3>
+               <h3 className="text-xl font-bold text-primary tracking-tight">Your Inbox Is Empty</h3>
                <p className="text-primary-light font-medium text-xs mt-2 max-w-sm mx-auto leading-relaxed">
                  {filter === 'unread' 
                    ? "Great! You've read all your notifications. Change the filter to see your history." 
@@ -178,7 +178,7 @@ export default function Notifications() {
                </p>
                <button 
                  onClick={() => setFilter('all')}
-                 className={`mt-6 px-5 py-2 rounded-full border border-primary-hover/30 text-primary-hover text-[10px] font-black uppercase tracking-widest hover:bg-primary-hover hover:text-white transition-all ${filter === 'all' ? 'hidden' : 'block'}`}
+                 className={`mt-6 px-5 py-2 rounded-full border border-primary-hover/30 text-primary-hover text-[10px] font-bold hover:bg-primary-hover hover:text-white transition-all ${filter === 'all' ? 'hidden' : 'block'}`}
                >
                  Show All History
                </button>
@@ -201,7 +201,7 @@ export default function Notifications() {
       {/* ───── FOOTER INFO ───── */}
       <div className="flex items-center justify-center gap-2.5 text-primary-light/60">
         <div className="h-px w-10 bg-border" />
-        <span className="text-[9px] font-bold uppercase tracking-[0.2em]">End of Inbox</span>
+        <span className="text-[9px] font-bold">End Of Inbox</span>
         <div className="h-px w-10 bg-border" />
       </div>
 

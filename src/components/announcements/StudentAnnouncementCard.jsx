@@ -62,7 +62,7 @@ export default function StudentAnnouncementCard({ announcement }) {
       </div>
 
       <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-3">
-        <div className="flex items-center gap-3 text-[9px] font-bold text-primary-light/50 uppercase tracking-widest">
+        <div className="flex items-center gap-3 text-[9px] font-bold text-primary-light/50">
           <div className="flex items-center gap-1.5 whitespace-nowrap">
             <Clock className="h-3 w-3 opacity-60" />
             {date}
@@ -74,7 +74,7 @@ export default function StudentAnnouncementCard({ announcement }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[9px] font-black text-primary-hover uppercase tracking-[0.15em] group-hover:gap-2 transition-all">
+        <div className="flex items-center gap-1.5 text-[9px] font-bold text-primary-hover group-hover:gap-2 transition-all">
           Read full story <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>

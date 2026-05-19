@@ -3,7 +3,7 @@ import React from 'react';
 const Card = ({ children, className = '' }) => {
   return (
     <div className={`
-      bg-bg-tertiary rounded-lg p-6 border border-border shadow-sm
+      bg-bg-tertiary rounded-lg p-5 border border-border shadow-sm
       transition-colors duration-150
       ${className}
     `}>
@@ -13,10 +13,10 @@ const Card = ({ children, className = '' }) => {
 };
 
 const CardHeader = ({ title, subtitle, action, className = '' }) => (
-  <div className={`flex items-center justify-between mb-4 ${className}`}>
+  <div className={`flex items-center justify-between mb-3.5 ${className}`}>
     <div>
-      {title && <h3 className="text-xl font-bold text-label-primary tracking-tight">{title}</h3>}
-      {subtitle && <p className="text-sm text-label-secondary">{subtitle}</p>}
+      {title && <h3 className="text-lg font-bold text-label-primary tracking-tight">{title}</h3>}
+      {subtitle && <p className="text-xs text-label-secondary">{subtitle}</p>}
     </div>
     {action && <div>{action}</div>}
   </div>
@@ -27,7 +27,7 @@ const CardBody = ({ children, className = '' }) => (
 );
 
 const CardFooter = ({ children, className = '' }) => (
-  <div className={`mt-6 pt-4 border-t border-separator ${className}`}>
+  <div className={`mt-5 pt-3.5 border-t border-separator ${className}`}>
     {children}
   </div>
 );

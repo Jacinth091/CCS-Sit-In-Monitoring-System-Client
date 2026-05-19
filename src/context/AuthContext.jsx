@@ -1,56 +1,79 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  clearStoredAuthSession,
+  getStoredAuthToken,
+  hasTokenExpired,
+  decodeJwtPayload,
+} from "../utils/authToken";
 import studentService from '../services/student.service';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = sessionStorage.getItem('user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Keep sessionStorage in sync
   useEffect(() => {
-    if (user) {
-      sessionStorage.setItem('user', JSON.stringify(user));
-    } else {
-      sessionStorage.removeItem('user');
-      sessionStorage.removeItem('authToken');
-    }
-  }, [user]);
+    const handleAuthExpired = () => {
+      setUser(null);
+    };
 
-  // Initial session verification
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
+  }, []);
+
+  // Sync token cleanup on user logout
+  useEffect(() => {
+    if (!user && !isLoading) {
+      clearStoredAuthSession();
+    }
+  }, [user, isLoading]);
+
+  // Initial session verification & Refresh
   useEffect(() => {
     const verifySession = async () => {
-      const token = sessionStorage.getItem('authToken');
+      const token = getStoredAuthToken();
       if (!token) {
         setIsLoading(false);
         return;
       }
 
-      try {
-        // If it's a student, we can check their profile
-        if (user?.role === 'student') {
-          await studentService.getProfile();
-        }
-        // If it's an admin, we might need an admin-specific check or just a general heartbeat
-        // For now, if we have a user and token, and any request fails, 
-        // the interceptor in backendConnection.js will handle the logout/redirect.
-      } catch (err) {
-        console.error("Initial session verification failed:", err);
-        // Interceptor already handles 401, but we ensure state is cleared if not handled
-        if (err.response?.status === 401) {
-          setUser(null);
-        }
-      } finally {
+      if (hasTokenExpired(token, 10)) {
+        setUser(null);
+        clearStoredAuthSession();
         setIsLoading(false);
+        return;
       }
+
+      // Reconstruct basic user info from JWT
+      const payload = decodeJwtPayload(token);
+      const tokenData = payload?.data || {};
+
+      if (tokenData.role === 'student') {
+        try {
+          const freshData = await studentService.getProfile();
+          if (freshData) {
+            setUser({ ...freshData, role: 'student' });
+          } else {
+            // Fallback to JWT data if profile fetch fails but token is valid
+            setUser({ ...tokenData });
+          }
+        } catch (err) {
+          // If profile fetch fails with 401, logout
+          if (err.response?.status === 401) {
+            setUser(null);
+            clearStoredAuthSession();
+          } else {
+            // Network error or other: trust JWT for now
+            setUser({ ...tokenData });
+          }
+        }
+      } else if (tokenData.role === 'admin') {
+        // For admin, we trust the JWT data
+        setUser({ ...tokenData });
+      }
+
+      setIsLoading(false);
     };
 
     verifySession();
@@ -62,8 +85,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('authToken');
+    clearStoredAuthSession();
   };
 
   const isAdmin = user?.role === 'admin';

@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, NavLink, useLocation } from 'react-router';
-import { Menu, X, LogOut, Bell, ChevronDown, User, LayoutDashboard, Megaphone, History, ChevronRight } from 'lucide-react';
+import { useNavigate, NavLink } from 'react-router';
+import { Menu, X, LogOut, Bell, User, LayoutDashboard, Megaphone, History, CalendarPlus, MessageCircle, Monitor, Sun, Moon, Clock3, Info, CheckCircle2, ArrowRight, CheckCheck, Trash2 } from 'lucide-react';
 import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
 import { useAuth } from '../../context/AuthContext';
-
-import StudentNotificationList from '../../components/notifications/StudentNotificationList';
 import notificationService from '../../services/notification.service';
+import { useTheme } from '../../context/ThemeContext';
 
 const navItems = [
-  { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/student/announcements', label: 'Announcements', icon: Megaphone },
-  { to: '/student/history', label: 'My History', icon: History },
+  { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 1 },
+  { to: '/student/announcements', label: 'Announcements', icon: Megaphone, group: 2 },
+  { to: '/student/history', label: 'History', icon: History, group: 2 },
+  { to: '/student/testimonials', label: 'Feedback', icon: MessageCircle, group: 2 },
+  { to: '/student/reservations', label: 'Reservations', icon: CalendarPlus, group: 3 },
+  { to: '/student/software', label: 'Software', icon: Monitor, group: 3 }
 ];
 
-/* ── Dropdown hook ── */
 function useDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -29,72 +30,76 @@ function useDropdown() {
   return { open, setOpen, ref };
 }
 
-/* ── Profile Dropdown ── */
+function getInitials(user) {
+  const first = user?.first_name?.[0] || '';
+  const last = user?.last_name?.[0] || '';
+  return `${first}${last}`.toUpperCase() || 'ST';
+}
+
 function ProfileDropdown() {
   const { open, setOpen, ref } = useDropdown();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Student';
 
   const handleLogout = () => {
     logout();
     navigate('/auth/login');
   };
 
-  const fullName = user
-    ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
-    : 'Student';
-
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-[#EAD8B1]/10 transition-all duration-200 cursor-pointer group"
+        className="w-[28px] h-[28px] rounded-full border-[1.5px] border-white/15 bg-primary-hover/20 text-primary-light flex items-center justify-center text-[11px] font-semibold cursor-pointer hover:bg-primary-hover/30 transition-colors"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3A6D8C] to-[#EAD8B1] p-0.5 shadow-sm group-hover:shadow-md transition-all">
-          <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-            {user?.profile_pic ? (
-              <img 
-                src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <User className="h-4 w-4 text-[#3A6D8C]" />
-            )}
-          </div>
-        </div>
-        <div className="hidden xl:flex flex-col items-start leading-none text-left">
-          <span className="text-[13px] font-extrabold text-[#001F3F]">{fullName}</span>
-          <span className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest mt-0.5">Student Account</span>
-        </div>
-        <ChevronDown className={`h-3.5 w-3.5 text-[#6A9AB0] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        {getInitials(user)}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-56 bg-white border border-[#6A9AB0]/20 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in-up">
-          <div className="px-5 py-3 border-b border-[#6A9AB0]/10 mb-1">
-             <p className="text-[10px] font-bold text-[#6A9AB0] uppercase tracking-widest mb-1">Signed in as</p>
-             <p className="text-[13px] font-extrabold text-[#001F3F] truncate">{user?.email}</p>
+        <div className="absolute right-0 top-[36px] w-[210px] rounded-xl p-1.5 z-[120] bg-white border border-border shadow-xl">
+          <div className="px-3 py-2.5">
+            <p className="text-[12px] font-semibold text-primary truncate">{fullName}</p>
+            <p className="text-[11px] mt-1 text-primary-light truncate">{user?.email || 'student@ccs.edu.ph'}</p>
           </div>
+
+          <div className="h-px my-1 bg-border" />
+
           <NavLink
             to="/student/edit-profile"
             onClick={() => setOpen(false)}
             className={({ isActive }) =>
-              `block px-5 py-3 text-[13px] font-bold transition-colors ${
-                isActive
-                  ? 'text-[#3A6D8C] bg-[#EAD8B1]/10'
-                  : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/5'
+              `block px-3 py-2 rounded-lg text-[11px] transition-colors ${
+                isActive ? 'text-primary bg-primary/5' : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
               }`
             }
           >
-            Edit Profile
+            Edit profile
           </NavLink>
+
+          <NavLink
+            to="/student/notifications"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded-lg text-[11px] transition-colors mt-0.5 ${
+                isActive ? 'text-primary bg-primary/5' : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
+              }`
+            }
+          >
+            Notifications
+          </NavLink>
+
+          <div className="h-px my-1.5 bg-border" />
+
           <button
             onClick={handleLogout}
-            className="w-full text-left px-5 py-3 text-[13px] font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-3 cursor-pointer border-t border-[#6A9AB0]/10 mt-1"
+            className="w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-error hover:bg-red-50 transition-colors cursor-pointer"
           >
-            <LogOut className="h-4 w-4" />
-            Sign Out
+            <span className="inline-flex items-center gap-2">
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </span>
           </button>
         </div>
       )}
@@ -102,91 +107,265 @@ function ProfileDropdown() {
   );
 }
 
-/* ── Notification bell dropdown ── */
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
+    >
+      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
+
 function NotificationBell() {
   const { open, setOpen, ref } = useDropdown();
-  const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isWorking, setIsWorking] = useState(false);
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+
+  const notificationStyles = {
+    feedback: { icon: MessageCircle, badge: 'bg-emerald-50 text-emerald-600' },
+    announcement: { icon: Megaphone, badge: 'bg-blue-50 text-blue-600' },
+    session: { icon: Clock3, badge: 'bg-amber-50 text-amber-600' },
+    system: { icon: Info, badge: 'bg-slate-100 text-slate-600' },
+    success: { icon: CheckCircle2, badge: 'bg-emerald-50 text-emerald-600' }
+  };
+
+  const fetchTrayData = async () => {
+    try {
+      const [count, list] = await Promise.all([
+        notificationService.getUnreadCount(),
+        notificationService.getAll()
+      ]);
+      setUnreadCount(Number(count) || 0);
+      setNotifications(Array.isArray(list) ? list.slice(0, 6) : []);
+    } catch (err) {
+      console.error('Failed to load notification tray data', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Poll every 30s
+    fetchTrayData();
+    const interval = setInterval(fetchTrayData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchData = async () => {
+  const handleNotificationClick = async (notification) => {
     try {
-      const data = await notificationService.getAll();
-      setNotifications(data.slice(0, 5));
-      const count = await notificationService.getUnreadCount();
-      setUnreadCount(count);
+      if (notification.isUnread) {
+        await notificationService.markAsRead(notification.id);
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notification.id ? { ...n, isUnread: false } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
     } catch (err) {
-      // Fail silently
+      console.error(`Failed to mark notification ${notification.id} as read`, err);
+    } finally {
+      setOpen(false);
+      navigate('/student/notifications');
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (unreadCount === 0 || isWorking) return;
+    setIsWorking(true);
+    try {
+      await notificationService.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all notifications as read', err);
+    } finally {
+      setIsWorking(false);
     }
   };
 
   const handleClearAll = async () => {
+    if (notifications.length === 0 || isWorking) return;
+    setIsWorking(true);
     try {
       await notificationService.deleteAll();
-      fetchData();
+      setNotifications([]);
+      setUnreadCount(0);
     } catch (err) {
-      // Fail silently
+      console.error('Failed to clear notifications', err);
+    } finally {
+      setIsWorking(false);
     }
   };
 
-  const handleRead = async (n) => {
-    await notificationService.markAsRead(n.id);
-    fetchData();
-  };
+  const dotBorder = theme === 'dark' ? 'var(--color-bg-primary)' : 'var(--color-bg-secondary)';
+  const hasNotifications = notifications.length > 0;
 
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2 text-[13px] font-bold transition-all duration-200 px-3 py-2 rounded-xl cursor-pointer group ${
-          open ? 'bg-[#EAD8B1]/15 text-[#001F3F]' : 'text-[#6A9AB0] hover:text-[#001F3F] hover:bg-[#EAD8B1]/10'
-        }`}
+        onClick={() => {
+          const nextOpen = !open;
+          setOpen(nextOpen);
+          if (nextOpen) {
+            fetchTrayData();
+          }
+        }}
+        className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer relative"
       >
-        <div className="relative">
-           <Bell className="h-4 w-4" />
-           {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white flex items-center justify-center text-[8px] font-black text-white">
-                {unreadCount > 9 ? '!' : unreadCount}
-              </span>
-           )}
-        </div>
-        <span className="hidden sm:inline">Alerts</span>
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        <Bell className="h-4 w-4" />
+        {unreadCount > 0 && (
+          <span
+            className="absolute top-[7px] right-[7px] w-[5px] h-[5px] rounded-full bg-error"
+            style={{ border: `1.5px solid ${dotBorder}` }}
+          />
+        )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-border rounded-xl shadow-2xl overflow-hidden z-[100] animate-fade-in-up">
-           <StudentNotificationList 
-              notifications={notifications} 
-              onClearAll={handleClearAll}
-              onRead={handleRead}
-           />
-           <div className="bg-bg-secondary/30 border-t border-border p-3 text-center">
-              <NavLink 
-                to="/student/notifications" 
-                onClick={() => setOpen(false)}
-                className="text-[9px] font-black text-primary-hover uppercase tracking-[0.2em] hover:text-primary transition-colors flex items-center justify-center gap-2"
+        <div className="absolute right-0 top-[36px] w-[340px] rounded-2xl z-[120] bg-white border border-border shadow-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border bg-bg-secondary/50">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-bold text-primary">Notifications</p>
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-primary-hover/10 text-primary-hover text-[9px] font-bold">
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+            <div className="mt-2 flex items-center gap-1.5">
+              <button
+                onClick={handleMarkAllRead}
+                disabled={unreadCount === 0 || isWorking}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[9px] font-bold text-primary-light hover:text-primary hover:bg-white border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Explore All Alerts <ChevronRight className="h-3 w-3" />
-              </NavLink>
-           </div>
+                <CheckCheck className="h-3 w-3" />
+                Mark all read
+              </button>
+              <button
+                onClick={handleClearAll}
+                disabled={!hasNotifications || isWorking}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-50 border border-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="h-3 w-3" />
+                Clear all
+              </button>
+            </div>
+          </div>
+
+          <div className="max-h-[330px] overflow-y-auto">
+            {isLoading ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-[10px] font-bold text-primary-light">Loading alerts...</p>
+              </div>
+            ) : !hasNotifications ? (
+              <div className="px-4 py-8 text-center">
+                <Bell className="h-5 w-5 mx-auto text-primary-light/40 mb-2" />
+                <p className="text-[10px] font-bold text-primary-light">Inbox empty</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/60">
+                {notifications.map((notification) => {
+                  const style = notificationStyles[notification.type] || notificationStyles.system;
+                  const Icon = style.icon;
+
+                  return (
+                    <button
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`w-full px-4 py-3 text-left flex items-start gap-3 transition-colors cursor-pointer ${
+                        notification.isUnread ? 'bg-primary-hover/[0.04] hover:bg-primary-hover/[0.08]' : 'hover:bg-bg-secondary/70'
+                      }`}
+                    >
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-border/50 ${style.badge}`}>
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className={`block text-[11px] leading-snug ${notification.isUnread ? 'text-primary font-bold' : 'text-primary/70 font-medium'}`}>
+                          {notification.message}
+                        </span>
+                        <span className="mt-1 inline-flex items-center gap-1.5 text-[9px] font-bold text-primary-light/70">
+                          {notification.time || 'Just now'}
+                          {notification.isUnread && <span className="w-1 h-1 rounded-full bg-primary-hover" />}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="p-2 border-t border-border bg-white">
+            <button
+              onClick={() => {
+                setOpen(false);
+                navigate('/student/notifications');
+              }}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
+            >
+              View all notifications
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-/* ── Main Navbar ── */
+function MobileThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="flex items-center justify-center gap-2.5 py-3 rounded-xl border border-border text-[12px] font-semibold text-primary cursor-pointer hover:bg-bg-secondary transition-colors"
+    >
+      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+    </button>
+  );
+}
+
+function DesktopNav() {
+  return (
+    <div className="flex items-center justify-center">
+      {navItems.map((item, idx) => {
+        const prevGroup = navItems[idx - 1]?.group;
+        const showDivider = idx > 0 && prevGroup !== item.group;
+        const Icon = item.icon;
+
+        return (
+          <React.Fragment key={item.to}>
+            {showDivider && <span className="w-px h-4 mx-1.5 bg-border-strong" />}
+            <NavLink
+              to={item.to}
+              className={({ isActive }) =>
+                `inline-flex items-center gap-2 text-[12.5px] px-[11px] py-[5px] rounded-[7px] transition-colors ${
+                  isActive ? 'font-bold text-primary bg-primary/10' : 'font-semibold text-primary-light hover:text-primary hover:bg-bg-secondary'
+                }`
+              }
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {item.label}
+            </NavLink>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StudentNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleMobileLogout = () => {
     logout();
@@ -194,132 +373,78 @@ export default function StudentNavbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border shadow-sm">
-      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Logo Section - Matching Admin Style */}
-          <NavLink to="/student/dashboard" className="flex items-center gap-3 shrink-0 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <img src={ccsLogo} alt="CCS Logo" className="h-10 w-10 object-contain relative z-10" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="text-[15px] sm:text-[17px] font-black tracking-tighter text-primary">
-                CCS HUB
-              </span>
-              <span className="text-[9px] font-black text-primary-light/60 uppercase tracking-[0.2em] mt-0.5">
-                Student Portal
-              </span>
-            </div>
-          </NavLink>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            <div className="flex items-center space-x-1 mr-2">
-               {navItems.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2.5 ${
-                        isActive
-                          ? 'text-primary bg-primary/5'
-                          : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
-                      }`
-                    }
-                  >
-                    {item.icon && <item.icon className={`h-4 w-4 ${location.pathname === item.to ? 'text-primary' : 'text-primary-light'}`} />}
-                    {item.label}
-                  </NavLink>
-               ))}
-            </div>
-
-            <div className="h-8 w-[1px] bg-border mx-2" />
-
-            <div className="flex items-center gap-4">
-               <NotificationBell />
-               <ProfileDropdown />
-            </div>
+    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-border">
+      <div className="mx-auto max-w-[1536px] h-[58px] px-4 sm:px-6 xl:px-12">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center h-full">
+          <div className="flex items-center gap-2.5 pr-4 h-full" style={{ borderRight: '1px solid var(--color-border)' }}>
+            <NavLink to="/student/dashboard" className="flex items-center gap-2.5 h-full">
+              <img src={ccsLogo} alt="CCS Logo" className="w-[26px] h-[26px] rounded-[6px]" />
+              <div className="flex flex-col leading-none">
+                <span className="text-[13px] font-black tracking-tight text-primary">CCS HUB</span>
+                <span className="mt-1 text-[9px] font-bold text-primary-light/70">Student Portal</span>
+              </div>
+            </NavLink>
           </div>
 
-          {/* Mobile Toggle */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-xl text-primary hover:bg-bg-secondary transition-all cursor-pointer"
-          >
-            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="hidden xl:flex items-center justify-center h-full px-4">
+            <DesktopNav />
+          </div>
+
+          <div className="flex items-center justify-end gap-1.5 pl-4 h-full" style={{ borderLeft: '1px solid var(--color-border)' }}>
+            <div className="hidden xl:flex items-center gap-1.5">
+              <ThemeToggle />
+              <NotificationBell />
+              <ProfileDropdown />
+            </div>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="xl:hidden w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-primary-light hover:text-primary hover:bg-bg-secondary cursor-pointer transition-colors"
+            >
+              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-t border-border px-4 pt-2 pb-8 space-y-2 animate-fade-in shadow-inner overflow-y-auto max-h-[calc(100vh-64px)]">
-          {navItems.map((item) => (
+        <div className="xl:hidden bg-white mobile-menu border-t border-border">
+          <div className="mx-auto max-w-[1536px] px-4 sm:px-6 xl:px-12 py-3 space-y-1.5">
+            {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
-              key={item.to}
-              to={item.to}
+              key={to}
+              to={to}
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-                  isActive
-                    ? 'text-primary bg-primary/5'
-                    : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] transition-colors ${
+                  isActive ? 'font-bold text-primary bg-primary/10' : 'font-semibold text-primary-light hover:text-primary hover:bg-bg-secondary'
                 }`
               }
             >
-              {item.icon && <item.icon className="h-4 w-4" />}
-              {item.label}
+              <Icon className="h-4 w-4" />
+              {label}
             </NavLink>
-          ))}
+            ))}
 
-          <NavLink
-            to="/student/notifications"
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-                isActive 
-                  ? 'text-primary bg-primary/5' 
-                  : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
-              }`
-            }
-          >
-            <Bell className="h-4 w-4" /> Notifications
-          </NavLink>
-          
-          <div className="pt-4 mt-2 border-t border-border">
-             <div className="flex items-center gap-3 px-4 py-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center overflow-hidden">
-                   {user?.profile_pic ? (
-                      <img src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profile_pic}`} alt="" className="w-full h-full object-cover" />
-                   ) : (
-                      <User className="h-5 w-5 text-primary" />
-                   )}
-                </div>
-                <div className="flex flex-col">
-                   <span className="text-sm font-black text-primary">{user?.first_name} {user?.last_name}</span>
-                   <span className="text-[10px] font-bold text-primary-light uppercase tracking-widest truncate max-w-[180px]">{user?.email}</span>
-                </div>
-             </div>
-             
-             <div className="grid grid-cols-1 gap-2 mb-4">
-                <NavLink 
-                  to="/student/edit-profile" 
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center py-2.5 rounded-xl border border-border text-[11px] font-black text-primary uppercase tracking-widest"
-                >
-                  Profile Settings
-                </NavLink>
-             </div>
+            <div className="h-px my-2 bg-border" />
 
-             <button
-               onClick={handleMobileLogout}
-               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-primary text-white text-sm font-black hover:bg-primary-hover transition-all shadow-lg active:scale-95 cursor-pointer"
-             >
-               <LogOut className="h-4 w-4" />
-               Sign Out
-             </button>
+            <div className="grid grid-cols-2 gap-2">
+              <NavLink
+                to="/student/edit-profile"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center py-2.5 rounded-lg text-[12px] text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                Edit profile
+              </NavLink>
+              <MobileThemeToggle />
+            </div>
+
+            <button
+              onClick={handleMobileLogout}
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[12px] text-error bg-red-50 hover:bg-red-100 cursor-pointer transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
           </div>
         </div>
       )}
