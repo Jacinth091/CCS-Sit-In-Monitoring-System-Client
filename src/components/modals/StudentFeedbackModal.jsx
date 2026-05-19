@@ -29,7 +29,7 @@ export default function StudentFeedbackModal({ isOpen, onClose, onSubmit, record
       await onSubmit({ sit_in_id: recordId, rating, comment: comment.trim() });
       toast.success('Feedback submitted! Thank you.');
       onClose();
-    } catch (error) {
+    } catch {
       toast.error('Failed to submit feedback');
     } finally {
       setIsSubmitting(false);

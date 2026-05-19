@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, Star, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
 
 export default function FeedbackModal({ 
   isOpen, 
@@ -32,8 +31,8 @@ export default function FeedbackModal({
     try {
       await onSubmit(recordId, feedbackText);
       onClose();
-    } catch (error) {
-      // Error handled in parent or toast shown here if needed
+    } catch {
+      // Error handled in parent
     } finally {
       setIsSubmitting(false);
     }
