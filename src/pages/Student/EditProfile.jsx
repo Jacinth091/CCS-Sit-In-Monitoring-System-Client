@@ -10,7 +10,7 @@ const inputStyles =
   'w-full px-4 py-2.5 rounded-xl border border-border bg-white text-xs text-primary placeholder:text-primary-light/40 focus:outline-none focus:ring-2 focus:ring-primary-hover/20 focus:border-primary-hover transition-all shadow-sm';
 
 const labelStyles =
-  'block text-[9px] font-black tracking-[0.2em] uppercase text-primary-light mb-1.5 ml-1';
+  'block text-[9px] font-bold text-primary-light mb-1.5 ml-1';
 
 export default function EditProfile() {
   const { user, login } = useAuth();
@@ -117,7 +117,7 @@ export default function EditProfile() {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-5">
         <div className="w-12 h-12 rounded-full border-4 border-primary-hover/10 border-t-primary-hover animate-spin" />
-        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light">Loading Profile...</p>
+        <p className="text-[9px] font-bold text-primary-light">Loading profile...</p>
       </div>
     );
   }
@@ -126,21 +126,21 @@ export default function EditProfile() {
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">
       
       {/* ───── HERO SECTION ───── */}
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-md">
+      <div className="relative overflow-hidden rounded-xl bg-primary hero-banner border border-border shadow-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-brand-sand/10 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-primary-light/10 blur-3xl" />
 
-        <div className="relative z-10 p-6 sm:p-10">
+        <div className="relative z-10 p-5 sm:p-7">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="space-y-2">
               <Link 
                 to="/student/dashboard" 
-                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors uppercase tracking-[0.2em]"
+                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" /> Back to Dashboard
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                  Account Settings
               </h1>
               <p className="text-primary-light/80 text-xs sm:text-sm font-medium max-w-md leading-relaxed">
@@ -149,7 +149,7 @@ export default function EditProfile() {
             </div>
 
             <div className="relative group shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
                 <div className="w-full h-full rounded-[0.9rem] bg-primary flex items-center justify-center border border-primary overflow-hidden relative group/avatar">
                   {user?.profile_pic ? (
                     <img 
@@ -158,7 +158,7 @@ export default function EditProfile() {
                       className="w-full h-full object-cover relative z-10"
                     />
                   ) : (
-                    <User className="h-10 w-10 text-brand-sand relative z-10" />
+                    <User className="h-7 w-7 text-brand-sand relative z-10" />
                   )}
                   
                   {/* Hover Overlay */}
@@ -168,11 +168,11 @@ export default function EditProfile() {
                     className="absolute inset-0 bg-primary/80 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer z-20 backdrop-blur-sm"
                   >
                     {isUploadingPic ? (
-                      <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        <Loader2 className="h-4 w-4 text-white animate-spin" />
                     ) : (
                       <>
-                        <Camera className="h-5 w-5 text-brand-sand mb-1.5" />
-                        <span className="text-[9px] font-black text-white uppercase tracking-widest">Update</span>
+                          <Camera className="h-4 w-4 text-brand-sand mb-1.5" />
+                        <span className="text-[9px] font-bold text-white">Update</span>
                       </>
                     )}
                   </button>
@@ -198,7 +198,7 @@ export default function EditProfile() {
                <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center">
                   <Shield className="h-4 w-4 text-primary-hover" />
                </div>
-               <h4 className="text-[11px] font-black uppercase tracking-widest text-primary">Identity Access</h4>
+               <h4 className="text-[11px] font-bold text-primary">Identity Access</h4>
             </div>
             
             <div className="space-y-3.5">
@@ -217,10 +217,10 @@ export default function EditProfile() {
           <div className="bg-gradient-to-br from-primary-hover to-primary rounded-xl p-5 shadow-lg shadow-primary-hover/20 text-white">
              <div className="flex items-center gap-2.5 mb-3.5">
                 <CheckCircle className="h-4 w-4 text-brand-sand" />
-                <h4 className="text-[11px] font-black uppercase tracking-widest">Verified Account</h4>
+                <h4 className="text-[11px] font-bold">Verified Account</h4>
              </div>
              <p className="text-[11px] text-primary-light/90 leading-relaxed">
-               You are currently logged in as a verified student of the University Of Cebu.
+               You are currently logged in as a verified student of the University of Cebu.
              </p>
           </div>
         </div>
@@ -229,8 +229,8 @@ export default function EditProfile() {
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border shadow-sm p-6 flex flex-col gap-6">
             <div className="flex items-center justify-between mb-1">
-               <h3 className="text-base font-black text-primary tracking-tight">Personal Details</h3>
-               <span className="text-[9px] font-bold text-primary-light bg-bg-secondary px-2.5 py-0.5 rounded-full uppercase tracking-widest border border-border">Settings</span>
+               <h3 className="text-base font-bold text-primary tracking-tight">Personal Details</h3>
+               <span className="text-[9px] font-bold text-primary-light bg-bg-secondary px-2.5 py-0.5 rounded-full border border-border">Settings</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -338,12 +338,12 @@ export default function EditProfile() {
             <div className="pt-5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-primary-light/60">
                 <AlertCircle className="h-3.5 w-3.5" />
-                <span className="text-[9px] font-bold uppercase tracking-widest">Fields marked with (*) are required</span>
+                <span className="text-[9px] font-bold">Fields marked with (*) are required</span>
               </div>
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 shadow-md cursor-pointer min-w-[180px] w-full sm:w-auto ${
+                className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl text-[10px] font-bold transition-all duration-300 shadow-md cursor-pointer min-w-[180px] w-full sm:w-auto ${
                   isLoading
                     ? 'bg-primary-light text-white cursor-not-allowed opacity-70'
                     : 'bg-primary-hover text-white hover:bg-primary shadow-primary-hover/20 hover:shadow-primary-hover/40 active:scale-[0.98]'

@@ -27,7 +27,9 @@ export default function MyHistory() {
     totalSessions: 0,
     totalHours: '0h 0m',
     mostVisitedLab: '—',
-    lastSessionDate: '—'
+    lastSessionDate: '—',
+    avgDuration: '—',
+    longestSession: '—'
   });
 
   useEffect(() => {
@@ -59,7 +61,9 @@ export default function MyHistory() {
           totalSessions: s.total_sessions || 0,
           totalHours: displayDuration,
           mostVisitedLab: s.most_visited_lab || '—',
-          lastSessionDate: s.last_session_date ? new Date(s.last_session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+          lastSessionDate: s.last_session_date ? new Date(s.last_session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—',
+          avgDuration: s.avg_duration || '—',
+          longestSession: s.longest_duration || '—'
         });
       }
     } catch (err) {
@@ -86,7 +90,9 @@ export default function MyHistory() {
         return {
           id: s.id || s.log_id,
           date: new Date(s.time_in).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          lab_name: s.lab_name,
+          name: s.name,
+          lab_code: s.lab_code,
+          pc_number: s.pc_number,
           purpose: s.purpose,
           status: s.status,
           start_time: new Date(s.time_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -141,21 +147,21 @@ export default function MyHistory() {
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">
       
       {/* ───── HERO SECTION ───── */}
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-md">
+      <div className="relative overflow-hidden rounded-xl bg-primary hero-banner border border-border shadow-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-brand-sand/10 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-primary-light/10 blur-3xl" />
 
-        <div className="relative z-10 p-6 sm:p-10">
+        <div className="relative z-10 p-5 sm:p-7">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="space-y-2">
               <Link 
                 to="/student/dashboard" 
-                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors uppercase tracking-[0.2em]"
+                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" /> Back to Dashboard
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                  Activity Journal
               </h1>
               <p className="text-primary-light/80 text-xs sm:text-sm font-medium max-w-md leading-relaxed">
@@ -164,8 +170,8 @@ export default function MyHistory() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-              <div className="w-14 h-14 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                 <History className="h-7 w-7 text-brand-sand" />
+              <div className="w-11 h-11 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                 <History className="h-5 w-5 text-brand-sand" />
               </div>
             </div>
           </div>
@@ -179,8 +185,8 @@ export default function MyHistory() {
              <Clock className="h-5 w-5 text-primary-hover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
            </div>
            <div className="text-center space-y-1">
-             <p className="text-xs font-bold text-primary uppercase tracking-[0.15em]">Retrieving Logs</p>
-             <p className="text-[10px] text-primary-light font-medium uppercase tracking-widest">Compiling your history...</p>
+             <p className="text-xs font-bold text-primary">Retrieving Logs</p>
+             <p className="text-[10px] text-primary-light font-medium">Compiling your history...</p>
            </div>
         </div>
       ) : (
@@ -189,13 +195,13 @@ export default function MyHistory() {
           
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between px-1">
-               <h3 className="text-[10px] font-black tracking-[0.15em] uppercase text-primary-light">
+               <h3 className="text-[10px] font-bold text-primary-light">
                   Detailed Session History
                </h3>
                <div className="flex items-center gap-2.5 text-primary-light">
                 <div className="h-px w-6 bg-border" />
-                <span className="text-[9px] font-bold uppercase tracking-[0.15em] whitespace-nowrap">
-                  {sessions.length} Records
+                <span className="text-[9px] font-bold whitespace-nowrap">
+                  {sessions.length} records
                 </span>
               </div>
             </div>
@@ -227,9 +233,9 @@ export default function MyHistory() {
       {!isLoading && (
         <div className="mt-12 flex flex-col items-center">
            <div className="h-1 w-10 bg-brand-sand/30 rounded-full mb-5" />
-           <p className="text-[9px] font-bold text-primary-light uppercase tracking-[0.2em] text-center leading-loose">
+           <p className="text-[9px] font-bold text-primary-light text-center leading-loose">
              CCS Sit-In Monitoring <br /> 
-             <span className="text-primary/40">University Of Cebu - CCS Lab Management</span>
+             <span className="text-primary/40">University of Cebu - CCS Lab Management</span>
            </p>
         </div>
       )}

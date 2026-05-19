@@ -99,31 +99,31 @@ export default function Announcements() {
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 pb-20">
       
       {/* ───── HERO SECTION ───── */}
-      <div className="relative overflow-hidden rounded-xl bg-primary border border-border shadow-md">
+      <div className="relative overflow-hidden rounded-xl bg-primary hero-banner border border-border shadow-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-brand-sand/10 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-primary-light/10 blur-3xl" />
 
-        <div className="relative z-10 p-6 sm:p-10">
+        <div className="relative z-10 p-5 sm:p-7">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="space-y-2">
               <Link 
                 to="/student/dashboard" 
-                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors uppercase tracking-[0.2em]"
+                className="inline-flex items-center gap-2 text-[9px] font-bold text-brand-sand/70 hover:text-brand-sand transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" /> Back to Dashboard
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                  University Feed
               </h1>
               <p className="text-primary-light/80 text-xs sm:text-sm font-medium max-w-md leading-relaxed">
-                Official updates, news, and academic policies from the University Of Cebu - CCS Lab Management.
+                Official updates, news, and academic policies from the University of Cebu - CCS Lab Management.
               </p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-              <div className="w-14 h-14 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                 <Megaphone className="h-7 w-7 text-brand-sand" />
+              <div className="w-11 h-11 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                 <Megaphone className="h-5 w-5 text-brand-sand" />
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function Announcements() {
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
-                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer grow sm:grow-0 ${
+                className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer grow sm:grow-0 ${
                   filter === tab.id 
                     ? 'bg-primary-hover text-white shadow-md' 
                     : 'text-primary-light hover:text-primary hover:bg-bg-secondary'
@@ -170,8 +170,8 @@ export default function Announcements() {
         {/* Total Count Display */}
         <div className="hidden lg:flex items-center gap-2.5 text-primary-light">
           <div className="h-px w-6 bg-border" />
-          <span className="text-[9px] font-bold uppercase tracking-[0.2em] whitespace-nowrap">
-            Showing {filteredAnnouncements.length} of {pagination.total} Updates
+          <span className="text-[9px] font-bold whitespace-nowrap">
+            Showing {filteredAnnouncements.length} of {pagination.total} updates
           </span>
           <div className="h-px w-6 bg-border" />
         </div>
@@ -186,8 +186,8 @@ export default function Announcements() {
                <Megaphone className="h-5 w-5 text-primary-hover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
              </div>
              <div className="text-center space-y-1">
-               <p className="text-xs font-bold text-primary uppercase tracking-[0.15em]">Synchronizing Feed</p>
-               <p className="text-[10px] text-primary-light font-medium uppercase tracking-widest">Checking for new updates...</p>
+               <p className="text-xs font-bold text-primary">Synchronizing Feed</p>
+               <p className="text-[10px] text-primary-light font-medium">Checking for new updates...</p>
              </div>
           </div>
         ) : filteredAnnouncements.length === 0 ? (
@@ -195,13 +195,13 @@ export default function Announcements() {
              <div className="w-20 h-20 rounded-2xl bg-bg-secondary flex items-center justify-center mb-6 border border-border">
                 <Inbox className="h-8 w-8 text-primary-light/40" />
              </div>
-             <h3 className="text-xl font-black text-primary tracking-tight">No results found</h3>
+             <h3 className="text-xl font-bold text-primary tracking-tight">No Results Found</h3>
              <p className="text-primary-light font-medium text-xs mt-2 max-w-sm mx-auto leading-relaxed">
                We couldn't find any announcements matching your current search or filter.
              </p>
              <button 
                 onClick={() => { setSearchQuery(''); setFilter('all'); }}
-                className="mt-6 px-6 py-2.5 rounded-full bg-primary-hover text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary shadow-lg shadow-primary-hover/20 transition-all active:scale-95"
+                className="mt-6 px-6 py-2.5 rounded-full bg-primary-hover text-white text-[10px] font-bold hover:bg-primary shadow-lg shadow-primary-hover/20 transition-all active:scale-95"
              >
                Clear Filters
              </button>
@@ -228,8 +228,8 @@ export default function Announcements() {
                 >
                   <div className="absolute inset-0 bg-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   
-                  <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-white transition-colors">
-                    {isLoadingMore ? 'Loading Updates...' : 'Discover More Updates'}
+                  <span className="relative z-10 text-[10px] font-bold group-hover:text-white transition-colors">
+                    {isLoadingMore ? 'Loading updates...' : 'Discover More Updates'}
                   </span>
                   
                   {isLoadingMore ? (
@@ -245,7 +245,7 @@ export default function Announcements() {
             {pagination.page >= pagination.lastPage && filteredAnnouncements.length > 0 && (
               <div className="flex flex-col items-center justify-center mt-12 pt-8 border-t border-border/40 opacity-40">
                 <div className="h-1 w-10 bg-primary-light/30 rounded-full mb-5" />
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-primary-light">
+                <p className="text-[9px] font-bold text-primary-light">
                    End of University Feed
                 </p>
               </div>
@@ -256,9 +256,9 @@ export default function Announcements() {
 
       {/* ───── FOOTER INFO ───── */}
       <div className="mt-12 flex flex-col items-center">
-         <p className="text-[9px] font-bold text-primary-light uppercase tracking-[0.2em] text-center leading-loose">
+         <p className="text-[9px] font-bold text-primary-light text-center leading-loose">
            University of Cebu <br /> 
-           <span className="text-primary/40">University Of Cebu - CCS Lab Management</span>
+           <span className="text-primary/40">University of Cebu - CCS Lab Management</span>
          </p>
       </div>
 
