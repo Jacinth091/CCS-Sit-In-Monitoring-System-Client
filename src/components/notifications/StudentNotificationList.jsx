@@ -14,13 +14,13 @@ export default function StudentNotificationList({ notifications, onClearAll, onR
     <div className="flex flex-col">
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-border bg-bg-secondary/30 flex items-center justify-between">
-        <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+        <h3 className="text-[10px] font-bold text-primary flex items-center gap-2">
           Notifications
         </h3>
         {notifications.length > 0 && (
           <button 
             onClick={onClearAll}
-            className="text-[9px] font-black text-primary-light hover:text-red-500 uppercase tracking-widest flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-[9px] font-bold text-primary-light hover:text-red-500 flex items-center gap-1 transition-colors cursor-pointer"
           >
             Clear All
           </button>
@@ -32,7 +32,7 @@ export default function StudentNotificationList({ notifications, onClearAll, onR
         {notifications.length === 0 ? (
           <div className="py-10 px-6 text-center">
             <Bell className="h-6 w-6 text-primary-light/20 mx-auto mb-2" />
-            <p className="text-[10px] font-black text-primary-light uppercase tracking-widest">Inbox Empty</p>
+            <p className="text-[10px] font-bold text-primary-light">Inbox Empty</p>
           </div>
         ) : (
           <div className="divide-y divide-border/50">
@@ -52,7 +52,7 @@ export default function StudentNotificationList({ notifications, onClearAll, onR
                        {n.message}
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-[8px] font-black text-primary-light/40 uppercase tracking-widest">{n.time}</span>
+                      <span className="text-[8px] font-bold text-primary-light/40">{n.time}</span>
                       {n.isUnread && <span className="w-1 h-1 rounded-full bg-primary-hover" />}
                     </div>
                   </div>

@@ -31,10 +31,10 @@ export default function StudentNotificationCard({ notification, onClick, typeCon
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-1">
-           <span className={`text-[9px] font-bold uppercase tracking-widest ${cfg.text}`}>
+           <span className={`text-[9px] font-bold capitalize ${cfg.text}`}>
              {type} Alert
            </span>
-           <span className="text-[9px] font-semibold text-primary-light uppercase tracking-wider whitespace-nowrap">
+           <span className="text-[9px] font-semibold text-primary-light whitespace-nowrap">
              {time}
            </span>
         </div>
