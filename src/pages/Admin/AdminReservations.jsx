@@ -225,6 +225,17 @@ export default function AdminReservations() {
   });
   const [auditPage, setAuditPage] = useState(1);
   const [auditMeta, setAuditMeta] = useState({ total: 0, totalPages: 1, perPage: 20 });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredReservations = useMemo(() => {
+    if (!searchTerm.trim()) return reservations;
+    const term = searchTerm.toLowerCase();
+    return reservations.filter(r => 
+      String(r.student_id).toLowerCase().includes(term) ||
+      `${r.first_name} ${r.last_name}`.toLowerCase().includes(term) ||
+      String(r.pc_number).includes(term)
+    );
+  }, [reservations, searchTerm]);
 
   const filteredPcs = useMemo(() => {
     let list = pcs;
@@ -693,7 +704,7 @@ export default function AdminReservations() {
 
         {!reservationsError && !reservationsLoading && reservations.length > 0 && (
           <div className="space-y-2">
-            {reservations.map((reservation) => {
+            {filteredReservations.map((reservation) => {
               const expanded = expandedReservationId === reservation.id;
               const showWarning = approvalWarningId === reservation.id;
 
