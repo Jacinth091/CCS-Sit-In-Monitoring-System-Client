@@ -29,7 +29,7 @@ export default function ViewAnnouncementModal({ isOpen, onClose, announcement })
             <div className="w-8 h-8 rounded-xl bg-bg-secondary flex items-center justify-center border border-border">
               <Megaphone className="h-4 w-4" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Bulletin Update</span>
+            <span className="text-[10px] font-bold">Bulletin Update</span>
           </div>
           <div className="flex items-center gap-2">
             {announcement.isImportant && (
@@ -65,7 +65,7 @@ export default function ViewAnnouncementModal({ isOpen, onClose, announcement })
             {announcement.title}
           </h1>
 
-          <div className="flex items-center gap-3 text-[10px] font-bold text-primary-light/50 uppercase tracking-widest mb-8 pb-6 border-b border-border/50">
+          <div className="flex items-center gap-3 text-[10px] font-bold text-primary-light/50 mb-8 pb-6 border-b border-border/50">
              <div className="flex items-center gap-1.5">
                 <Calendar className="h-3 w-3" />
                 {announcement.date}
