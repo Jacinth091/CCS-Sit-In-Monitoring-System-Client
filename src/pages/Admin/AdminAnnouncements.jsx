@@ -122,40 +122,15 @@ export default function AdminAnnouncements() {
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 h-[calc(100vh-80px)] flex flex-col gap-6 overflow-hidden">
       
-      {/* ───── HERO BANNER ───── */}
-      <div className={`relative overflow-hidden rounded-xl bg-primary border border-border shadow-lg shrink-0 ${isMobileDetailOpen ? 'hidden lg:block' : 'block'}`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary-hover opacity-95" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-light/10 blur-3xl animate-pulse" />
-        
-        <div className="relative z-10 p-5 sm:p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-xl shrink-0">
-                <div className="w-full h-full rounded-xl bg-primary flex items-center justify-center border-2 border-primary relative overflow-hidden">
-                  <Megaphone className="h-6 w-6 text-brand-sand relative z-10" />
-                  <div className="absolute inset-0 bg-primary-hover/20" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                   <span className="text-[10px] font-black text-brand-sand uppercase tracking-[0.2em]">Bulletin Board</span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tighter leading-none">Announcements</h1>
-                <p className="text-[11px] font-bold text-primary-light/80 max-w-md leading-relaxed">Post updates for students and laboratory sessions.</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all min-w-[140px] group">
-                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <Inbox className="h-3.5 w-3.5 text-brand-sand" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-primary-light/60 font-black mb-0.5">Total Posts</p>
-                    <p className="text-base font-black text-white tracking-tighter">{pagination.total}</p>
-                  </div>
-               </div>
-            </div>
+      <div className={`rounded-xl border border-border bg-white shadow-sm shrink-0 ${isMobileDetailOpen ? 'hidden lg:block' : 'block'}`}>
+        <div className="flex items-center justify-between gap-3 p-4">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light">Bulletin Board</p>
+            <h1 className="text-base sm:text-lg font-black text-primary tracking-tight">Announcements</h1>
+          </div>
+          <div className="rounded-lg border border-border bg-bg-secondary px-3 py-2">
+            <p className="text-[8px] uppercase tracking-[0.2em] text-primary-light/70 font-black mb-0.5">Total Posts</p>
+            <p className="text-sm font-black text-primary tracking-tight text-right">{pagination.total}</p>
           </div>
         </div>
       </div>
