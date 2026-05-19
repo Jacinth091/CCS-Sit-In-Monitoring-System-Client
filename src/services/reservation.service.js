@@ -42,6 +42,11 @@ const reservationService = {
       ...payload,
     }).then(r => r.data),
 
+  convertToSitIn: (reservationId) =>
+    api.post('admin/reservations/convert_to_sitin.php', {
+      reservation_id: reservationId
+    }).then(r => r.data),
+
   getAuditLog: (filters = {}, page = 1, perPage = 20) =>
     api.get('admin/reservations/audit_log.php', {
       params: {

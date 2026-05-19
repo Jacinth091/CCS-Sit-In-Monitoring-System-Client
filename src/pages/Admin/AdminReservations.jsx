@@ -11,11 +11,13 @@ import {
   History,
   Loader2,
   Monitor,
+  Play,
+  Info,
   RefreshCw,
   Search,
   ShieldAlert,
   User,
-  XCircle,
+  X, XCircle, CheckSquare, LayoutGrid, Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -23,11 +25,13 @@ import { Badge, Button, Select } from "../../components/ui";
 import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import reservationService from "../../services/reservation.service";
+import BulkPcModal from "../../components/modals/BulkPcModal";
 
 const RESERVATION_TABS = [
   { id: "all", label: "All" },
   { id: "pending", label: "Pending" },
   { id: "approved", label: "Approved" },
+  { id: "fulfilled", label: "Completed" },
   { id: "rejected", label: "Rejected" },
   { id: "rescheduled", label: "Rescheduled" },
 ];
@@ -154,6 +158,7 @@ const getStatusVariant = (status) => {
       return "error";
     case "occupied":
     case "reserved":
+    case "fulfilled":
       return "primary";
     default:
       return "secondary";
@@ -207,7 +212,7 @@ function InlineError({ message, onRetry }) {
   );
 }
 
-/* ── Pagination Component ── */
+/* â”€â”€ Pagination Component â”€â”€ */
 function Pagination({ currentPage, totalPages, onPageChange }) {
   const pages = [];
   const maxVisiblePages = 5;
@@ -299,9 +304,10 @@ export default function AdminReservations() {
   const [pcActionId, setPcActionId] = useState(null);
   const [pcStatusFilter, setPcStatusFilter] = useState("all");
   const [pcReservationFilter, setPcReservationFilter] = useState("all");
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
   const [reservationTab, setReservationTab] = useState("pending");
-  const [pendingCount, setPendingCount] = useState(0);
+  const [allPendingReservations, setAllPendingReservations] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
   const [reservationsError, setReservationsError] = useState("");
@@ -313,6 +319,16 @@ export default function AdminReservations() {
   const [adminNotes, setAdminNotes] = useState({});
   const [selectedReasons, setSelectedReasons] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+
+  const pendingCount = useMemo(() => {
+    if (!selectedLabId) return 0;
+    return allPendingReservations.filter(r => String(r.lab_id) === String(selectedLabId)).length;
+  }, [allPendingReservations, selectedLabId]);
+
+  const [convertingId, setConvertingId] = useState(null);
+  const [isConverting, setIsConverting] = useState(false);
+  const [convertingError, setConvertingError] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const [auditEntries, setAuditEntries] = useState([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -330,12 +346,40 @@ export default function AdminReservations() {
   });
 
   const filteredReservations = useMemo(() => {
-    const queueOrdered = [...reservations].sort((a, b) => {
+    let baseList = [...reservations];
+    if (selectedLabId) {
+      baseList = baseList.filter((r) => String(r.lab_id) === String(selectedLabId));
+    }
+
+    const queueOrdered = baseList.sort((a, b) => {
       if (reservationTab === "pending") {
         const timeDiff =
           getReservationQueueTime(a) - getReservationQueueTime(b);
         if (timeDiff !== 0) return timeDiff;
         return Number(a?.id || 0) - Number(b?.id || 0);
+      }
+      if (reservationTab === "approved") {
+        const today = new Date().toLocaleDateString("en-CA");
+        const dateA = (a.reserved_date || "").split("T")[0];
+        const dateB = (b.reserved_date || "").split("T")[0];
+        
+        const isTodayA = dateA === today;
+        const isTodayB = dateB === today;
+
+        if (isTodayA && !isTodayB) return -1;
+        if (!isTodayA && isTodayB) return 1;
+
+        if (dateA !== dateB) return dateA.localeCompare(dateB);
+
+        const timeA = a.reserved_time || "23:59:59";
+        const timeB = b.reserved_time || "23:59:59";
+        return timeA.localeCompare(timeB);
+      }
+      if (["all", "rejected", "rescheduled", "fulfilled"].includes(reservationTab)) {
+        const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
+        const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
+        if (timeA !== timeB) return timeB - timeA;
+        return Number(b?.id || 0) - Number(a?.id || 0);
       }
       return 0;
     });
@@ -348,7 +392,7 @@ export default function AdminReservations() {
         `${r.first_name} ${r.last_name}`.toLowerCase().includes(term) ||
         String(r.pc_number).includes(term),
     );
-  }, [reservations, searchTerm, reservationTab]);
+  }, [reservations, searchTerm, reservationTab, selectedLabId]);
 
   const filteredPcs = useMemo(() => {
     let list = pcs;
@@ -370,6 +414,8 @@ export default function AdminReservations() {
     const savedLabId = sessionStorage.getItem("adminReservationActiveLabId");
     void fetchLabs(savedLabId);
     void fetchSettings();
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -455,7 +501,7 @@ export default function AdminReservations() {
         reservationService.getAll("pending"),
       ]);
       setReservations(normalizeList(tabResult));
-      setPendingCount(normalizeList(pendingResult).length);
+      setAllPendingReservations(normalizeList(pendingResult));
     } catch {
       setReservationsError("Failed to load reservations.");
     } finally {
@@ -693,6 +739,29 @@ export default function AdminReservations() {
     toast.info(`Locating reservation #${reservationId}...`);
   };
 
+  const handleStartSitIn = async (reservation) => {
+    setIsConverting(true);
+    setConvertingError("");
+    try {
+      const result = await reservationService.convertToSitIn(reservation.id);
+      if (!isApiSuccess(result)) {
+        throw new Error(result?.message || "Failed to convert reservation");
+      }
+      toast.success(`Sit-in session started for ${reservation.first_name} ${reservation.last_name}`);
+      setConvertingId(null);
+      await Promise.all([
+        fetchReservations(reservationTab),
+        fetchAuditLog(1, auditFilters),
+      ]);
+      setAuditPage(1);
+    } catch (err) {
+      const backendMessage = err.response?.data?.message || err.message;
+      setConvertingError(backendMessage || "Failed to start sit-in session");
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   const renderPcPanel = () => (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border bg-bg-secondary/30">
@@ -701,29 +770,25 @@ export default function AdminReservations() {
             <Monitor className="w-3.5 h-3.5" />
             PC Controls
           </h3>
-          <Badge
-            variant="secondary"
-            className="px-2 py-0.5 scale-90 origin-right"
-          >
-            {filteredPcs.length} Items
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="secondary"
+              className="px-2 py-0.5 scale-90"
+            >
+              {filteredPcs.length} Items
+            </Badge>
+            <button
+              type="button"
+              onClick={() => setIsBulkModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary-hover transition-all shadow-sm"
+            >
+              <LayoutGrid className="w-3 h-3" />
+              Bulk
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3">
-          {" "}
-          {/* 1. Reduced from space-y-4 */}
-          <Select
-            label="Select Laboratory"
-            value={selectedLabId}
-            onChange={(e) => setSelectedLabId(e.target.value)}
-            disabled={labsLoading}
-          >
-            {labs.map((lab) => (
-              <option key={lab.id} value={lab.id}>
-                {lab.lab_code ? `${lab.lab_code} - ${lab.name}` : lab.name}
-              </option>
-            ))}
-          </Select>
           <div className="space-y-2">
             {" "}
             {/* 2. Tighter spacing between filter rows */}
@@ -987,6 +1052,29 @@ export default function AdminReservations() {
                     highlightedReservationId === reservation.id;
                   const isActioning = reservationActionId === reservation.id;
 
+                  const isEligibleForSitIn = (() => {
+                    if (reservation.status !== 'approved') return false;
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    const localTodayStr = `${yyyy}-${mm}-${dd}`;
+
+                    if (reservation.reserved_date !== localTodayStr) return false;
+
+                    const [hours, minutes] = (reservation.reserved_time || "00:00").split(':').map(Number);
+                    const slotStart = new Date(today);
+                    slotStart.setHours(hours, minutes, 0, 0);
+                    
+                    const earliestStart = new Date(slotStart);
+                    earliestStart.setMinutes(earliestStart.getMinutes() - 15);
+                    
+                    const latestStart = new Date(slotStart);
+                    latestStart.setHours(slotStart.getHours() + 2); // 2 hours window
+                    latestStart.setMinutes(latestStart.getMinutes() + 15);
+
+                    return currentTime >= earliestStart && currentTime <= latestStart;
+                  })();
                   return (
                     <div
                       key={reservation.id}
@@ -1074,7 +1162,7 @@ export default function AdminReservations() {
                                     Academic Info
                                   </p>
                                   <p className="text-xs font-bold text-primary">
-                                    {reservation.course} —{" "}
+                                    {reservation.course} â€”{" "}
                                     {reservation.course_level}
                                   </p>
                                   <p className="text-[10px] text-primary-light">
@@ -1120,6 +1208,46 @@ export default function AdminReservations() {
                             {reservation.status === "pending" ||
                             reservation.status === "approved" ? (
                               <div className="space-y-4 animate-zoom-in">
+                                {convertingId === reservation.id && (
+                                  <div className="p-4 rounded-xl bg-primary/[0.03] border border-primary/20 flex items-start gap-3 animate-fade-in mb-3">
+                                    <div className="p-2 rounded-lg bg-primary/10 shrink-0 mt-0.5">
+                                      <Play className="w-4 h-4 text-primary" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-[10px] font-black uppercase tracking-widest text-primary">
+                                        Initialize Sit-In Session
+                                      </p>
+                                      <p className="text-[11px] text-primary-light font-bold mt-1.5 leading-relaxed">
+                                        Start a session for <span className="text-primary">{reservation.first_name} {reservation.last_name}</span> at PC {reservation.pc_number}? This will log them in immediately.
+                                      </p>
+                                      {convertingError && (
+                                        <div className="mt-3 p-2.5 rounded-lg bg-red-50 border border-red-100 flex items-center gap-2">
+                                          <ShieldAlert className="w-4 h-4 text-red-600 shrink-0" />
+                                          <p className="text-[10px] text-red-700 font-bold uppercase tracking-wide">
+                                            {convertingError}
+                                          </p>
+                                        </div>
+                                      )}
+                                      <div className="flex gap-2 mt-4">
+                                        <button
+                                          onClick={() => handleStartSitIn(reservation)}
+                                          disabled={isConverting}
+                                          className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50 shadow-sm"
+                                        >
+                                          {isConverting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                                          Confirm Start
+                                        </button>
+                                        <button
+                                          onClick={() => { setConvertingId(null); setConvertingError(""); }}
+                                          disabled={isConverting}
+                                          className="px-4 py-2 rounded-lg bg-white border border-border text-primary-light text-[10px] font-black uppercase tracking-widest hover:bg-bg-secondary hover:text-primary transition-all disabled:opacity-50"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="grid grid-cols-1 gap-3">
                                   <Select
                                     label="Administrative Response"
@@ -1203,6 +1331,17 @@ export default function AdminReservations() {
                                 )}
 
                                 <div className="flex flex-wrap items-center gap-2">
+                                  {isEligibleForSitIn && convertingId !== reservation.id && (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => setConvertingId(reservation.id)}
+                                      loading={isActioning}
+                                      icon={<Play className="w-4 h-4" />}
+                                      className="bg-primary hover:bg-primary/90 text-white shadow-sm"
+                                    >
+                                      Start Sit-in
+                                    </Button>
+                                  )}
                                   {reservation.status === "pending" && (
                                     <Button
                                       size="sm"
@@ -1472,7 +1611,7 @@ export default function AdminReservations() {
 
   return (
     <div className="max-w-[1600px] mx-auto w-full h-[calc(100vh-40px)] px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 animate-fade-in overflow-hidden pb-8">
-      {/* ── Standardized Admin Banner ── */}
+      {/* â”€â”€ Standardized Admin Banner â”€â”€ */}
       <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden shrink-0">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5">
           <div className="min-w-0">
@@ -1546,16 +1685,28 @@ export default function AdminReservations() {
             </div>
 
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-bg-secondary border border-border">
-              <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-primary shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-primary shadow-sm shrink-0">
                 <Monitor className="w-4 h-4" />
               </div>
-              <div className="max-w-[120px]">
-                <p className="text-[8px] font-black uppercase tracking-widest text-primary-light">
-                  Current Lab
+              <div className="min-w-[160px]">
+                <p className="text-[8px] font-black uppercase tracking-widest text-primary-light mb-1">
+                  Global Laboratory Filter
                 </p>
-                <p className="text-xs font-black text-primary truncate uppercase tracking-tight">
-                  {currentLab?.name || "---"}
-                </p>
+                {labsLoading ? (
+                   <div className="h-6 w-full animate-pulse bg-white rounded-md border border-border"></div>
+                ) : (
+                  <select
+                    value={selectedLabId}
+                    onChange={(e) => setSelectedLabId(e.target.value)}
+                    className="w-full text-xs font-black text-primary uppercase tracking-tight bg-white border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                  >
+                    {labs.map((lab) => (
+                      <option key={lab.id} value={lab.id}>
+                        {lab.lab_code ? `${lab.lab_code} - ${lab.name}` : lab.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
           </div>
@@ -1610,6 +1761,32 @@ export default function AdminReservations() {
           {renderAuditPanel()}
         </div>
       </div>
+      <BulkPcModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        pcs={pcs}
+        currentLab={currentLab}
+        onApplyPcStatus={async (selectedPcs, newStatus) => {
+          const results = await Promise.allSettled(selectedPcs.map(pc => pcService.updatePcStatus(pc.id, newStatus)));
+          const failed = results.filter(r => r.status === 'rejected').length;
+          if (failed > 0) toast.error(failed + ' PCs failed to update');
+          else toast.success('Updated ' + selectedPcs.length + ' PCs to ' + newStatus);
+          void fetchPcs(selectedLabId);
+          void fetchAuditLog(1, auditFilters);
+          setAuditPage(1);
+        }}
+        onApplyReservationStatus={async (selectedPcs, newStatus) => {
+          const activePcs = selectedPcs.filter(pc => pc.pc_status === 'active');
+          if (activePcs.length === 0) { toast.error('No active PCs in selection'); return; }
+          const results = await Promise.allSettled(activePcs.map(pc => pcService.updateReservationStatus(pc.id, newStatus)));
+          const failed = results.filter(r => r.status === 'rejected').length;
+          if (failed > 0) toast.error(failed + ' PCs failed to update');
+          else toast.success('Booking status updated for ' + activePcs.length + ' PCs');
+          void fetchPcs(selectedLabId);
+          void fetchAuditLog(1, auditFilters);
+          setAuditPage(1);
+        }}
+      />
     </div>
   );
 }

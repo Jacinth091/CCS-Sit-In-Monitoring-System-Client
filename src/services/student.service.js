@@ -57,6 +57,11 @@ const studentService = {
     return response.data;
   },
 
+  resetSingleSession: async (student_id) => {
+    const response = await api.post("admin/student/reset_single_session.php", { student_id });
+    return response.data;
+  },
+
   // Deprecated or legacy (if any)
   update: async (payload) => {
     // Keep for backward compatibility if needed, but point to admin update if it exists

@@ -21,6 +21,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -591,11 +592,13 @@ const RESERVATION_TABS = [
   { id: "all", label: "All", icon: ClipboardList },
   { id: "pending", label: "Pending", icon: Clock },
   { id: "approved", label: "Approved", icon: CheckCircle },
+  { id: "fulfilled", label: "Completed", icon: CheckCircle },
   { id: "rejected", label: "Rejected", icon: XCircle },
   { id: "rescheduled", label: "Rescheduled", icon: RefreshCw },
 ];
 
 export default function StudentReservations() {
+  const { user } = useAuth();
   const [labs, setLabs] = useState([]);
   const [myReservations, setMyReservations] = useState([]);
   const [isSystemEnabled, setIsSystemEnabled] = useState(true);
@@ -719,7 +722,8 @@ export default function StudentReservations() {
         toast.error(result.message);
       }
     } catch (err) {
-      toast.error("Failed to submit reservation");
+      const backendMessage = err.response?.data?.message;
+      toast.error(backendMessage || err.message || "Failed to submit reservation");
     }
   };
 
@@ -786,6 +790,7 @@ export default function StudentReservations() {
       rescheduled: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-500 dark:border-sky-500/20",
       cancelled: "bg-primary/5 text-primary border-primary/15 dark:bg-white/5 dark:text-primary-light dark:border-white/10",
       used: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-500 dark:border-indigo-500/20",
+      fulfilled: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-500 dark:border-blue-500/20",
     };
     const label = String(status || "unknown")
       .replace(/_/g, " ")
@@ -838,6 +843,14 @@ export default function StudentReservations() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 backdrop-blur-md border border-white/10">
+                <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-white ${user?.session > 0 ? "bg-emerald-500/30" : "bg-red-500/80"}`}>
+                    {user?.session ?? 0}
+                  </span>
+                  Remaining Sessions
+                </span>
+              </div>
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 backdrop-blur-md border border-white/10">
                 <div
                   className={`w-2 h-2 rounded-full ${isSystemEnabled ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
