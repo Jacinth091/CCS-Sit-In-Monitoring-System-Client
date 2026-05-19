@@ -24,11 +24,6 @@ const sitinService = {
         return response.data;
     },
 
-    getStats: async (studentId) => {
-        const response = await api.get(`student/sitin/stats.php?student_id=${studentId}`);
-        return response.data;
-    },
-
     getCurrentSession: async (studentId) => {
         const response = await api.get(`student/sitin/read_single.php?student_id=${studentId}`);
         return response.data;
@@ -37,6 +32,21 @@ const sitinService = {
     submitStudentFeedback: async (payload) => {
         // payload: { sit_in_id, rating, comment }
         const response = await api.post('student/sitin/feedback.php', payload);
+        return response.data;
+    },
+
+    getSummary: async () => {
+        const response = await api.get('student/sitin/summary.php');
+        return response.data;
+    },
+
+    getDashboardStats: async () => {
+        const response = await api.get('student/sitin/stats.php');
+        return response.data;
+    },
+
+    getStats: async (studentId) => {
+        const response = await api.get('student/sitin/stats.php');
         return response.data;
     },
 
@@ -69,6 +79,11 @@ const sitinService = {
 
     endSessionAdmin: async (logId) => {
         const response = await api.post('admin/sitin/end_session.php', { log_id: logId });
+        return response.data;
+    },
+
+    getOccupiedPcsAdmin: async (labId) => {
+        const response = await api.get(`admin/sitin/stats.php?lab_id=${labId}`);
         return response.data;
     }
 };
