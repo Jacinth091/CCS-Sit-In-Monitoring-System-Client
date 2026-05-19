@@ -1,31 +1,96 @@
 import axios from "axios";
+import {
+  clearStoredAuthSession,
+  getStoredAuthToken,
+  hasTokenExpired,
+  stripBearerPrefix,
+} from "../utils/authToken";
+
+const configuredApiUrl = String(import.meta.env.VITE_API_URL || "")
+  .trim()
+  .replace(/^['"]|['"]$/g, "");
+const baseURL = import.meta.env.DEV ? "/api" : (configuredApiUrl || "/api");
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+const isAuthEndpoint = (url = "") =>
+  /(^|\/)auth\/(login|register)\.php(?:\?|$)/i.test(String(url));
+
+const AUTH_EXPIRED_EVENT = "auth:expired";
+let redirectingToLogin = false;
+
+const expireSessionAndRedirect = () => {
+  if (!redirectingToLogin) {
+    console.error("Session expired or unauthorized.");
+  }
+
+  clearStoredAuthSession();
+  window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+
+  if (!window.location.pathname.includes("/auth/login") && !redirectingToLogin) {
+    redirectingToLogin = true;
+    window.location.href = "/auth/login";
+  }
+};
+
 api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("authToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const token = getStoredAuthToken();
+  const authRequest = isAuthEndpoint(config.url);
+  const normalizedToken = stripBearerPrefix(token || "");
+
+  if (!config.headers) {
+    config.headers = {};
+  }
+
+  if (authRequest || config._retryWithoutAuth) {
+    delete config.headers.Authorization;
+    delete config.headers["X-Auth-Token"];
+    return config;
+  }
+
+  if (normalizedToken && hasTokenExpired(normalizedToken, 10)) {
+    expireSessionAndRedirect();
+    return Promise.reject(
+      Object.assign(new Error("Session token expired."), {
+        customMessage: "Your session has expired. Please sign in again.",
+        code: "AUTH_TOKEN_EXPIRED",
+      }),
+    );
+  }
+
+  if (normalizedToken) {
+    config.headers.Authorization = config._retryWithRawToken
+      ? normalizedToken
+      : `Bearer ${normalizedToken}`;
+    config.headers["X-Auth-Token"] = normalizedToken;
   }
   return config;
 });
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error("Session expired or unauthorized.");
-      sessionStorage.removeItem("authToken");
-      sessionStorage.removeItem("user");
-      // Use window.location for a hard redirect to the login page on auth failure
-      if (!window.location.pathname.includes('/auth/login')) {
-        window.location.href = "/auth/login";
-      }
+  async (error) => {
+    const authRequest = isAuthEndpoint(error.config?.url);
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      !authRequest &&
+      originalRequest &&
+      !originalRequest._retryWithRawToken
+    ) {
+      originalRequest._retryWithRawToken = true;
+      return api.request(originalRequest);
+    }
+
+    if (error.response?.status === 401 && !authRequest) {
+      expireSessionAndRedirect();
     }
 
     let msg = error.response?.data?.message || error.message;
