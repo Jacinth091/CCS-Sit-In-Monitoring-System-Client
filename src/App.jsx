@@ -41,7 +41,7 @@ import StudentTestimonials from "./pages/Student/StudentTestimonials";
 function App() {
   return (
     <>
-      <Toaster richColors position="bottom-right" />
+      <Toaster richColors position="bottom-right" duration={3000} />
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>

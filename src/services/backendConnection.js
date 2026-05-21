@@ -6,7 +6,8 @@ import {
   stripBearerPrefix,
 } from "../utils/authToken";
 
-const configuredApiUrl = String(import.meta.env.VITE_API_URL || "")
+import { API_URL } from "../config";
+const configuredApiUrl = String(API_URL || "")
   .trim()
   .replace(/^['"]|['"]$/g, "");
 const baseURL = import.meta.env.DEV ? "/api" : (configuredApiUrl || "/api");
