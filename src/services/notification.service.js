@@ -1,5 +1,6 @@
 import api from './backendConnection';
 import studentService from './student.service';
+import { formatDate, formatTime } from '../utils/dateUtils';
 
 const normalizeNotification = (n) => {
   // Map type sit_in to session for UI consistency
@@ -10,13 +11,7 @@ const normalizeNotification = (n) => {
     id: n.id || n.notification_id || n.log_id,
     type: type,
     message: n.message || n.content || n.text || '',
-    time: n.time || (n.created_at ? new Date(n.created_at).toLocaleString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true 
-    }) : 'Just now'),
+    time: n.time || (n.created_at ? `${formatDate(n.created_at)} • ${formatTime(n.created_at)}` : 'Just now'),
     isUnread: n.isUnread !== undefined ? n.isUnread : (n.is_read !== undefined ? !n.is_read : (n.status === 'unread' || n.status === 0 || n.is_unread === 1))
   };
 };

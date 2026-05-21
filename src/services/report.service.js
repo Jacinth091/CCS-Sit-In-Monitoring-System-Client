@@ -1,7 +1,7 @@
 import api from './backendConnection';
 
 const reportService = {
-  generate: (filters) => api.get('admin/reports/generate.php', { params: filters }).then(r => r.data),
+  generate: (filters, page = 1, limit = 20) => api.get('admin/reports/generate.php', { params: { ...filters, page, limit } }).then(r => r.data),
   
   downloadReport: async (filters, type = 'csv') => {
     const response = await api.get('admin/reports/generate.php', {

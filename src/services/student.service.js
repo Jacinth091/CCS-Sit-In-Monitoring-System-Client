@@ -59,11 +59,16 @@ const studentService = {
   },
 
   // Deprecated or legacy (if any)
-  update: async (payload) => {
+  adminUpdate: async (payload) => {
     // Keep for backward compatibility if needed, but point to admin update if it exists
     const response = await api.put("admin/student/update.php", payload);
     return response.data;
   },
-};
+  getDetails: async (id) => {
+    const response = await api.get(`admin/student/read_single.php?id=${id}`);
+    return response.data;
+  },
+  };
+
 
 export default studentService;
