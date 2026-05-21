@@ -37,6 +37,7 @@ import sitinService from "../../services/sitin.service";
 import studentService from "../../services/student.service";
 import { formatDate, formatTime } from "../../utils/dateUtils";
 import StudentDetailsModal from "../../components/modals/StudentDetailsModal";
+import ReservationCard from "../../components/reservations/ReservationCard";
 
 const COURSES = COURSE_LIST;
 
@@ -1170,7 +1171,7 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
         onClick={onClose}
       >
         <div
-          className="bg-bg-secondary rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden border border-border flex flex-col max-h-[92vh] animate-zoom-in"
+          className="bg-bg-secondary rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden border border-border flex flex-col max-h-[92vh] animate-zoom-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Refined Header */}
@@ -1423,62 +1424,25 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 gap-3">
-                        {reservations.slice(0, 10).map((res) => (
-                          <div
-                            key={res.id}
-                            className={`p-5 rounded-lg border shadow-sm flex items-center justify-between group transition-all border-l-4 ${
-                              res.status === "pending"
-                                ? "bg-amber-50/20 border-amber-200 border-l-amber-500"
-                                : "bg-white border-border border-l-primary/10 hover:border-l-primary hover:border-primary/30"
-                            }`}
-                          >
-                            <div className="flex items-center gap-5">
-                              <div
-                                className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-                                  res.status === "pending"
-                                    ? "bg-amber-50 border-amber-100 text-amber-500"
-                                    : "bg-bg-secondary border-border text-primary/40 group-hover:text-primary group-hover:bg-primary/5"
-                                }`}
-                              >
-                                <Calendar className="h-6 w-6" />
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-sm font-black text-primary uppercase tracking-tight">
-                                  {res.lab_name || "Lab Reservation"}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-black text-primary-light bg-bg-secondary px-2 py-0.5 rounded uppercase tracking-wider">
-                                    {res.purpose}
-                                  </span>
-                                  <span className="text-[10px] font-bold text-primary-light/60">
-                                    PC {res.pc_number || "Any"} · {res.time_slot}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xs font-black text-primary mb-1">
-                                {res.reserved_time || "—"}
-                              </p>
-                              <p className="text-[9px] font-bold text-primary-light uppercase tracking-widest">
-                                {formatDate(res.reservation_date)}
-                              </p>
-                              <span
-                                className={`text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm ${
-                                  res.status === "pending"
-                                    ? "bg-amber-500 text-white"
-                                    : res.status === "approved" || res.status === "fulfilled"
-                                      ? "bg-emerald-500 text-white"
-                                      : res.status === "completed"
-                                        ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
-                                        : "bg-red-500 text-white"
-                                }`}
-                              >
-                                {res.status}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                        {reservations.slice(0, 10).map((res) => {
+                          const matchedLab = labs.find(
+                            (lab) => String(lab.id) === String(res.lab_id),
+                          );
+                          const labCode = res.lab_code || matchedLab?.lab_code;
+                          
+                          return (
+                            <ReservationCard
+                              key={res.id}
+                              labCode={labCode || "LAB"}
+                              labName={res.lab_name || matchedLab?.name || "Lab Reservation"}
+                              purpose={res.purpose}
+                              pcNumber={res.pc_number ? `PC ${res.pc_number}` : "ANY PC"}
+                              date={res.reserved_date || res.reservation_date}
+                              time={res.reserved_time || res.time_slot || "00:00"}
+                              status={res.status?.toUpperCase() || "PENDING"}
+                            />
+                          );
+                        })}
                       </div>
                     )}
                   </div>

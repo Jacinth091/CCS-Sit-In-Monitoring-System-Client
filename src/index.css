@@ -9,6 +9,8 @@
   --color-primary-hover: #3A6D8C;   /* Ocean */
   --color-primary-light: #6A9AB0;   /* Steel */
   --color-brand-sand: #EAD8B1;      /* Sand */
+  --color-navy: #001F3F;            /* Constant Navy */
+  --color-sand: #DCC497;            /* Constant Sand */
   
   /* Neutral scale - moving away from pure white to warmer tones */
   --color-bg-primary: #FFFFFF;
@@ -21,6 +23,8 @@
   --color-label-secondary: #3A6D8C;
   --color-label-tertiary: #6A9AB0;
   
+  --font-sans: 'Poppins', system-ui, -apple-system, sans-serif;
+
   /* Semantic */
   --color-success: #166534;
   --color-error: #991B1B;

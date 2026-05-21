@@ -4,6 +4,7 @@ import reservationService from '../../services/reservation.service';
 import sitinService from '../../services/sitin.service';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import { ASSET_URL } from '../../config';
+import ReservationCard from '../reservations/ReservationCard';
 
 function StudentDetailsModal({ isOpen, onClose, student }) {
   const [data, setData] = useState({
@@ -42,26 +43,26 @@ function StudentDetailsModal({ isOpen, onClose, student }) {
 
   return (
     <div className="fixed inset-0 bg-primary/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-border">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-border">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border bg-bg-secondary/30 flex items-center justify-between">
-          <h3 className="text-lg font-black text-primary uppercase tracking-tight">Student Details</h3>
+          <h3 className="text-base font-black text-primary uppercase tracking-tight">Student Details</h3>
           <button onClick={onClose} className="p-2 text-primary-light hover:text-primary transition-colors border border-transparent hover:border-border rounded-lg">
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
           {/* Profile Section */}
-          <div className="flex items-center gap-6 mb-8 p-4 bg-bg-secondary/30 rounded-xl">
-            <div className="w-20 h-20 rounded-2xl bg-white border border-border shadow-sm flex items-center justify-center overflow-hidden">
-              {student.profile_pic ? <img src={`${ASSET_URL}/${student.profile_pic}`} className="w-full h-full object-cover" /> : <User className="h-10 w-10 text-primary/20" />}
+          <div className="flex items-center gap-4 mb-6 p-4 bg-bg-secondary/30 rounded-xl">
+            <div className="w-16 h-16 rounded-xl bg-white border border-border shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+              {student.profile_pic ? <img src={`${ASSET_URL}/${student.profile_pic}`} className="w-full h-full object-cover" /> : <User className="h-8 w-8 text-primary/20" />}
             </div>
             <div>
-              <h2 className="text-xl font-black text-primary">{student.first_name} {student.last_name}</h2>
-              <p className="text-xs font-black text-primary-light uppercase tracking-widest">{student.student_id}</p>
-              <p className="text-xs font-bold text-primary-light">{student.course} - {student.course_level}</p>
+              <h2 className="text-lg font-black text-primary">{student.first_name} {student.last_name}</h2>
+              <p className="text-[10px] font-black text-primary-light uppercase tracking-widest">{student.student_id}</p>
+              <p className="text-[10px] font-bold text-primary-light">{student.course} - {student.course_level}</p>
             </div>
           </div>
 
@@ -77,13 +78,16 @@ function StudentDetailsModal({ isOpen, onClose, student }) {
                 {data.reservations.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {data.reservations.slice(0, 4).map(res => (
-                      <div key={res.id} className="p-4 rounded-xl border border-border bg-bg-secondary/10 flex items-center justify-between">
-                        <div>
-                          <p className="text-xs font-bold text-primary">{res.lab_name}</p>
-                          <p className="text-[10px] font-black text-primary-light uppercase">{formatDate(res.reserved_date)} · {formatTime(res.reserved_time)}</p>
-                        </div>
-                        <span className={`px-2 py-1 text-[9px] font-black uppercase rounded-lg ${res.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{res.status}</span>
-                      </div>
+                      <ReservationCard
+                        key={res.id}
+                        labCode={res.lab_code || "LAB"}
+                        labName={res.lab_name || "Lab Reservation"}
+                        purpose={res.purpose || "RESERVATION"}
+                        pcNumber={res.pc_number ? `PC ${res.pc_number}` : "ANY PC"}
+                        date={res.reserved_date || res.reservation_date}
+                        time={res.reserved_time || "00:00"}
+                        status={res.status?.toUpperCase() || "PENDING"}
+                      />
                     ))}
                   </div>
                 ) : <p className="text-xs text-primary-light italic">No reservations found.</p>}
