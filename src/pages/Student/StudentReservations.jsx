@@ -30,18 +30,9 @@ import Input from "../../components/ui/Input";
 import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import reservationService from "../../services/reservation.service";
+import { formatDate, formatTime } from "../../utils/dateUtils";
 
 /* ── Helpers ── */
-const format12HourTime = (timeStr) => {
-  if (!timeStr) return "--:--";
-  const [hours, minutes] = timeStr.split(":");
-  if (!hours || !minutes) return timeStr;
-  const h = parseInt(hours, 10);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const formattedH = h % 12 || 12;
-  return `${formattedH}:${minutes} ${ampm}`;
-};
-
 const formatRelativeTime = (value) => {
   if (!value) return "";
   const date = new Date(value);
@@ -52,7 +43,7 @@ const formatRelativeTime = (value) => {
     if (diffInHours < 1) return "Just now";
     return `${Math.floor(diffInHours)} hours ago`;
   }
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  return formatDate(date);
 };
 
 /* ── Integrated PC Map Component ── */
@@ -592,7 +583,7 @@ const RESERVATION_TABS = [
   { id: "all", label: "All", icon: ClipboardList },
   { id: "pending", label: "Pending", icon: Clock },
   { id: "approved", label: "Approved", icon: CheckCircle },
-  { id: "fulfilled", label: "Completed", icon: CheckCircle },
+  { id: "fulfilled", label: "Fulfilled", icon: CheckCircle },
   { id: "rejected", label: "Rejected", icon: XCircle },
   { id: "rescheduled", label: "Rescheduled", icon: RefreshCw },
 ];
@@ -975,20 +966,11 @@ export default function StudentReservations() {
                             <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-primary-light">
                               <span className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1.5 rounded-lg text-primary border border-border/50">
                                 <Calendar className="h-3.5 w-3.5" />{" "}
-                                {new Date(res.reserved_date).toLocaleDateString(
-                                  [],
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  },
-                                )}
+                                {formatDate(res.reserved_date)}
                               </span>
                               <span className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1.5 rounded-lg text-primary border border-border/50">
                                 <Clock className="h-3.5 w-3.5" />{" "}
-                                {format12HourTime(
-                                  res.reserved_time || res.time_slot,
-                                )}
+                                {formatTime(res.reserved_time || res.time_slot)}
                               </span>
                               <span className="flex items-center gap-1.5 bg-bg-secondary/60 px-2.5 py-1.5 rounded-lg text-primary-light border border-border/60 text-[10px] font-extrabold tracking-wide">
                                 <Clock className="h-3 w-3" />

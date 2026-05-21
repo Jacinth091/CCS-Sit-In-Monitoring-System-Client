@@ -8,6 +8,7 @@ import StudentFeedbackModal from '../../components/modals/StudentFeedbackModal';
 import { Loader2, ArrowLeft, History, Clock, FlaskConical } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
+import { formatDate, formatDuration, formatTime } from '../../utils/dateUtils';
 
 export default function MyHistory() {
   const { user } = useAuth();
@@ -45,23 +46,21 @@ export default function MyHistory() {
       if (res.status === 'success') {
         const s = res.data;
         
-        // Robust duration formatting
+        // Use central utility for duration formatting
         let displayDuration = '0h 0m';
         if (s.total_duration) {
-          displayDuration = s.total_duration;
+           displayDuration = s.total_duration;
         } else if (s.total_minutes !== undefined) {
-          const mins = parseInt(s.total_minutes);
-          displayDuration = `${Math.floor(mins / 60)}h ${mins % 60}m`;
+           displayDuration = formatDuration(s.total_minutes);
         } else if (s.total_hours !== undefined) {
-          const totalMins = Math.round(parseFloat(s.total_hours) * 60);
-          displayDuration = `${Math.floor(totalMins / 60)}h ${totalMins % 60}m`;
+           displayDuration = formatDuration(Math.round(parseFloat(s.total_hours) * 60));
         }
 
         setStats({
           totalSessions: s.total_sessions || 0,
           totalHours: displayDuration,
           mostVisitedLab: s.most_visited_lab || '—',
-          lastSessionDate: s.last_session_date ? new Date(s.last_session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—',
+          lastSessionDate: formatDate(s.last_session_date),
           avgDuration: s.avg_duration || '—',
           longestSession: s.longest_duration || '—'
         });
@@ -78,25 +77,22 @@ export default function MyHistory() {
       const rawData = res.data || [];
       
       const transformed = rawData.map(s => {
-        // Calculate duration if not provided by backend or if we want a nice string
+        // Use central utility for duration if we have minutes
         let durationStr = s.duration;
         if (!durationStr && s.duration_minutes) {
-          const mins = parseInt(s.duration_minutes);
-          const h = Math.floor(mins / 60);
-          const m = mins % 60;
-          durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+          durationStr = formatDuration(s.duration_minutes);
         }
 
         return {
           id: s.id || s.log_id,
-          date: new Date(s.time_in).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          date: formatDate(s.time_in),
           name: s.name,
           lab_code: s.lab_code,
           pc_number: s.pc_number,
           purpose: s.purpose,
           status: s.status,
-          start_time: new Date(s.time_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          end_time: s.time_out ? new Date(s.time_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+          start_time: formatTime(s.time_in),
+          end_time: s.time_out ? formatTime(s.time_out) : null,
           duration: durationStr,
           duration_minutes: s.duration_minutes || 0,
           studentRating: s.student_rating,
