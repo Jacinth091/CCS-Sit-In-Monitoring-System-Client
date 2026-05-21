@@ -4,6 +4,7 @@ import StudentAnnouncementCard from '../../components/announcements/StudentAnnou
 import announcementService from '../../services/announcement.service';
 import { toast } from 'sonner';
 import { Link } from 'react-router';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
@@ -41,14 +42,7 @@ export default function Announcements() {
         id: a.id,
         title: a.title || 'Administrative Update',
         body: a.content || a.body || '',
-        date: a.created_at ? new Date(a.created_at).toLocaleString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }) : '—',
+        date: a.created_at ? `${formatDate(a.created_at)} • ${formatTime(a.created_at)}` : '—',
         authorName: a.admin_username || a.author || 'CCS Admin',
         authorInitials: (a.admin_username || a.author || 'CA').toString().split(' ').map(n => n[0]).join('').toUpperCase(),
         isPinned: !!(a.is_pinned || a.isPinned),

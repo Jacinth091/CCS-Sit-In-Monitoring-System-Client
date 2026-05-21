@@ -7,6 +7,7 @@ import {
 import announcementService from '../../services/announcement.service';
 import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { toast } from 'sonner';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 
 export default function AnnouncementDetail() {
   const { id } = useParams();
@@ -23,14 +24,7 @@ export default function AnnouncementDetail() {
         if (data) {
           const transformed = {
             ...data,
-            date: data.created_at ? new Date(data.created_at).toLocaleString('en-US', { 
-              month: 'long', 
-              day: 'numeric', 
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            }) : '—',
+            date: data.created_at ? `${formatDate(data.created_at)} • ${formatTime(data.created_at)}` : '—',
             authorName: data.admin_username || data.author || 'Lab Administrator',
             authorInitials: (data.admin_username || data.author || 'LA').toString().split(' ').map(n => n[0]).join('').toUpperCase(),
             isImportant: !!(data.is_important || data.isImportant),
