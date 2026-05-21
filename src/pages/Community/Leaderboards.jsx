@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Trophy, Medal, Crown, Search, Clock, Star, ArrowUpRight, Filter, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import leaderboardService from '../../services/leaderboard.service';
+import { formatTime } from '../../utils/dateUtils';
 
 export default function Leaderboards() {
   const [metric, setMetric] = useState('hours'); // 'hours' or 'sessions'
@@ -77,7 +78,7 @@ export default function Leaderboards() {
             </p>
             {lastUpdated && (
               <p className="text-[10px] font-bold text-primary-light/60 flex items-center gap-1.5 uppercase tracking-widest">
-                <Clock className="w-3 h-3" /> Last updated: {lastUpdated.toLocaleTimeString()}
+                <Clock className="w-3 h-3" /> Last updated: {formatTime(lastUpdated)}
               </p>
             )}
           </div>

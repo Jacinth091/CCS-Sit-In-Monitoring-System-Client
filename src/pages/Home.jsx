@@ -9,13 +9,16 @@ import {
   Star,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ASSET_URL } from "../config";
 import { Link } from "react-router";
 import ccsLogo from "../assets/images/png/uccslogobg.png";
 import Card from "../components/ui/Card";
 import testimonialService from "../services/testimonial.service";
+import leaderboardService from "../services/leaderboard.service";
 
 export default function Home() {
   const [testimonials, setTestimonials] = useState([]);
+  const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fallback sample testimonials if none are approved in DB
@@ -76,27 +79,45 @@ export default function Home() {
     },
   ];
 
+  // Default fallback leaderboard data
+  const defaultLeaderboard = [
+    { student_name: "Adrian Mercado", course: "BSCS 3", hours: 142.5, rank: 1 },
+    { student_name: "Sophia Villarante", course: "BSIT 4", hours: 128.0, rank: 2 },
+    { student_name: "James Yap", course: "BSCS 2", hours: 115.2, rank: 3 },
+  ];
+
   useEffect(() => {
-    const fetchTestimonials = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await testimonialService.getApproved();
-        if (response.status === "success" && response.data?.length > 0) {
-          // Shuffle and only show up to 6 approved testimonials on the home page
-          const shuffled = [...response.data].sort(() => 0.5 - Math.random());
+        // Fetch testimonials
+        const tResponse = await testimonialService.getApproved();
+        if (tResponse.status === "success" && tResponse.data?.length > 0) {
+          const shuffled = [...tResponse.data].sort(() => 0.5 - Math.random());
           setTestimonials(shuffled.slice(0, 6));
         } else {
           setTestimonials(sampleTestimonials);
         }
+
+        // Fetch Leaderboard (Monthly by hours)
+        const lResponse = await leaderboardService.getLeaderboard('hours', 'monthly');
+        if (lResponse && lResponse.data?.entries) {
+          setLeaderboardData(lResponse.data.entries.slice(0, 3));
+        } else {
+          setLeaderboardData(defaultLeaderboard);
+        }
       } catch (error) {
-        console.error("Failed to fetch testimonials:", error);
+        console.error("Failed to fetch initial data:", error);
         setTestimonials(sampleTestimonials);
+        setLeaderboardData(defaultLeaderboard);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTestimonials();
+    fetchData();
   }, []);
+
 
   return (
     <div className="min-h-screen bg-bg-secondary flex flex-col font-sans selection:bg-primary selection:text-white">
@@ -212,51 +233,26 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Adrian Mercado",
-                course: "BSCS 3",
-                value: "142.5",
-                avatar: "AM",
-                rank: 1,
-                trend: "+12%",
-              },
-              {
-                name: "Sophia Villarante",
-                course: "BSIT 4",
-                value: "128.0",
-                avatar: "SV",
-                rank: 2,
-                trend: "+5%",
-              },
-              {
-                name: "James Yap",
-                course: "BSCS 2",
-                value: "115.2",
-                avatar: "JY",
-                rank: 3,
-                trend: "+18%",
-              },
-            ].map((student, i) => (
+            {leaderboardData.map((student, i) => (
               <Card
                 key={i}
                 className="p-8 bg-white border-primary/5 shadow-xl hover:shadow-2xl transition-all duration-500 group relative overflow-hidden"
               >
                 <div
-                  className={`absolute top-0 left-0 w-1.5 h-full ${student.rank === 1 ? "bg-primary" : "bg-primary/20"}`}
+                  className={`absolute top-0 left-0 w-1.5 h-full ${i === 0 ? "bg-primary" : "bg-primary/20"}`}
                 />
                 <div className="flex items-center justify-between mb-6">
                   <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black border-2 border-white shadow-lg ${student.rank === 1 ? "bg-primary text-brand-sand" : "bg-bg-secondary text-primary"}`}
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black border-2 border-white shadow-lg ${i === 0 ? "bg-primary text-brand-sand" : "bg-bg-secondary text-primary"}`}
                   >
-                    {student.avatar}
+                    {student.student_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                   </div>
                   <span className="text-[10px] font-black text-primary/20 uppercase tracking-widest">
-                    Rank #0{student.rank}
+                    Rank #0{i + 1}
                   </span>
                 </div>
                 <h3 className="text-base font-black text-primary uppercase tracking-tight mb-1 group-hover:text-primary-hover transition-colors">
-                  {student.name}
+                  {student.student_name}
                 </h3>
                 <p className="text-[9px] font-bold text-primary-light uppercase tracking-widest mb-6">
                   {student.course}
@@ -268,15 +264,7 @@ export default function Home() {
                       Accumulated
                     </p>
                     <p className="text-xl font-black text-primary tracking-tighter">
-                      {student.value} hrs
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">
-                      Trend
-                    </p>
-                    <p className="text-[10px] font-black text-emerald-600 flex items-center gap-1">
-                      <TrendingUp className="h-2.5 w-2.5" /> {student.trend}
+                      {student.hours !== undefined ? Number(student.hours).toFixed(1) : (student.display_value || student.value || "0.0")}
                     </p>
                   </div>
                 </div>
@@ -325,7 +313,7 @@ export default function Home() {
                   <div className="w-10 h-10 rounded-xl bg-primary-hover border border-white/20 flex items-center justify-center text-[10px] font-black text-white uppercase shadow-lg overflow-hidden">
                     {testimony.profile_pic ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL}/${testimony.profile_pic}`}
+                        src={`${ASSET_URL}/${testimony.profile_pic}`}
                         className="w-full h-full object-cover"
                       />
                     ) : (
