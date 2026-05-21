@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ASSET_URL } from '../../config';
 import {
   User, BookOpen, GraduationCap, Mail, MapPin, Hash,
   Megaphone, ShieldCheck, ChevronRight, Clock, Calendar, ArrowRight, AlertCircle, History, MessageCircle
@@ -12,6 +13,7 @@ import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { COURSES } from '../../constants/app.constants';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 
 const RULES = [
   'Maintain silence, decorum, and order inside the laboratory. Turn off or keep on silent mode all mobile phones and personal electronic devices.',
@@ -60,14 +62,7 @@ export default function StudentDashboard() {
           title: a.title || 'Administrative Update',
           body: a.content || a.body || '',
           isImportant: a.is_important,
-          date: new Date(a.created_at || a.date).toLocaleString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          }),
+          date: `${formatDate(a.created_at || a.date)} • ${formatTime(a.created_at || a.date)}`,
           author: a.admin_username || a.author || 'CCS Admin'
         })) : [];
         setAnnouncements(transformed);
@@ -80,7 +75,7 @@ export default function StudentDashboard() {
             totalHours: s.total_duration || '0h 0m',
             totalSessions: s.total_sessions ?? s.count ?? 0,
             mostVisitedLab: s.most_visited_lab || '—',
-            lastSession: s.last_session_date ? new Date(s.last_session_date).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'
+            lastSession: formatDate(s.last_session_date)
           });
         }
       } catch (err) {
@@ -118,7 +113,7 @@ export default function StudentDashboard() {
                   <div className="absolute inset-0 bg-primary-hover/20" />
                   {user?.profile_pic ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL}/${user.profile_pic}`} 
+                      src={`${ASSET_URL}/${user.profile_pic}`} 
                       alt="Profile" 
                       className="w-full h-full object-cover relative z-10"
                     />
@@ -402,7 +397,7 @@ export default function StudentDashboard() {
               <div className="w-10 h-10 rounded-lg bg-primary-hover/10 flex items-center justify-center overflow-hidden shrink-0 border border-primary-hover/10">
                 {user?.profile_pic ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL}/${user.profile_pic}`} 
+                      src={`${ASSET_URL}/${user.profile_pic}`} 
                       alt="Profile" 
                       className="w-full h-full object-cover"
                     />

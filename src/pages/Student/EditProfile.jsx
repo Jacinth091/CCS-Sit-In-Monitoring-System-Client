@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ASSET_URL } from '../../config';
 import { User, Save, Loader2, Camera, CheckCircle, AlertCircle, ArrowLeft, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -158,7 +159,7 @@ export default function EditProfile() {
                 <div className="w-full h-full rounded-[0.9rem] bg-primary flex items-center justify-center border border-primary overflow-hidden relative group/avatar">
                   {user?.profile_pic ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL}/${user.profile_pic}`} 
+                      src={`${ASSET_URL}/${user.profile_pic}`} 
                       alt="Profile" 
                       className="w-full h-full object-cover relative z-10"
                     />
