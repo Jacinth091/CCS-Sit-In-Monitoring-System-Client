@@ -17,37 +17,13 @@ import {
   Eye,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { ASSET_URL } from "../../config";
 import { toast } from "sonner";
 import FeedbackModal from "../../components/modals/FeedbackModal";
 import SitInMetricCards from "../../components/sit-in/SitInMetricCards";
 import { SITIN_PURPOSES } from "../../constants/app.constants";
 import sitinService from "../../services/sitin.service";
-
-function formatDate(ts) {
-  if (!ts) return "—";
-  return new Date(ts).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(ts) {
-  if (!ts) return "—";
-  return new Date(ts).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function calcDuration(timeIn, timeOut) {
-  if (!timeIn || !timeOut) return null;
-  const diff = Math.floor((new Date(timeOut) - new Date(timeIn)) / 60000);
-  const h = Math.floor(diff / 60);
-  const m = diff % 60;
-  if (h === 0) return `${m}m`;
-  return `${h}h ${m}m`;
-}
+import { formatDate, formatTime, formatDuration, calcDuration } from "../../utils/dateUtils";
 
 function StatusBadge({ status }) {
   const isOngoing = status?.toLowerCase() === "ongoing";
@@ -106,7 +82,7 @@ function RecordDetailModal({ record, onClose }) {
               <div className="w-full h-full rounded-[0.65rem] bg-white flex items-center justify-center overflow-hidden">
                 {record.profile_pic ? (
                   <img
-                    src={`${import.meta.env.VITE_API_URL}/${record.profile_pic}`}
+                    src={`${ASSET_URL}/${record.profile_pic}`}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -554,15 +530,15 @@ export default function SitInHistory() {
                     >
                       <td className="py-3 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
-                            {record.profile_pic ? (
+                          <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10 relative">
+                            <User className="h-4 w-4 text-primary absolute" />
+                            {record.profile_pic && (
                               <img
-                                src={`${import.meta.env.VITE_API_URL}/${record.profile_pic}`}
+                                src={`${ASSET_URL}/${record.profile_pic}`}
                                 alt=""
-                                className="w-full h-full object-cover rounded-md"
+                                className="w-full h-full object-cover rounded-md relative z-10"
+                                onError={(e) => e.target.style.display = 'none'}
                               />
-                            ) : (
-                              <User className="h-4 w-4 text-primary" />
                             )}
                           </div>
                           <div className="flex flex-col">

@@ -7,6 +7,7 @@ import {
 import announcementService from '../../services/announcement.service';
 import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { toast } from 'sonner';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 
 export default function AdminAnnouncements() {
   const [announcements, setAnnouncements] = useState([]);
@@ -42,7 +43,8 @@ export default function AdminAnnouncements() {
         status: (a.status || 'Published').charAt(0).toUpperCase() + (a.status || 'Published').slice(1), 
         isImportant: !!(a.is_important || a.isImportant), 
         isPinned: !!(a.is_pinned || a.isPinned), 
-        date: new Date(a.created_at || a.date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }), 
+        date: `${formatDate(a.created_at || a.date)} • ${formatTime(a.created_at || a.date)}`,
+ 
         authorName: a.admin_username || a.author || 'Admin', 
         authorInitials: (a.admin_username || a.author || 'CA').split(' ').map(n => n[0]).join('').toUpperCase() 
       })) : [];

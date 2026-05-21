@@ -11,17 +11,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ASSET_URL } from "../../config";
 import { toast } from "sonner";
 import { SITIN_PURPOSES } from "../../constants/app.constants";
 import sitinService from "../../services/sitin.service";
-
-function formatTime(ts) {
-  if (!ts) return "—";
-  return new Date(ts).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatTime } from "../../utils/dateUtils";
 
 function SessionDetailModal({ session, onClose, onEndSession }) {
   if (!session) return null;
@@ -61,15 +55,15 @@ function SessionDetailModal({ session, onClose, onEndSession }) {
         <div className="px-6 py-6 border-b border-border bg-white">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-primary-hover to-brand-sand p-0.5 shadow-sm">
-              <div className="w-full h-full rounded-[0.65rem] bg-white flex items-center justify-center overflow-hidden">
-                {session.profile_pic ? (
+              <div className="w-full h-full rounded-[0.65rem] bg-white flex items-center justify-center overflow-hidden relative">
+                <User className="h-6 w-6 text-primary absolute" />
+                {session.profile_pic && (
                   <img
-                    src={`${import.meta.env.VITE_API_URL}/${session.profile_pic}`}
+                    src={`${ASSET_URL}/${session.profile_pic}`}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover relative z-10"
+                    onError={(e) => e.target.style.display = 'none'}
                   />
-                ) : (
-                  <User className="h-6 w-6 text-primary" />
                 )}
               </div>
             </div>
@@ -373,7 +367,7 @@ export default function CurrentSitIn() {
                         <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
                           {session.profile_pic ? (
                             <img
-                              src={`${import.meta.env.VITE_API_URL}/${session.profile_pic}`}
+                              src={`${ASSET_URL}/${session.profile_pic}`}
                               alt=""
                               className="w-full h-full object-cover rounded-md"
                             />

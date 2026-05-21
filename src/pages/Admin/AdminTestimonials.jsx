@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ASSET_URL } from "../../config";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -22,6 +23,7 @@ import {
 
 import testimonialService from "../../services/testimonial.service";
 import notificationService from "../../services/notification.service";
+import { formatDate } from "../../utils/dateUtils";
 
 export default function AdminTestimonials() {
   const [testimonials, setTestimonials] = useState([]);
@@ -435,18 +437,18 @@ export default function AdminTestimonials() {
                 {/* Author Footer (Full Transparency for Admin) */}
                 <div className="mt-auto px-5 py-4 bg-bg-secondary/30 border-t border-border rounded-b-xl flex items-center justify-between gap-3 shrink-0">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-10 w-10 rounded-[10px] bg-white border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-inner p-0.5">
-                      {t.profile_pic ? (
-                        <img
-                          src={`${import.meta.env.VITE_API_URL}/${t.profile_pic}`}
-                          className="w-full h-full object-cover rounded-[8px]"
-                          alt="Profile"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/5 flex items-center justify-center rounded-[8px]">
-                          <User className="h-4 w-4 text-primary-light" />
-                        </div>
-                      )}
+                    <div className="h-10 w-10 rounded-[10px] bg-white border border-border shrink-0 shadow-inner p-0.5">
+                      <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-[8px] relative bg-primary/5">
+                        <User className="h-4 w-4 text-primary-light absolute" />
+                        {t.profile_pic && (
+                          <img
+                            src={`${ASSET_URL}/${t.profile_pic}`}
+                            className="w-full h-full object-cover relative z-10"
+                            alt="Profile"
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                        )}
+                      </div>
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-black text-primary truncate tracking-tight">
@@ -455,10 +457,7 @@ export default function AdminTestimonials() {
                       <div className="flex items-center gap-1.5 text-[8px] font-bold text-primary-light uppercase tracking-widest mt-0.5">
                         <span className="text-primary-hover">{t.course || "Verified Student"}</span>
                         <span className="opacity-30">•</span>
-                        {new Date(t.created_at).toLocaleDateString([], {
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {formatDate(t.created_at)}
                       </div>
                     </div>
                   </div>
