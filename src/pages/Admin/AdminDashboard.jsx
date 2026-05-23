@@ -232,7 +232,10 @@ export default function AdminDashboard() {
           <div className="p-4 space-y-3 grow overflow-y-auto max-h-[500px] custom-scrollbar">
             {stats.recent_sessions && stats.recent_sessions.length > 0 ? (
               stats.recent_sessions.map((session, idx) => {
-                const isOngoing = session.status === 'active';
+                const rawStatus = String(session.status || '').toLowerCase().trim();
+                const isOngoing = rawStatus === 'active' || rawStatus === 'ongoing' || rawStatus === '1';
+                const isCompleted = rawStatus === 'completed' || rawStatus === 'finished' || rawStatus === '0';
+
                 return (
                   <div
                     key={idx}
@@ -251,7 +254,7 @@ export default function AdminDashboard() {
                                   {session.pc_number ? `PC ${session.pc_number}` : 'No Station'}
                                 </span>
                                 <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/5">
-                                  {session.lab_name}
+                                  {session.lab_code ? `${session.lab_code} - ${session.lab_name}` : session.lab_name}
                                 </span>
                               </div>
                               <p className="text-[12px] font-bold text-primary-light leading-tight">
@@ -276,9 +279,12 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="flex flex-col items-end justify-between min-w-[88px]">
-                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${isOngoing
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                            : 'bg-bg-secondary text-primary-light border-border'
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${
+                            isOngoing
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm'
+                              : isCompleted
+                                ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                : 'bg-bg-secondary text-primary-light border-border'
                             }`}>
                             {session.status}
                           </span>
