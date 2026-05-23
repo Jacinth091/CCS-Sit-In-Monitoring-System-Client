@@ -4,13 +4,20 @@ import { useNavigate } from 'react-router';
 import ccsLogo from '../assets/images/png/uccslogobg.png';
 import authService from '../services/auth.service';
 import { toast } from 'sonner';
-import { COURSES, ACADEMIC_YEARS } from '../constants/app.constants';
+import { ACADEMIC_YEARS } from '../constants/app.constants';
+import { CourseSearchableDropdown } from '../components/ui';
+import { 
+  validateIdNumber, 
+  validateName, 
+  validateEmail, 
+  validateAddress 
+} from '../utils/validationUtils';
 
 export default function SignUp() {
   const inputStyles =
-    "w-full px-0 py-2 bg-transparent border-0 border-b border-border focus:ring-0 focus:outline-none focus:border-primary-hover text-primary text-sm transition-colors duration-150 placeholder:text-primary-light/50";
+    "w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary placeholder:text-primary-light/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
   const labelStyles =
-    "block text-[10px] font-bold tracking-wider uppercase text-primary/60 mb-1";
+    "block text-[9px] font-black tracking-[0.15em] uppercase text-primary-light mb-1.5 ml-1";
 
   const navigate = useNavigate();
 
@@ -37,13 +44,49 @@ export default function SignUp() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    // Field Validation
+    if (!validateIdNumber(formData.student_id)) {
+      toast.error("ID Number must be exactly 8 digits.");
+      return;
+    }
+
+    if (!validateName(formData.first_name)) {
+      toast.error("Invalid First Name format.");
+      return;
+    }
+
+    if (formData.middle_name && !validateName(formData.middle_name)) {
+      toast.error("Invalid Middle Name format.");
+      return;
+    }
+
+    if (!validateName(formData.last_name)) {
+      toast.error("Invalid Last Name format.");
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (formData.address?.trim() && !validateAddress(formData.address)) {
+      toast.error("Please enter a valid address (min. 5 characters).");
+      return;
+    }
+
     if (formData.password !== formData.confirm_password) {
       toast.error("Passwords do not match!");
       return;
     }
 
-    if (!formData.student_id || !formData.first_name || !formData.last_name || !formData.password) {
-      toast.error("Please fill in all required fields.");
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (!formData.course || !formData.course_level) {
+      toast.error("Please select your course and year level.");
       return;
     }
 
@@ -56,7 +99,29 @@ export default function SignUp() {
       navigate('/auth/login');
 
     } catch (err) {
-      toast.error(err.customMessage || "Registration failed. Please try again.");
+      // Improved error message extraction based on Backend Validation Guide
+      let errorMessage = "Registration failed. Please try again.";
+      
+      if (err.response) {
+        const data = err.response.data;
+        const status = err.response.status;
+        
+        if (status === 409) {
+          errorMessage = data.message || data.error || "This Student ID or Email is already registered.";
+        } else if (status === 422) {
+          if (data.errors && typeof data.errors === 'object') {
+            errorMessage = Object.values(data.errors)[0];
+          } else {
+            errorMessage = data.message || "Validation failed. Please check your inputs.";
+          }
+        } else {
+          errorMessage = data.message || data.error || err.customMessage || `Error ${status}: Registration failed.`;
+        }
+      } else if (err.customMessage) {
+        errorMessage = err.customMessage;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -140,86 +205,86 @@ export default function SignUp() {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelStyles}>Course</label>
-                <select 
-                  name="course" 
-                  value={formData.course} 
-                  onChange={handleChange} 
-                  className={`${inputStyles} cursor-pointer appearance-none`}
-                >
-                  <option value="" disabled>Select a Course</option>
-                  {COURSES.map(course => (
-                    <option key={course} value={course}>{course}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelStyles}>Year Level</label>
-                <select 
-                  name="course_level" 
-                  value={formData.course_level} 
-                  onChange={handleChange} 
-                  className={`${inputStyles} cursor-pointer appearance-none`}
-                >
-                  <option value="" disabled>Select Year</option>
-                  {ACADEMIC_YEARS.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className={labelStyles}>Email</label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.edu" className={inputStyles} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelStyles}>Password</label>
-                <div className="relative">
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    name="password" 
-                    value={formData.password} 
-                    onChange={handleChange} 
-                    placeholder="••••••••" 
-                    className={`${inputStyles} pr-8`} 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className={labelStyles}>Confirm Password</label>
-                <div className="relative">
-                  <input 
-                    type={showConfirmPassword ? 'text' : 'password'} 
-                    name="confirm_password" 
-                    value={formData.confirm_password} 
-                    onChange={handleChange} 
-                    placeholder="••••••••" 
-                    className={`${inputStyles} pr-8`} 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
+               <div>
+                 <label className={labelStyles}>Course</label>
+                 <CourseSearchableDropdown
+                   value={formData.course}
+                   onChange={(val) => setFormData({ ...formData, course: val })}
+                   placeholder="Select a Course"
+                   className={`${inputStyles} flex items-center justify-between cursor-pointer`}
+                 />
+               </div>
+               <div>
+                 <label className={labelStyles}>Year Level</label>
+                 <div className="relative">
+                   <select 
+                     name="course_level" 
+                     value={formData.course_level} 
+                     onChange={handleChange} 
+                     className={`${inputStyles} cursor-pointer appearance-none`}
+                   >
+                     <option value="" disabled>Select Year</option>
+                     {ACADEMIC_YEARS.map(year => (
+                       <option key={year} value={year}>{year} Year</option>
+                     ))}
+                   </select>
+                   <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-primary-light">
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg>
+                   </div>
+                 </div>
+               </div>
+             </div>
+             <div>
+               <label className={labelStyles}>Email</label>
+               <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.edu" className={inputStyles} />
+             </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div>
+                 <label className={labelStyles}>Password</label>
+                 <div className="relative">
+                   <input 
+                     type={showPassword ? 'text' : 'password'} 
+                     name="password" 
+                     value={formData.password} 
+                     onChange={handleChange} 
+                     placeholder="••••••••" 
+                     className={`${inputStyles} pr-10`} 
+                   />
+                   <button
+                     type="button"
+                     onClick={() => setShowPassword(!showPassword)}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
+                   >
+                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                   </button>
+                 </div>
+               </div>
+               <div>
+                 <label className={labelStyles}>Confirm Password</label>
+                 <div className="relative">
+                   <input 
+                     type={showConfirmPassword ? 'text' : 'password'} 
+                     name="confirm_password" 
+                     value={formData.confirm_password} 
+                     onChange={handleChange} 
+                     placeholder="••••••••" 
+                     className={`${inputStyles} pr-10`} 
+                   />
+                   <button
+                     type="button"
+                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
+                   >
+                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                   </button>
+                 </div>
+               </div>
+             </div>
 
-            <div>
-              <label className={labelStyles}>Address</label>
-              <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Cebu City" className={inputStyles} />
-            </div>
+             <div>
+               <label className={labelStyles}>Address</label>
+               <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Cebu City" className={inputStyles} />
+             </div>
 
             <hr className="border-border" />
             <button

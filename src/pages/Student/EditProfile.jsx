@@ -5,7 +5,13 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import studentService from '../../services/student.service';
 import { Link } from 'react-router';
-import { COURSES, ACADEMIC_YEARS } from '../../constants/app.constants';
+import { ACADEMIC_YEARS } from '../../constants/app.constants';
+import { CourseSearchableDropdown } from '../../components/ui';
+import { 
+  validateName, 
+  validateEmail, 
+  validateAddress 
+} from '../../utils/validationUtils';
 
 const inputStyles =
   'w-full px-4 py-2.5 rounded-xl border border-border bg-white text-xs text-primary placeholder:text-primary-light/40 focus:outline-none focus:ring-2 focus:ring-primary-hover/20 focus:border-primary-hover transition-all shadow-sm';
@@ -98,8 +104,34 @@ export default function EditProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.first_name || !formData.last_name || !formData.email) {
-      toast.error('First name, last name, and email are required.');
+    // Field Validation
+    if (!validateName(formData.first_name)) {
+      toast.error("Invalid First Name format.");
+      return;
+    }
+
+    if (formData.middle_name && !validateName(formData.middle_name)) {
+      toast.error("Invalid Middle Name format.");
+      return;
+    }
+
+    if (!validateName(formData.last_name)) {
+      toast.error("Invalid Last Name format.");
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (formData.address?.trim() && !validateAddress(formData.address)) {
+      toast.error("Please enter a valid address (min. 5 characters).");
+      return;
+    }
+
+    if (!formData.course || !formData.course_level) {
+      toast.error('Course and Year Level are required.');
       return;
     }
 
@@ -113,7 +145,29 @@ export default function EditProfile() {
 
       toast.success('Profile updated successfully!');
     } catch (err) {
-      toast.error(err.customMessage || 'Failed to update profile. Please try again.');
+      // Improved error message extraction based on Backend Validation Guide
+      let errorMessage = "Failed to update profile. Please try again.";
+      
+      if (err.response) {
+        const data = err.response.data;
+        const status = err.response.status;
+        
+        if (status === 409) {
+          errorMessage = data.message || data.error || "Conflict: This Student ID or Email already exists in the system.";
+        } else if (status === 422) {
+          if (data.errors && typeof data.errors === 'object') {
+            errorMessage = Object.values(data.errors)[0];
+          } else {
+            errorMessage = data.message || "Validation failed. Please check your inputs.";
+          }
+        } else {
+          errorMessage = data.message || data.error || err.customMessage || `Error ${status}: Update failed.`;
+        }
+      } else if (err.customMessage) {
+        errorMessage = err.customMessage;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -278,22 +332,12 @@ export default function EditProfile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelStyles}>Course / Program</label>
-                <div className="relative">
-                  <select
-                    name="course"
-                    value={formData.course}
-                    onChange={handleChange}
-                    className={`${inputStyles} cursor-pointer appearance-none`}
-                  >
-                    <option value="" disabled>Select a Course</option>
-                    {COURSES.map(course => (
-                      <option key={course} value={course}>{course}</option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-primary-light">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg>
-                  </div>
-                </div>
+                <CourseSearchableDropdown
+                  value={formData.course}
+                  onChange={(val) => setFormData({ ...formData, course: val })}
+                  placeholder="Select a Course"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-xs text-primary placeholder:text-primary-light/40 focus:outline-none focus:ring-2 focus:ring-primary-hover/20 focus:border-primary-hover transition-all shadow-sm flex items-center justify-between cursor-pointer"
+                />
               </div>
               <div>
                 <label className={labelStyles}>Academic Year Level</label>
