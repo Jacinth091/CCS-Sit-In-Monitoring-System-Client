@@ -19,8 +19,10 @@ const sitinService = {
         return response.data;
     },
 
-    getHistoryByStudent: async (studentId) => {
-        const response = await api.get(`student/sitin/read.php?student_id=${studentId}`);
+    getHistoryByStudent: async (studentId, params = {}) => {
+        const response = await api.get('student/sitin/read.php', {
+            params: { student_id: studentId, ...params }
+        });
         return response.data;
     },
 
@@ -57,8 +59,8 @@ const sitinService = {
         return response.data;
     },
 
-    getActiveSessions: async () => {
-        const response = await api.get('admin/sitin/read_active.php');
+    getActiveSessions: async (params = {}) => {
+        const response = await api.get('admin/sitin/read_active.php', { params });
         return response.data;
     },
 

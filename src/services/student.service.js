@@ -28,8 +28,8 @@ const studentService = {
     return response.data;
   },
 
-  getAll: async () => {
-    const response = await api.get("admin/student/read.php");
+  getAll: async (params = {}) => {
+    const response = await api.get("admin/student/read.php", { params });
     return response.data.data;
   },
 

@@ -2,7 +2,7 @@ import api from './backendConnection';
 
 const softwareService = {
   // General
-  getAll: () => api.get('admin/software/read.php').then(r => r.data),
+  getAll: (params = {}) => api.get('admin/software/read.php', { params }).then(r => r.data),
   
   // Admin Endpoints
   create: (data) => api.post('admin/software/create.php', data).then(r => r.data),
