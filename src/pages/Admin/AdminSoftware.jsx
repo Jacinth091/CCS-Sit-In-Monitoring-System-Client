@@ -21,6 +21,8 @@ import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import softwareService from "../../services/software.service";
 import notificationService from "../../services/notification.service";
+import Pagination from "../../components/ui/Pagination";
+import { useConfirm } from "../../hooks/useConfirm.jsx";
 
 export default function AdminSoftware() {
   const [activeTab, setActiveTab] = useState("labs"); // 'labs' | 'software'
@@ -79,12 +81,7 @@ function LaboratoriesTab() {
   const [selectedLab, setSelectedLab] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    lab_code: "",
-    capacity: 30,
-    is_active: true,
-  });
+  const [formData, setFormData] = useState({ name: "", lab_code: "", capacity: 30, is_active: true });
   const [labSearch, setLabSearch] = useState("");
 
   const [pcs, setPcs] = useState([]);
@@ -93,6 +90,8 @@ function LaboratoriesTab() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignSearch, setAssignSearch] = useState("");
   const [assigningLoading, setAssigningLoading] = useState(null);
+
+  const { confirm: confirmDialog, ConfirmModalUI } = useConfirm();
 
   const fetchLabs = async () => {
     setLoading(true);
@@ -153,7 +152,13 @@ function LaboratoriesTab() {
   };
 
   const handleRemovePc = async (id) => {
-    if (!window.confirm("Remove this PC from the lab?")) return;
+    const ok = await confirmDialog({
+      title: 'Remove Workstation?',
+      message: 'This PC will be removed from the lab roster. Any associated data may be affected.',
+      variant: 'warning',
+      confirmText: 'Yes, Remove',
+    });
+    if (!ok) return;
     try {
       await pcService.delete(id);
       toast.success("PC removed");
@@ -195,7 +200,13 @@ function LaboratoriesTab() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this laboratory?")) return;
+    const ok = await confirmDialog({
+      title: 'Delete Laboratory?',
+      message: 'This laboratory and all its data will be permanently deleted.',
+      variant: 'danger',
+      confirmText: 'Yes, Delete',
+    });
+    if (!ok) return;
     try {
       await labService.delete(id);
       toast.success("Laboratory deleted");
@@ -697,6 +708,7 @@ function LaboratoriesTab() {
           </div>
         </div>
       )}
+      {ConfirmModalUI}
     </div>
   );
 }
@@ -729,15 +741,31 @@ function SoftwareTab() {
     is_active: true,
   });
 
+  const { confirm: confirmDialog, ConfirmModalUI } = useConfirm();
+
+  const [softwarePage, setSoftwarePage] = useState(1);
+  const [softwareTotalPages, setSoftwareTotalPages] = useState(1);
+  const [softwareTotalRecords, setSoftwareTotalRecords] = useState(0);
+  const itemsPerPage = 10;
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const [swRes, labRes] = await Promise.all([
-        softwareService.getAll(),
+        softwareService.getAll({
+          page: softwarePage,
+          per_page: itemsPerPage,
+          search: search.trim() || undefined,
+        }),
         labService.getAll(),
       ]);
-      setSoftware(swRes.data || []);
+      const recordsArray = swRes.data?.records || [];
+      const meta = swRes.data?.meta || {};
+      
+      setSoftware(recordsArray);
       setLabs(labRes.data || []);
+      setSoftwareTotalPages(meta.last_page || 1);
+      setSoftwareTotalRecords(meta.total || 0);
     } catch (e) {
       toast.error("Failed to load data");
     }
@@ -746,7 +774,11 @@ function SoftwareTab() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [softwarePage, search]);
+
+  useEffect(() => {
+    setSoftwarePage(1);
+  }, [search]);
 
   const handleSaveSoftware = async (e) => {
     e.preventDefault();
@@ -777,7 +809,13 @@ function SoftwareTab() {
   };
 
   const handleDeleteSw = async (id) => {
-    if (!window.confirm("Remove software from catalog?")) return;
+    const ok = await confirmDialog({
+      title: 'Remove From Catalog?',
+      message: 'This software will be removed from the global catalog and unassigned from all labs.',
+      variant: 'danger',
+      confirmText: 'Yes, Remove',
+    });
+    if (!ok) return;
     try {
       await softwareService.delete(id);
       toast.success("Software deleted");
@@ -938,9 +976,7 @@ function SoftwareTab() {
     }
   };
 
-  const filteredSoftware = software.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredSoftware = software;
 
   if (loading && software.length === 0) {
     return (
@@ -1019,7 +1055,7 @@ function SoftwareTab() {
                           onClick={() => toggleLabAssignment(lab.id)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isSelected ? "bg-primary border-primary text-white shadow-sm" : "bg-bg-secondary border-border text-primary-light hover:border-primary-light/30"}`}
                         >
-                          {lab.name}
+                          {lab.lab_code || lab.name}
                         </button>
                       );
                     })}
@@ -1071,7 +1107,7 @@ function SoftwareTab() {
                       onClick={() => toggleLabAssignment(lab.id)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isSelected ? "bg-primary border-primary text-white shadow-sm" : "bg-bg-secondary border-border text-primary-light hover:border-primary-light/30"}`}
                     >
-                      {lab.name}
+                      {lab.lab_code || lab.name}
                     </button>
                   );
                 })}
@@ -1340,9 +1376,19 @@ function SoftwareTab() {
                 </tbody>
               </table>
             </div>
+            {softwareTotalPages > 1 && (
+              <div className="px-6 py-4 border-t border-border bg-bg-secondary/30 flex items-center justify-center">
+                <Pagination
+                  currentPage={softwarePage}
+                  totalPages={softwareTotalPages}
+                  onPageChange={setSoftwarePage}
+                />
+              </div>
+            )}
           </Card>
         )}
       </div>
+      {ConfirmModalUI}
     </div>
   );
 }
