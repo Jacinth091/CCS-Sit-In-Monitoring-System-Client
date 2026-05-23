@@ -7,9 +7,9 @@ import { useAuth } from "../context/AuthContext";
 import authService from "../services/auth.service";
 
 const inputStyles =
-  "w-full px-0 py-2 bg-transparent border-0 border-b border-border focus:ring-0 focus:outline-none focus:border-primary-hover text-primary text-sm transition-colors duration-150 placeholder:text-primary-light/50";
+  "w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary placeholder:text-primary-light/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
 const labelStyles =
-  "block text-[10px] font-bold tracking-wider uppercase text-primary/60 mb-1";
+  "block text-[9px] font-black tracking-[0.15em] uppercase text-primary-light mb-1.5 ml-1";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -136,14 +136,14 @@ export default function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className={`${inputStyles} pr-8`}
+                  className={`${inputStyles} pr-10`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-light hover:text-primary transition-colors duration-150"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -154,7 +154,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center text-sm">
               <label className="flex items-center gap-2 text-primary/70 cursor-pointer select-none font-medium">
                 <input
                   type="checkbox"
@@ -162,12 +162,6 @@ export default function Login() {
                 />
                 Remember me
               </label>
-              <a
-                href="/auth/forgot-password"
-                className="text-primary-hover hover:underline font-bold"
-              >
-                Forgot password?
-              </a>
             </div>
 
             <hr className="border-border" />

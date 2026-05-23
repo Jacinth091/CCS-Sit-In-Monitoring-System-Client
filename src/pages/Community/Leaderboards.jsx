@@ -3,6 +3,7 @@ import { Trophy, Medal, Crown, Search, Clock, Star, ArrowUpRight, Filter, AlertC
 import Card from '../../components/ui/Card';
 import leaderboardService from '../../services/leaderboard.service';
 import { formatTime } from '../../utils/dateUtils';
+import { ASSET_URL } from '../../config';
 
 export default function Leaderboards() {
   const [metric, setMetric] = useState('hours'); // 'hours' or 'sessions'
@@ -150,12 +151,21 @@ export default function Leaderboards() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 items-end">
                 {/* 2nd Place */}
                 {topStudents[1] && (
-                  <Card className="p-0 overflow-hidden bg-white border-primary/5 shadow-xl relative group transition-all duration-500 hover:-translate-y-2 order-2 md:order-1 h-[90%]">
-                    <div className="h-2 w-full bg-primary/60" />
+                  <Card className="p-0 overflow-hidden bg-white border-primary/5 shadow-xl hover:shadow-2xl hover:shadow-slate-400/10 relative group transition-all duration-500 hover:-translate-y-2 order-2 md:order-1 h-[90%]">
+                    <div className="h-2 w-full bg-slate-400" />
                     <div className="p-8 flex flex-col items-center text-center">
                         <div className="relative mb-6 mt-4">
-                          <div className="w-20 h-20 rounded-[2rem] flex items-center justify-center text-xl font-black border-4 border-white shadow-xl transition-transform group-hover:rotate-6 bg-bg-secondary text-primary">
-                            {getInitials(topStudents[1].student_name)}
+                          <div className="w-20 h-20 rounded-[2rem] flex items-center justify-center text-xl font-black border-4 border-white shadow-xl transition-transform group-hover:rotate-6 bg-bg-secondary text-primary overflow-hidden">
+                            {topStudents[1].profile_pic ? (
+                              <img
+                                src={`${ASSET_URL}/${topStudents[1].profile_pic}`}
+                                className="w-full h-full object-cover"
+                                alt="Profile"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            ) : (
+                              getInitials(topStudents[1].student_name)
+                            )}
                           </div>
                           <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-white border border-border shadow-lg flex items-center justify-center">
                             <Medal className="h-4 w-4 text-slate-400" />
@@ -177,25 +187,34 @@ export default function Leaderboards() {
 
                 {/* 1st Place */}
                 {topStudents[0] && (
-                  <Card className="p-0 overflow-hidden bg-white border-primary/5 shadow-2xl relative group transition-all duration-500 hover:-translate-y-2 ring-2 ring-primary/20 order-1 md:order-2 z-10">
-                    <div className="absolute top-0 right-0 p-4">
+                  <Card className="p-0 overflow-hidden bg-white border-primary/5 shadow-2xl hover:shadow-amber-500/10 relative group transition-all duration-500 hover:-translate-y-2 ring-4 ring-amber-400/20 order-1 md:order-2 z-10">
+                    <div className="absolute top-0 right-0 p-4 z-20">
                       <div className="bg-amber-100 p-2.5 rounded-full shadow-lg border border-amber-200">
                         <Crown className="h-8 w-8 text-amber-500 fill-amber-500 animate-bounce drop-shadow-md" />
                       </div>
                     </div>
-                    <div className="h-2 w-full bg-primary" />
+                    <div className="h-2 w-full bg-amber-500" />
                     <div className="p-10 flex flex-col items-center text-center mt-4">
                         <div className="relative mb-6">
-                          <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center text-3xl font-black border-4 border-white shadow-2xl transition-transform group-hover:rotate-6 bg-primary text-brand-sand">
-                            {getInitials(topStudents[0].student_name)}
+                          <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center text-3xl font-black border-4 border-white shadow-2xl transition-transform group-hover:rotate-6 bg-primary text-brand-sand overflow-hidden">
+                            {topStudents[0].profile_pic ? (
+                              <img
+                                src={`${ASSET_URL}/${topStudents[0].profile_pic}`}
+                                className="w-full h-full object-cover"
+                                alt="Profile"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            ) : (
+                              getInitials(topStudents[0].student_name)
+                            )}
                           </div>
                           <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-2xl bg-white border border-border shadow-lg flex items-center justify-center">
-                            <Trophy className="h-6 w-6 text-brand-sand fill-brand-sand" />
+                            <Trophy className="h-6 w-6 text-amber-500 fill-amber-500" />
                           </div>
                         </div>
                         <div className="space-y-1 mb-6">
                           <h3 className="text-2xl font-black text-primary tracking-tight uppercase">{topStudents[0].student_name}</h3>
-                          <p className="text-[10px] font-black text-primary-light/60 uppercase tracking-widest">Rank 1</p>
+                          <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Rank 1</p>
                         </div>
                         <div className="w-full pt-6 border-t border-border/50 flex flex-col items-center">
                           <p className="text-[9px] font-black text-primary-light uppercase tracking-widest mb-1">Accumulated {metric}</p>
@@ -209,12 +228,21 @@ export default function Leaderboards() {
 
                 {/* 3rd Place */}
                 {topStudents[2] && (
-                  <Card className="p-0 overflow-hidden bg-white border-primary/5 shadow-xl relative group transition-all duration-500 hover:-translate-y-2 order-3 md:order-3 h-[85%]">
-                    <div className="h-2 w-full bg-primary/30" />
+                  <Card className="p-0 overflow-hidden bg-white border-primary/5 shadow-xl hover:shadow-2xl hover:shadow-amber-700/10 relative group transition-all duration-500 hover:-translate-y-2 order-3 md:order-3 h-[85%]">
+                    <div className="h-2 w-full bg-amber-700/60" />
                     <div className="p-8 flex flex-col items-center text-center">
                         <div className="relative mb-6 mt-4">
-                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-black border-4 border-white shadow-xl transition-transform group-hover:rotate-6 bg-bg-secondary text-primary">
-                            {getInitials(topStudents[2].student_name)}
+                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-black border-4 border-white shadow-xl transition-transform group-hover:rotate-6 bg-bg-secondary text-primary overflow-hidden">
+                            {topStudents[2].profile_pic ? (
+                              <img
+                                src={`${ASSET_URL}/${topStudents[2].profile_pic}`}
+                                className="w-full h-full object-cover"
+                                alt="Profile"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            ) : (
+                              getInitials(topStudents[2].student_name)
+                            )}
                           </div>
                           <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-white border border-border shadow-lg flex items-center justify-center">
                             <Medal className="h-4 w-4 text-amber-700" />
@@ -272,8 +300,17 @@ export default function Leaderboards() {
                           </td>
                           <td className="px-8 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-bg-secondary border border-border flex items-center justify-center text-[10px] font-black text-primary group-hover:bg-white group-hover:shadow-md transition-all">
-                                {getInitials(student.student_name)}
+                              <div className="w-10 h-10 rounded-xl bg-bg-secondary border border-border flex items-center justify-center text-[10px] font-black text-primary group-hover:bg-white group-hover:shadow-md transition-all overflow-hidden">
+                                {student.profile_pic ? (
+                                  <img
+                                    src={`${ASSET_URL}/${student.profile_pic}`}
+                                    className="w-full h-full object-cover"
+                                    alt="Profile"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                  />
+                                ) : (
+                                  getInitials(student.student_name)
+                                )}
                               </div>
                               <span className="text-sm font-black text-primary tracking-tight uppercase">{student.student_name}</span>
                             </div>

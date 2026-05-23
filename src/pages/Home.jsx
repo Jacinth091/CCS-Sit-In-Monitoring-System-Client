@@ -7,6 +7,11 @@ import {
   Trophy,
   Users,
   Star,
+  Shield,
+  Monitor,
+  Target,
+  Info,
+  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ASSET_URL } from "../config";
@@ -15,10 +20,24 @@ import ccsLogo from "../assets/images/png/uccslogobg.png";
 import Card from "../components/ui/Card";
 import testimonialService from "../services/testimonial.service";
 import leaderboardService from "../services/leaderboard.service";
+import labService from "../services/lab.service";
+
+// Icon mapping for dynamic rules
+const RULE_ICONS = {
+  Shield,
+  Monitor,
+  Target,
+  ShieldCheck,
+  Info,
+  Clock,
+  BookOpen,
+  Users
+};
 
 export default function Home() {
   const [testimonials, setTestimonials] = useState([]);
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [labRules, setLabRules] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fallback sample testimonials if none are approved in DB
@@ -86,6 +105,49 @@ export default function Home() {
     { student_name: "James Yap", course: "BSCS 2", hours: 115.2, rank: 3 },
   ];
 
+  const defaultLabRules = [
+    {
+      icon_name: 'Shield',
+      title: 'Decorum & Silence',
+      description: "Maintain silence, decorum, and order inside the laboratory. Turn off or keep on silent mode all mobile phones."
+    },
+    {
+      icon_name: 'Monitor',
+      title: 'No Gaming',
+      description: 'Games are strictly NOT allowed inside the laboratory. This includes computer games and mobile games.'
+    },
+    {
+      icon_name: 'Target',
+      title: 'Academic Internet Use',
+      description: "Surfing and downloading without the instructor's permission is strictly prohibited."
+    },
+    {
+      icon_name: 'ShieldCheck',
+      title: 'Food & Drinks',
+      description: 'Food and drinks (including water) are NOT allowed inside the laboratory at any time.'
+    },
+    {
+      icon_name: 'Info',
+      title: 'Digital Log In/Out',
+      description: 'Students must log in and out of the sit-in monitoring system when entering and leaving the lab.'
+    },
+    {
+      icon_name: 'Shield',
+      title: 'Issue Reporting',
+      description: 'Report any hardware or software issues to the lab technician or instructor immediately.'
+    },
+    {
+      icon_name: 'Target',
+      title: 'Liability for Damage',
+      description: 'Students are responsible for any damage to lab equipment caused by negligence or misuse.'
+    },
+    {
+      icon_name: 'Clock',
+      title: 'Scheduled Access',
+      description: 'Follow the scheduled lab hours. Unauthorized access outside of scheduled hours is not permitted.'
+    }
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -106,10 +168,19 @@ export default function Home() {
         } else {
           setLeaderboardData(defaultLeaderboard);
         }
+
+        // Fetch Lab Rules
+        const rResponse = await labService.getRules();
+        if (rResponse.status === "success" && rResponse.data?.length > 0) {
+          setLabRules(rResponse.data);
+        } else {
+          setLabRules(defaultLabRules);
+        }
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
         setTestimonials(sampleTestimonials);
         setLeaderboardData(defaultLeaderboard);
+        setLabRules(defaultLabRules);
       } finally {
         setLoading(false);
       }
@@ -211,6 +282,45 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ───── LABORATORY RULES & REGULATIONS ───── */}
+      <section className="py-24 bg-bg-secondary/30">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 space-y-3">
+            <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] flex items-center justify-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary-hover" /> Standard Protocols
+            </h2>
+            <p className="text-3xl font-extrabold text-primary tracking-tight uppercase">
+              Laboratory Rules & <span className="text-primary-hover">Regulations</span>
+            </p>
+            <p className="text-sm text-primary-light/70 font-medium max-w-2xl mx-auto">
+              To maintain a productive and professional environment, all students are required to adhere to the following CCS laboratory policies.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {labRules.map((rule, i) => {
+              const RuleIcon = RULE_ICONS[rule.icon_name] || Shield;
+              return (
+                <div 
+                  key={i}
+                  className="p-8 rounded-[2rem] bg-white border border-border hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-bg-secondary border border-border text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:rotate-6 transition-all duration-500">
+                    <RuleIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-6 text-sm font-black text-primary uppercase tracking-wider">
+                    {rule.title}
+                  </h3>
+                  <p className="mt-3 text-xs text-primary-light/70 font-bold leading-relaxed italic">
+                    "{rule.description || rule.desc}"
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ───── TOP PERFORMERS (Leaderboard Preview) ───── */}
       <section className="py-24 bg-bg-secondary/50">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -243,9 +353,28 @@ export default function Home() {
                 />
                 <div className="flex items-center justify-between mb-6">
                   <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black border-2 border-white shadow-lg ${i === 0 ? "bg-primary text-brand-sand" : "bg-bg-secondary text-primary"}`}
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black border-2 border-white shadow-lg overflow-hidden ${i === 0 ? "bg-primary text-brand-sand" : "bg-bg-secondary text-primary"}`}
                   >
-                    {student.student_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    {student.profile_pic ? (
+                      <img
+                        src={`${ASSET_URL}/${student.profile_pic}`}
+                        className="w-full h-full object-cover"
+                        alt="Profile"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      student.student_name ? (
+                        student.student_name
+                          .split(' ')
+                          .filter(Boolean)
+                          .map(n => n[0])
+                          .join('')
+                          .substring(0, 2)
+                          .toUpperCase()
+                      ) : (
+                        '??'
+                      )
+                    )}
                   </div>
                   <span className="text-[10px] font-black text-primary/20 uppercase tracking-widest">
                     Rank #0{i + 1}
@@ -288,52 +417,58 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((testimony, i) => (
-              <div
-                key={i}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 relative hover:bg-white/10 transition-colors group flex flex-col"
-              >
-                <Quote className="absolute top-6 right-6 h-8 w-8 text-white/5 group-hover:text-white/10 transition-colors" />
+          <div className="relative overflow-hidden group/slider">
+            {/* Gradient Masks */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 z-20 bg-gradient-to-r from-primary to-transparent pointer-events-none opacity-0 group-hover/slider:opacity-100 transition-opacity" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 z-20 bg-gradient-to-l from-primary to-transparent pointer-events-none opacity-0 group-hover/slider:opacity-100 transition-opacity" />
+            
+            <div className="flex gap-6 animate-scroll-x w-fit hover:[animation-play-state:paused] py-4">
+              {[...testimonials, ...testimonials].map((testimony, i) => (
+                <div
+                  key={i}
+                  className="w-[350px] sm:w-[450px] shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 relative hover:bg-white/10 transition-colors group flex flex-col"
+                >
+                  <Quote className="absolute top-6 right-6 h-8 w-8 text-white/5 group-hover:text-white/10 transition-colors" />
 
-                <div className="flex items-center gap-0.5 mb-6">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-3.5 w-3.5 ${star <= (testimony.rating || 5) ? "text-brand-sand fill-brand-sand" : "text-white/20 fill-white/10"}`}
-                    />
-                  ))}
-                </div>
-
-                <p className="text-sm text-white/90 leading-loose font-bold italic mb-8 grow">
-                  "{testimony.content}"
-                </p>
-
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-10 h-10 rounded-xl bg-primary-hover border border-white/20 flex items-center justify-center text-[10px] font-black text-white uppercase shadow-lg overflow-hidden">
-                    {testimony.profile_pic ? (
-                      <img
-                        src={`${ASSET_URL}/${testimony.profile_pic}`}
-                        className="w-full h-full object-cover"
+                  <div className="flex items-center gap-0.5 mb-6">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-3.5 w-3.5 ${star <= (testimony.rating || 5) ? "text-brand-sand fill-brand-sand" : "text-white/20 fill-white/10"}`}
                       />
-                    ) : (
-                      <>
-                        {testimony.first_name?.[0]}
-                        {testimony.last_name?.[0]}
-                      </>
-                    )}
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-xs font-black text-white uppercase tracking-wider">
-                      {testimony.first_name} {testimony.last_name}
-                    </p>
-                    <p className="text-[9px] font-black text-brand-sand uppercase tracking-widest opacity-60">
-                      {testimony.course} {testimony.course_level}
-                    </p>
+
+                  <p className="text-sm text-white/90 leading-loose font-bold italic mb-8 grow">
+                    "{testimony.content}"
+                  </p>
+
+                  <div className="flex items-center gap-4 mt-auto">
+                    <div className="w-10 h-10 rounded-xl bg-primary-hover border border-white/20 flex items-center justify-center text-[10px] font-black text-white uppercase shadow-lg overflow-hidden">
+                      {testimony.profile_pic ? (
+                        <img
+                          src={`${ASSET_URL}/${testimony.profile_pic}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          {testimony.first_name?.[0]}
+                          {testimony.last_name?.[0]}
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-white uppercase tracking-wider">
+                        {testimony.first_name} {testimony.last_name}
+                      </p>
+                      <p className="text-[9px] font-black text-brand-sand uppercase tracking-widest opacity-60">
+                        {testimony.course} {testimony.course_level}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
