@@ -3,15 +3,14 @@ import {
   Calendar,
   Camera,
   ChevronDown,
+  ClipboardList,
   Clock,
   Edit,
   FlaskConical,
   GraduationCap,
-  Hash,
   History,
   Info,
   Loader2,
-  Mail,
   MapPin,
   Monitor,
   PlusCircle,
@@ -25,10 +24,11 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import ReservationCard from "../../components/reservations/ReservationCard";
 import { ASSET_URL } from "../../config";
 import {
-  COURSES as COURSE_LIST,
   SITIN_PURPOSES,
+  ACADEMIC_YEARS,
 } from "../../constants/app.constants";
 import labService from "../../services/lab.service";
 import notificationService from "../../services/notification.service";
@@ -36,88 +36,14 @@ import pcService from "../../services/pc.service";
 import sitinService from "../../services/sitin.service";
 import studentService from "../../services/student.service";
 import { formatDate, formatTime } from "../../utils/dateUtils";
-import StudentDetailsModal from "../../components/modals/StudentDetailsModal";
-import ReservationCard from "../../components/reservations/ReservationCard";
-
-const COURSES = COURSE_LIST;
-
-/* ── Searchable Course Dropdown Component ── */
-function CourseSearchableDropdown({ value, onChange }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const filteredCourses = COURSES.filter((course) =>
-    course.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-secondary/30 text-sm font-bold text-primary flex items-center justify-between cursor-pointer hover:bg-white transition-all"
-      >
-        <span className="truncate">{value || "Select Course..."}</span>
-        <ChevronDown
-          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        />
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-[100] w-full mt-2 bg-white border border-border rounded-xl shadow-xl overflow-hidden animate-fade-in-up">
-          <div className="p-2 border-b border-border bg-bg-secondary/30">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-light" />
-              <input
-                type="text"
-                autoFocus
-                placeholder="Search courses..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs font-bold text-primary bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/10"
-              />
-            </div>
-          </div>
-          <div className="max-h-60 overflow-y-auto custom-scrollbar">
-            {filteredCourses.length > 0 ? (
-              filteredCourses.map((course, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    onChange(course);
-                    setIsOpen(false);
-                    setSearchTerm("");
-                  }}
-                  className={`px-4 py-2.5 text-xs font-bold cursor-pointer transition-colors ${
-                    value === course
-                      ? "bg-primary text-white"
-                      : "text-primary hover:bg-bg-secondary"
-                  }`}
-                >
-                  {course}
-                </div>
-              ))
-            ) : (
-              <div className="px-4 py-3 text-xs text-primary-light italic">
-                No results found
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import Pagination from "../../components/ui/Pagination";
+import { CourseSearchableDropdown } from "../../components/ui";
+import { 
+  validateIdNumber, 
+  validateName, 
+  validateEmail, 
+  validateAddress 
+} from "../../utils/validationUtils";
 
 function StudentActionsMenu({
   student,
@@ -244,6 +170,8 @@ export default function AdminStudents() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -269,9 +197,18 @@ export default function AdminStudents() {
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
-      const data = await studentService.getAll();
-      setStudents(data);
-      setFilteredStudents(data);
+      const data = await studentService.getAll({
+        page: currentPage,
+        per_page: itemsPerPage,
+        search: searchQuery.trim() || undefined,
+      });
+      const recordsArray = data?.records || [];
+      const meta = data?.meta || {};
+      
+      setStudents(recordsArray);
+      setFilteredStudents(recordsArray);
+      setTotalPages(meta.last_page || 1);
+      setTotalRecords(meta.total || 0);
     } catch (err) {
       toast.error("Failed to load students.");
     } finally {
@@ -281,25 +218,13 @@ export default function AdminStudents() {
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredStudents(students);
-      setCurrentPage(1);
-      return;
-    }
-    const q = searchQuery.toLowerCase();
-    const filtered = students.filter(
-      (s) =>
-        s.student_id?.toLowerCase().includes(q) ||
-        s.first_name?.toLowerCase().includes(q) ||
-        s.last_name?.toLowerCase().includes(q) ||
-        s.course?.toLowerCase().includes(q),
-    );
-    setFilteredStudents(filtered);
     setCurrentPage(1);
-  }, [searchQuery, students]);
+  }, [searchQuery]);
+
+
 
   const handleResetSessions = async () => {
     setIsResetting(true);
@@ -389,11 +314,7 @@ export default function AdminStudents() {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentStudents = filteredStudents.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const currentStudents = filteredStudents;
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20 relative">
@@ -440,7 +361,7 @@ export default function AdminStudents() {
           />
         </div>
         <div className="px-4 py-2 bg-bg-secondary border border-border rounded-xl text-[10px] font-black text-primary-light uppercase tracking-widest">
-          {filteredStudents.length} Students
+          {totalRecords} Students
         </div>
       </div>
 
@@ -542,31 +463,18 @@ export default function AdminStudents() {
         </div>
 
         {/* Pagination */}
-        {!isLoading && filteredStudents.length > 0 && (
+        {!isLoading && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-border bg-bg-secondary/30 flex items-center justify-between">
             <span className="text-[10px] text-primary-light font-black uppercase tracking-widest">
               {indexOfFirstItem + 1} —{" "}
-              {Math.min(indexOfLastItem, filteredStudents.length)} of{" "}
-              {filteredStudents.length}
+              {Math.min(indexOfLastItem, totalRecords)} of{" "}
+              {totalRecords}
             </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary bg-white border border-border disabled:opacity-30"
-              >
-                Prev
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary bg-white border border-border disabled:opacity-30"
-              >
-                Next
-              </button>
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>
@@ -581,6 +489,7 @@ export default function AdminStudents() {
         isOpen={isStudentModalOpen}
         onClose={() => setIsStudentModalOpen(false)}
         student={editingStudent}
+        students={students}
         onSuccess={() => {
           setIsStudentModalOpen(false);
           fetchStudents();
@@ -769,7 +678,7 @@ function DeleteConfirmationModal({ isOpen, student, onClose, onConfirm }) {
   );
 }
 
-function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
+function StudentFormModal({ isOpen, onClose, student, students = [], onSuccess }) {
   const isEditing = !!student;
   const [formData, setFormData] = useState({
     student_id: "",
@@ -834,18 +743,94 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.course) {
-      toast.error("Course is required.");
+
+    // Field Validation - Required Checks
+    if (!formData.student_id?.trim()) {
+      toast.error("Student ID is required.");
       return;
     }
+    if (!formData.first_name?.trim()) {
+      toast.error("First Name is required.");
+      return;
+    }
+    if (!formData.last_name?.trim()) {
+      toast.error("Last Name is required.");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error("Email is required.");
+      return;
+    }
+
+    // Format Validation
+    if (!validateIdNumber(formData.student_id)) {
+      toast.error("ID Number must be exactly 8 digits.");
+      return;
+    }
+
+    if (!validateName(formData.first_name)) {
+      toast.error("Invalid First Name format (letters and standard symbols only).");
+      return;
+    }
+
+    if (formData.middle_name?.trim() && !validateName(formData.middle_name)) {
+      toast.error("Invalid Middle Name format.");
+      return;
+    }
+
+    if (!validateName(formData.last_name)) {
+      toast.error("Invalid Last Name format.");
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (formData.address?.trim() && !validateAddress(formData.address)) {
+      toast.error("Please enter a valid address.");
+      return;
+    }
+
+    if (!formData.course || !formData.course_level) {
+      toast.error("Course and Year Level are required.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      // Duplicate Validation (Client-side check against current PAGE only)
+      const isDuplicateId = students.some(s => 
+        String(s.student_id) === String(formData.student_id) && s.id !== formData.id
+      );
+      const isDuplicateEmail = students.some(s => 
+        s.email?.toLowerCase() === formData.email?.toLowerCase() && s.id !== formData.id
+      );
+
+      if (isDuplicateId) {
+        toast.error(`Student ID ${formData.student_id} is already in the current list.`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (isDuplicateEmail) {
+        toast.error(`Email ${formData.email} is already in use.`);
+        setIsSubmitting(false);
+        return;
+      }
+
       let studentId = formData.id;
       if (isEditing) {
         await studentService.adminUpdate(formData);
       } else {
         if (!formData.password) {
           toast.error("Password required");
+          setIsSubmitting(false);
+          return;
+        }
+        if (formData.password.length < 6) {
+          toast.error("Password must be at least 6 characters.");
           setIsSubmitting(false);
           return;
         }
@@ -868,7 +853,34 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
       );
       onSuccess();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Action failed");
+      // Improved error message extraction based on Backend Validation Guide
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (err.response) {
+        const data = err.response.data;
+        const status = err.response.status;
+        
+        if (status === 409) {
+          // Conflict / Duplicate
+          errorMessage = data.message || data.error || "Conflict: This Student ID or Email already exists in the system.";
+        } else if (status === 422) {
+          // Validation Failed
+          if (data.errors && typeof data.errors === 'object') {
+            errorMessage = Object.values(data.errors)[0];
+          } else {
+            errorMessage = data.message || "Validation failed. Please check your inputs.";
+          }
+        } else {
+          // Other error statuses
+          errorMessage = data.message || data.error || err.customMessage || `Error ${status}: Action failed.`;
+        }
+      } else if (err.customMessage) {
+        errorMessage = err.customMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -968,7 +980,7 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
                       setFormData({ ...formData, student_id: e.target.value })
                     }
                     className={inputStyles}
-                    placeholder="2021-1234"
+                    placeholder="20211234"
                   />
                 </div>
                 <div>
@@ -986,29 +998,43 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
                 </div>
               </div>
             </div>
-            <div>
-              <label className={labelStyles}>First Name</label>
-              <input
-                required
-                type="text"
-                value={formData.first_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, first_name: e.target.value })
-                }
-                className={inputStyles}
-              />
-            </div>
-            <div>
-              <label className={labelStyles}>Last Name</label>
-              <input
-                required
-                type="text"
-                value={formData.last_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, last_name: e.target.value })
-                }
-                className={inputStyles}
-              />
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className={labelStyles}>First Name</label>
+                <input
+                  required
+                  type="text"
+                  value={formData.first_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, first_name: e.target.value })
+                  }
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Middle Name</label>
+                <input
+                  type="text"
+                  value={formData.middle_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, middle_name: e.target.value })
+                  }
+                  className={inputStyles}
+                  placeholder="(Optional)"
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Last Name</label>
+                <input
+                  required
+                  type="text"
+                  value={formData.last_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, last_name: e.target.value })
+                  }
+                  className={inputStyles}
+                />
+              </div>
             </div>
 
             <div className="md:col-span-2">
@@ -1029,11 +1055,10 @@ function StudentFormModal({ isOpen, onClose, student, onSuccess }) {
                 }
                 className={`${inputStyles} appearance-none cursor-pointer`}
               >
-                <option value="1st">1st Year</option>
-                <option value="2nd">2nd Year</option>
-                <option value="3rd">3rd Year</option>
-                <option value="4th">4th Year</option>
-                <option value="5th">5th Year</option>
+                <option value="" disabled>Select Year</option>
+                {ACADEMIC_YEARS.map(year => (
+                  <option key={year} value={year}>{year} Year</option>
+                ))}
               </select>
             </div>
 
@@ -1120,20 +1145,20 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
       console.log("Fetching details for student:", student.student_id);
       const [response, labsRes] = await Promise.all([
         studentService.getDetails(student.student_id),
-        labService.getAll().catch(() => ({ data: [] }))
+        labService.getAll().catch(() => ({ data: [] })),
       ]);
-      
+
       setLabs(labsRes.data || []);
       console.log("Full API Response:", response);
 
       if (response.status === "success" && response.data) {
         const data = response.data;
-        
+
         // The profile info is flat inside data, but we also want history and reservations
-        setFullDetails(data); 
+        setFullDetails(data);
         setHistory(data.sit_in_logs || []);
         setReservations(data.reservations || []);
-        
+
         // Format decimal hours to "Xh Ym" if it's a number
         let formattedHours = "0h 0m";
         if (typeof data.total_hours === "number") {
@@ -1171,160 +1196,111 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
         onClick={onClose}
       >
         <div
-          className="bg-bg-secondary rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden border border-border flex flex-col max-h-[92vh] animate-zoom-in"
+          className="bg-bg-secondary rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden border border-border flex flex-col max-h-[92vh] animate-zoom-in"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Refined Header */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-border bg-white">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10">
-                <Info className="h-5 w-5 text-primary" />
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-white">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10">
+                <ClipboardList className="h-3.5 w-3.5 text-primary" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-light leading-none">
-                  Student Management
-                </p>
-                <h2 className="text-xl font-black text-primary uppercase tracking-tight leading-none">
-                  Comprehensive Student File
-                </h2>
-              </div>
+              <h2 className="text-sm font-black text-primary uppercase tracking-tight leading-none">
+                Comprehensive Student File
+              </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2.5 rounded-md text-primary-light hover:text-primary hover:bg-bg-secondary transition-all border border-transparent hover:border-border cursor-pointer"
+              className="p-1.5 rounded-md text-primary-light hover:text-primary hover:bg-bg-secondary transition-all border border-transparent hover:border-border cursor-pointer"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
-            {/* Hero Section — Refined Professional */}
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-10 p-6 rounded-lg bg-white border border-border shadow-sm">
-              <div className="w-40 h-40 shrink-0 rounded-2xl bg-gradient-to-tr from-primary to-primary-hover p-1 shadow-lg overflow-hidden group">
-                <div className="w-full h-full bg-white rounded-[0.8rem] flex items-center justify-center relative overflow-hidden">
-                  <User className="h-16 w-16 text-primary/10 absolute" />
-                  {displayStudent.profile_pic && (
+          <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+            {/* Hero Section — ID Focused */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-4 bg-white border border-border rounded-xl shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
+
+              <div className="w-20 h-20 rounded-xl bg-gradient-to-tr from-primary to-primary-hover p-0.5 shadow-md shrink-0 transition-transform duration-500 group-hover:scale-105">
+                <div className="w-full h-full rounded-[0.7rem] bg-white flex items-center justify-center overflow-hidden relative">
+                  {displayStudent.profile_pic ? (
                     <img
                       src={`${ASSET_URL}/${displayStudent.profile_pic}`}
-                      alt=""
-                      className="w-full h-full object-cover rounded-[0.8rem] relative z-10 transition-transform duration-500 group-hover:scale-110"
-                      onError={(e) => (e.target.style.display = "none")}
+                      className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <User className="h-8 w-8 text-primary/10" />
                   )}
                 </div>
               </div>
 
-              <div className="flex-1 text-center md:text-left space-y-6">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-3">
-                    <span className="px-3 py-1 rounded-md bg-primary text-white text-[9px] font-black uppercase tracking-widest">
-                      {displayStudent.student_id}
-                    </span>
-                    <span className="px-3 py-1 rounded-md bg-brand-sand/20 border border-brand-sand text-primary-hover text-[9px] font-black uppercase tracking-widest">
-                      {displayStudent.course_level} Year
-                    </span>
-                  </div>
-                  <h3 className="text-4xl font-black text-primary tracking-tighter leading-none">
+              <div className="flex-1 text-center sm:text-left min-w-0">
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-xl font-black text-primary tracking-tighter leading-none mb-1">
+                    {displayStudent.student_id}
+                  </h2>
+                  <h3 className="text-lg font-bold text-primary leading-tight">
                     {displayStudent.first_name} {displayStudent.last_name}
                   </h3>
-                  <p className="text-sm font-bold text-primary-light uppercase tracking-widest flex items-center justify-center md:justify-start gap-2">
-                    <GraduationCap className="h-4 w-4" /> {displayStudent.course}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-                  <div className="flex items-center gap-4 p-4 bg-bg-secondary rounded-lg border border-border/60 hover:border-primary/20 transition-all group">
-                    <div className="w-10 h-10 rounded-md bg-white flex items-center justify-center shrink-0 shadow-sm border border-border group-hover:scale-110 transition-transform">
-                      <Mail className="h-5 w-5 text-primary-light" />
+                  <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-3 gap-y-1.5 mt-2">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-bg-secondary border border-border/60">
+                      <GraduationCap className="h-3 w-3 text-primary-light" />
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-tight">
+                        {displayStudent.course}
+                      </span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black text-primary-light uppercase tracking-widest leading-tight mb-1">
-                        Email Address
-                      </p>
-                      <p className="text-sm font-bold text-primary truncate leading-none">
-                        {displayStudent.email || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-bg-secondary rounded-lg border border-border/60 hover:border-primary/20 transition-all group">
-                    <div className="w-10 h-10 rounded-md bg-white flex items-center justify-center shrink-0 shadow-sm border border-border group-hover:scale-110 transition-transform">
-                      <MapPin className="h-5 w-5 text-primary-light" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black text-primary-light uppercase tracking-widest leading-tight mb-1">
-                        Current Address
-                      </p>
-                      <p className="text-sm font-bold text-primary truncate leading-none">
-                        {displayStudent.address || "No address provided"}
-                      </p>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-bg-secondary border border-border/60">
+                      <Calendar className="h-3 w-3 text-primary-light" />
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-tight">
+                        {displayStudent.course_level} Year
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* High-Contrast Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="p-6 bg-white rounded-lg border border-border shadow-sm group hover:border-primary/30 transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Clock className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <Info className="h-4 w-4 text-primary-light/20" />
-                </div>
-                <p className="text-[10px] font-black text-primary-light uppercase tracking-[0.2em] mb-1">
+            {/* High-Contrast Stats Grid - Compact */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 bg-white rounded-lg border border-border shadow-sm group hover:border-primary/30 transition-all">
+                <p className="text-[8px] font-black text-primary-light uppercase tracking-[0.2em] mb-1">
                   Accumulated Time
                 </p>
-                <p className="text-4xl font-black text-primary tracking-tighter">
+                <p className="text-2xl font-black text-primary tracking-tighter">
                   {stats.totalHours}
                 </p>
               </div>
 
-              <div className="p-6 bg-white rounded-lg border border-border shadow-sm group hover:border-primary/30 transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <History className="h-5 w-5 text-primary" />
-                  </div>
-                  <Info className="h-4 w-4 text-primary-light/20" />
-                </div>
-                <p className="text-[10px] font-black text-primary-light uppercase tracking-[0.2em] mb-1">
+              <div className="p-4 bg-white rounded-lg border border-border shadow-sm group hover:border-primary/30 transition-all">
+                <p className="text-[8px] font-black text-primary-light uppercase tracking-[0.2em] mb-1">
                   Total Sessions
                 </p>
-                <p className="text-4xl font-black text-primary tracking-tighter">
+                <p className="text-2xl font-black text-primary tracking-tighter">
                   {stats.totalSessions}
                 </p>
               </div>
 
-              <div className="p-6 bg-primary rounded-lg border border-primary/20 shadow-lg text-white group relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl transition-all group-hover:bg-white/10" />
+              <div className="p-4 bg-primary rounded-lg border border-primary/20 shadow-lg text-white group relative overflow-hidden">
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Monitor className="h-5 w-5 text-brand-sand" />
-                    </div>
-                  </div>
-                  <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">
+                  <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">
                     Available Credits
                   </p>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <p className="text-4xl font-black text-white tracking-tighter leading-none">
+                  <div className="flex items-baseline gap-1.5">
+                    <p className="text-2xl font-black text-white tracking-tighter leading-none">
                       {displayStudent.session}
                     </p>
-                    <p className="text-xs font-black text-white/30 uppercase">/ 30 Bal</p>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full bg-brand-sand shadow-[0_0_12px_rgba(211,188,143,0.5)] transition-all duration-700 ease-out"
-                      style={{ width: `${(displayStudent.session / 30) * 100}%` }}
-                    />
+                    <p className="text-[8px] font-black text-white/30 uppercase">
+                      / 30 Bal
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Refined Tabbed Interface */}
-            <div className="space-y-8">
-              <div className="flex gap-2 p-1 bg-white border border-border rounded-lg shadow-sm w-fit">
+            <div className="space-y-6">
+              <div className="flex gap-1.5 p-1 bg-white border border-border rounded-lg shadow-sm w-fit">
                 {[
                   { id: "sitin", label: "Recent Records", icon: History },
                   { id: "reservations", label: "Recent Reservations", icon: Calendar },
@@ -1333,79 +1309,101 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2.5 px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${
                       activeTab === tab.id
                         ? "bg-primary text-white shadow-md"
                         : "text-primary-light hover:text-primary hover:bg-bg-secondary"
                     }`}
                   >
-                    <tab.icon className="h-4 w-4" />
+                    <tab.icon className="h-3.5 w-3.5" />
                     {tab.label}
                   </button>
                 ))}
               </div>
 
               {/* Tab Content with High Clarity */}
-              <div className="min-h-[350px] animate-fade-in">
+              <div className="min-h-[300px] animate-fade-in">
                 {isLoading ? (
-                  <div className="py-24 text-center">
-                    <div className="w-10 h-10 border-4 border-primary/10 border-t-primary rounded-full animate-spin mx-auto" />
-                    <p className="text-[10px] font-black text-primary-light uppercase tracking-[0.2em] mt-6 animate-pulse">
+                  <div className="py-20 text-center">
+                    <div className="w-8 h-8 border-4 border-primary/10 border-t-primary rounded-full animate-spin mx-auto" />
+                    <p className="text-[10px] font-black text-primary-light uppercase tracking-[0.2em] mt-4 animate-pulse">
                       Synchronizing Records...
                     </p>
                   </div>
                 ) : activeTab === "sitin" ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {history.length === 0 ? (
-                      <div className="py-24 text-center bg-white rounded-lg border border-dashed border-border flex flex-col items-center">
-                        <History className="h-12 w-12 text-primary-light/10 mb-4" />
-                        <p className="text-[10px] font-black text-primary-light uppercase tracking-widest">
+                      <div className="py-20 text-center bg-white rounded-lg border border-dashed border-border flex flex-col items-center">
+                        <History className="h-10 w-10 text-primary-light/10 mb-3" />
+                        <p className="text-[9px] font-black text-primary-light uppercase tracking-widest">
                           No historical logs discovered
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 gap-3">
+                      <div className="grid grid-cols-1 gap-2">
                         {history.slice(0, 10).map((log) => {
                           const lab = labs.find((l) => l.id == log.lab_id);
                           const labCode = lab?.lab_code;
+                          const isOngoing = log.status === "active";
                           return (
                             <div
                               key={log.id}
-                              className="p-5 bg-white rounded-lg border border-border shadow-sm flex items-center justify-between group hover:border-primary/30 hover:shadow-md transition-all border-l-4 border-l-primary/10 hover:border-l-primary"
+                              className="relative border border-border rounded-xl p-0 transition-all duration-300 bg-white overflow-hidden hover:shadow-md hover:border-primary/20"
                             >
-                              <div className="flex items-center gap-5">
-                                <div className="w-12 h-12 rounded-lg bg-bg-secondary flex items-center justify-center shrink-0 border border-border transition-colors group-hover:bg-primary/5">
-                                  <Monitor className="h-6 w-6 text-primary/40 group-hover:text-primary transition-colors" />
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-sm font-black text-primary uppercase tracking-tight flex items-center gap-2">
-                                    {labCode && (
-                                      <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                                        {labCode}
+                              <div
+                                className={`absolute left-0 top-0 bottom-0 w-1 ${isOngoing ? "bg-emerald-500 animate-pulse" : "bg-primary-light/20"}`}
+                              />
+
+                              <div className="px-4 py-3 ml-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-start justify-between mb-1.5 gap-4">
+                                      <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-bold text-primary leading-tight">
+                                            {log.pc_number
+                                              ? `PC ${log.pc_number}`
+                                              : "No Station"}
+                                          </span>
+                                          {labCode && (
+                                            <span className="px-1.5 py-0.5 rounded bg-primary/5 text-[8px] font-bold text-primary-light border border-primary/10">
+                                              {labCode}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-[10px] font-bold text-primary-light leading-tight">
+                                          {log.lab_name || log.name}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-2 text-[9px] font-bold text-primary-light">
+                                      <span className="flex items-center gap-1.5 bg-bg-secondary px-2 py-1 rounded-lg text-primary border border-border/50">
+                                        <Calendar className="h-2.5 w-2.5" />
+                                        {formatDate(log.time_in)}
                                       </span>
-                                    )}
-                                    {log.lab_name || log.name}
-                                  </p>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-primary-light bg-bg-secondary px-2 py-0.5 rounded uppercase tracking-wider">
-                                      {log.purpose}
-                                    </span>
-                                    <span className="text-[10px] font-bold text-primary-light/60">
-                                      PC {log.pc_number || "—"}
+                                      <span className="flex items-center gap-1.5 bg-bg-secondary px-2 py-1 rounded-lg text-primary border border-border/50">
+                                        <Clock className="h-2.5 w-2.5" />
+                                        {formatTime(log.time_in)}
+                                      </span>
+                                      <span className="flex items-center gap-1.5 bg-bg-secondary/60 px-2 py-1 rounded-lg text-primary-light border border-border/60 text-[8px] font-extrabold tracking-wide">
+                                        {log.purpose}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col items-end justify-between min-w-[70px]">
+                                    <span
+                                      className={`px-2 py-0.5 rounded-lg text-[8px] font-extrabold border ${
+                                        isOngoing
+                                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                          : "bg-bg-secondary text-primary-light border-border"
+                                      }`}
+                                    >
+                                      {isOngoing ? "Ongoing" : "Completed"}
                                     </span>
                                   </div>
                                 </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-xs font-black text-primary mb-1">
-                                  {formatTime(log.time_in)}
-                                </p>
-                                <p className="text-[9px] font-bold text-primary-light uppercase tracking-widest mb-1.5">
-                                  {formatDate(log.time_in)}
-                                </p>
-                                <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-600 uppercase tracking-widest">
-                                  {log.status || "Completed"}
-                                </span>
                               </div>
                             </div>
                           );
@@ -1414,32 +1412,28 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
                     )}
                   </div>
                 ) : activeTab === "reservations" ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {reservations.length === 0 ? (
-                      <div className="py-24 text-center bg-white rounded-lg border border-dashed border-border flex flex-col items-center">
-                        <Calendar className="h-12 w-12 text-primary-light/10 mb-4" />
-                        <p className="text-[10px] font-black text-primary-light uppercase tracking-widest">
+                      <div className="py-20 text-center bg-white rounded-lg border border-dashed border-border flex flex-col items-center">
+                        <Calendar className="h-10 w-10 text-primary-light/10 mb-3" />
+                        <p className="text-[9px] font-black text-primary-light uppercase tracking-widest">
                           No reservation history found
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 gap-3">
+                      <div className="grid grid-cols-1 gap-2">
                         {reservations.slice(0, 10).map((res) => {
                           const matchedLab = labs.find(
                             (lab) => String(lab.id) === String(res.lab_id),
                           );
                           const labCode = res.lab_code || matchedLab?.lab_code;
-                          
+
                           return (
                             <ReservationCard
                               key={res.id}
-                              labCode={labCode || "LAB"}
-                              labName={res.lab_name || matchedLab?.name || "Lab Reservation"}
-                              purpose={res.purpose}
-                              pcNumber={res.pc_number ? `PC ${res.pc_number}` : "ANY PC"}
-                              date={res.reserved_date || res.reservation_date}
-                              time={res.reserved_time || res.time_slot || "00:00"}
-                              status={res.status?.toUpperCase() || "PENDING"}
+                              reservation={{ ...res, lab_code: labCode }}
+                              compact={true}
+                              className="!shadow-none"
                             />
                           );
                         })}
@@ -1447,35 +1441,37 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-lg border border-border p-10 space-y-10 shadow-sm relative overflow-hidden">
+                  <div className="bg-white rounded-lg border border-border p-6 space-y-8 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 border-b border-border pb-3">
-                          <GraduationCap className="h-5 w-5 text-primary" />
-                          <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">
-                            Academic Foundation
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 border-b border-border pb-2">
+                          <GraduationCap className="h-4 w-4 text-primary" />
+                          <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                            Academic File
                           </h4>
                         </div>
-                        <div className="grid grid-cols-1 gap-6 pl-2">
+                        <div className="grid grid-cols-1 gap-4 pl-1">
                           {[
                             {
                               label: "Official Full Name",
                               value: `${displayStudent.first_name} ${displayStudent.middle_name ? displayStudent.middle_name + " " : ""}${displayStudent.last_name}`,
                             },
-                            { label: "Degree Program", value: displayStudent.course },
+                            {
+                              label: "Degree Program",
+                              value: displayStudent.course,
+                            },
                             {
                               label: "Current Year Level",
                               value: `${displayStudent.course_level} Year Student`,
                             },
-                            { label: "Student Category", value: "Active / Regular" },
                           ].map((item, idx) => (
                             <div key={idx} className="flex flex-col group">
-                              <span className="text-[9px] font-black text-primary-light uppercase tracking-[0.15em] mb-1 group-hover:text-primary transition-colors">
+                              <span className="text-[8px] font-black text-primary-light uppercase tracking-[0.15em] mb-0.5 group-hover:text-primary transition-colors">
                                 {item.label}
                               </span>
-                              <span className="text-sm font-bold text-primary border-l-2 border-transparent group-hover:border-primary/30 pl-3 transition-all">
+                              <span className="text-xs font-bold text-primary border-l-2 border-transparent group-hover:border-primary/30 pl-2 transition-all">
                                 {item.value}
                               </span>
                             </div>
@@ -1483,31 +1479,33 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
                         </div>
                       </div>
 
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 border-b border-border pb-3">
-                          <MapPin className="h-5 w-5 text-primary" />
-                          <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">
-                            Identity & Verification
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 border-b border-border pb-2">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                            Verification
                           </h4>
                         </div>
-                        <div className="grid grid-cols-1 gap-6 pl-2">
+                        <div className="grid grid-cols-1 gap-4 pl-1">
                           {[
-                            { label: "Institutional ID", value: displayStudent.student_id },
-                            { label: "Primary Email Address", value: displayStudent.email },
                             {
-                              label: "Declared Residence",
-                              value: displayStudent.address || "Not Specified in File",
+                              label: "Institutional ID",
+                              value: displayStudent.student_id,
                             },
                             {
-                              label: "Record Established",
-                              value: formatDate(displayStudent.created_at) || "Prior to system logs",
+                              label: "Primary Email Address",
+                              value: displayStudent.email,
+                            },
+                            {
+                              label: "Declared Residence",
+                              value: displayStudent.address || "Not Specified",
                             },
                           ].map((item, idx) => (
                             <div key={idx} className="flex flex-col group">
-                              <span className="text-[9px] font-black text-primary-light uppercase tracking-[0.15em] mb-1 group-hover:text-primary transition-colors">
+                              <span className="text-[8px] font-black text-primary-light uppercase tracking-[0.15em] mb-0.5 group-hover:text-primary transition-colors">
                                 {item.label}
                               </span>
-                              <span className="text-sm font-bold text-primary border-l-2 border-transparent group-hover:border-primary/30 pl-3 transition-all">
+                              <span className="text-xs font-bold text-primary border-l-2 border-transparent group-hover:border-primary/30 pl-2 transition-all">
                                 {item.value}
                               </span>
                             </div>
@@ -1522,22 +1520,19 @@ function StudentDetailsPanel({ student, isOpen, onClose, onSitInComplete }) {
           </div>
 
           {/* Refined Professional Footer */}
-          <div className="px-8 py-5 bg-white border-t border-border flex justify-end items-center gap-4">
-            <p className="mr-auto text-[10px] font-bold text-primary-light/40 uppercase tracking-widest hidden sm:block">
-              Institutional Resource Monitoring System
-            </p>
+          <div className="px-6 py-3.5 bg-white border-t border-border flex justify-end items-center gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-md border border-border text-[10px] font-black uppercase text-primary hover:bg-bg-secondary transition-all cursor-pointer tracking-widest"
+              className="px-4 py-2 rounded-lg border border-border text-[9px] font-black uppercase text-primary hover:bg-bg-secondary transition-all cursor-pointer tracking-widest"
             >
               Close Record
             </button>
             <button
               onClick={() => setIsSitInModalOpen(true)}
               disabled={displayStudent.session <= 0}
-              className="px-8 py-2.5 bg-primary text-white rounded-md text-[10px] font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 disabled:opacity-30 hover:bg-primary-hover transition-all flex items-center gap-3 cursor-pointer ring-4 ring-primary/5"
+              className="px-6 py-2 bg-primary text-white rounded-lg text-[9px] font-black uppercase tracking-[0.15em] shadow-md active:scale-95 disabled:opacity-30 hover:bg-primary-hover transition-all flex items-center gap-2 cursor-pointer"
             >
-              <Monitor className="h-4 w-4" /> Start New Session
+              <Monitor className="h-3.5 w-3.5" /> Start New Session
             </button>
           </div>
         </div>
@@ -1854,13 +1849,13 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                         const isSelected = Number(formData.pc_number) === pcNum;
 
                         let cardClass = "";
-                        let statusText = "Available";
+                        let statusText = "Open";
                         let iconClass = "text-primary-light";
 
                         if (pcStatus === "under maintenance") {
                           cardClass =
                             "bg-amber-50 text-amber-900 border-amber-200 cursor-not-allowed opacity-70";
-                          statusText = "Maintenance";
+                          statusText = "Under Maintenance";
                           iconClass = "text-amber-400";
                         } else if (pcStatus === "disabled") {
                           cardClass =
@@ -1870,7 +1865,7 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                         } else if (isOccupied) {
                           cardClass =
                             "bg-red-500 text-white border-red-600 cursor-not-allowed shadow-sm";
-                          statusText = "In Use";
+                          statusText = "Occupied";
                           iconClass = "text-red-200";
                         } else if (isReserved) {
                           cardClass =
@@ -1900,7 +1895,7 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                             }
                             className={`w-full py-3 rounded-xl flex flex-col items-center justify-center transition-all duration-200 border-2 ${cardClass}`}
                             title={
-                              statusText !== "Available"
+                              statusText !== "Open"
                                 ? statusText
                                 : `Select PC ${pcNum}`
                             }
@@ -1937,10 +1932,10 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                   {/* Legend */}
                   <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/60 justify-center">
                     {[
-                      { color: "bg-white border-border", label: "Available" },
+                      { color: "bg-white border-border", label: "Open" },
                       {
                         color: "bg-red-500    border-red-600",
-                        label: "In Use",
+                        label: "Occupied",
                       },
                       {
                         color: "bg-amber-500  border-amber-600",
@@ -1952,7 +1947,7 @@ function SitInModal({ isOpen, onClose, student, onSuccess }) {
                       },
                       {
                         color: "bg-amber-50   border-amber-200",
-                        label: "Maintenance",
+                        label: "Under Maintenance",
                       },
                       {
                         color: "bg-red-50     border-red-200",
