@@ -5,11 +5,11 @@ import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
 
 const navItems = [
   { to: '/', label: 'Home', icon: House, group: 1 },
+  { to: '/community/leaderboards', label: 'Leaderboards', icon: Trophy, group: 1 },
   { to: '/about', label: 'About', icon: CircleHelp, group: 1 },
   { to: '/community/forums', label: 'Forums', icon: MessageSquare, group: 2 },
   { to: '/community/events', label: 'Events', icon: CalendarDays, group: 2 },
-  { to: '/community/members', label: 'Members', icon: UsersRound, group: 2 },
-  { to: '/community/leaderboards', label: 'Leaderboards', icon: Trophy, group: 2 }
+  { to: '/community/members', label: 'Members', icon: UsersRound, group: 2 }
 ];
 
 export default function Navbar() {
