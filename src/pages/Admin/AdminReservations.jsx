@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import { ASSET_URL } from "../../config";
 import { toast } from "sonner";
 import BulkPcModal from "../../components/modals/BulkPcModal";
@@ -26,6 +27,7 @@ import labService from "../../services/lab.service";
 import notificationService from "../../services/notification.service";
 import pcService from "../../services/pc.service";
 import reservationService from "../../services/reservation.service";
+import sitinService from "../../services/sitin.service";
 
 const RESERVATION_TABS = [
   { id: "all", label: "All" },
@@ -261,6 +263,8 @@ export default function AdminReservations() {
   const [isConverting, setIsConverting] = useState(false);
   const [convertingError, setConvertingError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  // Set of student_ids who currently have a live sit-in session
+  const [activeSessionStudentIds, setActiveSessionStudentIds] = useState(new Set());
 
   const [auditEntries, setAuditEntries] = useState([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -378,6 +382,10 @@ export default function AdminReservations() {
 
   useEffect(() => {
     void fetchReservations(reservationTab);
+    // Refresh active sessions whenever we switch to the approved tab
+    if (reservationTab === "approved" || reservationTab === "all") {
+      void fetchActiveSessions();
+    }
   }, [reservationTab]);
 
   useEffect(() => {
@@ -455,6 +463,18 @@ export default function AdminReservations() {
       setReservationsError("Failed to load reservations.");
     } finally {
       setReservationsLoading(false);
+    }
+  };
+
+  const fetchActiveSessions = async () => {
+    try {
+      const result = await sitinService.getActiveSessions();
+      const sessions = normalizeList(result);
+      setActiveSessionStudentIds(
+        new Set(sessions.map((s) => String(s.student_id))),
+      );
+    } catch {
+      // Silent fail — worst case Start Sit-in still shows and backend handles it
     }
   };
 
@@ -727,6 +747,7 @@ export default function AdminReservations() {
       await Promise.all([
         fetchReservations(reservationTab),
         fetchAuditLog(1, auditFilters),
+        fetchActiveSessions(),
       ]);
       setAuditPage(1);
     } catch (err) {
@@ -1036,33 +1057,13 @@ export default function AdminReservations() {
 
                   const isEligibleForSitIn = (() => {
                     if (reservation.status !== "approved") return false;
+                    // Available any time on the reserved date — no time window restriction
                     const today = new Date();
                     const yyyy = today.getFullYear();
                     const mm = String(today.getMonth() + 1).padStart(2, "0");
                     const dd = String(today.getDate()).padStart(2, "0");
                     const localTodayStr = `${yyyy}-${mm}-${dd}`;
-
-                    if (reservation.reserved_date !== localTodayStr)
-                      return false;
-
-                    const [hours, minutes] = (
-                      reservation.reserved_time || "00:00"
-                    )
-                      .split(":")
-                      .map(Number);
-                    const slotStart = new Date(today);
-                    slotStart.setHours(hours, minutes, 0, 0);
-
-                    const earliestStart = new Date(slotStart);
-                    earliestStart.setMinutes(earliestStart.getMinutes() - 15);
-
-                    const latestStart = new Date(slotStart);
-                    latestStart.setHours(slotStart.getHours() + 2); // 2 hours window
-                    latestStart.setMinutes(latestStart.getMinutes() + 15);
-
-                    return (
-                      currentTime >= earliestStart && currentTime <= latestStart
-                    );
+                    return reservation.reserved_date === localTodayStr;
                   })();
                   return (
                     <div
@@ -1262,49 +1263,53 @@ export default function AdminReservations() {
                                     </div>
                                   </div>
                                 )}
-                                <div className="grid grid-cols-1 gap-3">
-                                  <Select
-                                    label="Administrative Response"
-                                    value={
-                                      selectedReasons[reservation.id] || ""
-                                    }
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      setSelectedReasons((prev) => ({
-                                        ...prev,
-                                        [reservation.id]: val,
-                                      }));
-                                      if (val)
-                                        setAdminNotes((prev) => ({
+                                {/* Admin Response Form — only for pending reservations */}
+                                {reservation.status === "pending" && (
+                                  <div className="grid grid-cols-1 gap-3">
+                                    <Select
+                                      label="Administrative Response"
+                                      value={
+                                        selectedReasons[reservation.id] || ""
+                                      }
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setSelectedReasons((prev) => ({
                                           ...prev,
                                           [reservation.id]: val,
                                         }));
-                                    }}
-                                  >
-                                    <option value="">
-                                      Quick select response...
-                                    </option>
-                                    {COMMON_RESCHEDULE_REASONS.map((r) => (
-                                      <option key={r} value={r}>
-                                        {r}
+                                        if (val)
+                                          setAdminNotes((prev) => ({
+                                            ...prev,
+                                            [reservation.id]: val,
+                                          }));
+                                      }}
+                                    >
+                                      <option value="">
+                                        Quick select response...
                                       </option>
-                                    ))}
-                                  </Select>
+                                      {COMMON_RESCHEDULE_REASONS.map((r) => (
+                                        <option key={r} value={r}>
+                                          {r}
+                                        </option>
+                                      ))}
+                                    </Select>
 
-                                  <textarea
-                                    value={adminNotes[reservation.id] || ""}
-                                    onChange={(e) =>
-                                      setAdminNotes((prev) => ({
-                                        ...prev,
-                                        [reservation.id]: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Enter custom message or adjustments..."
-                                    className="w-full px-4 py-3 rounded-xl border border-border bg-white text-xs font-bold text-primary focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all min-h-[80px]"
-                                  />
-                                </div>
+                                    <textarea
+                                      value={adminNotes[reservation.id] || ""}
+                                      onChange={(e) =>
+                                        setAdminNotes((prev) => ({
+                                          ...prev,
+                                          [reservation.id]: e.target.value,
+                                        }))
+                                      }
+                                      placeholder="Enter custom message or adjustments..."
+                                      className="w-full px-4 py-3 rounded-xl border border-border bg-white text-xs font-bold text-primary focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all min-h-[80px]"
+                                    />
+                                  </div>
+                                )}
 
-                                {showWarning && (
+                                {/* Conflict warning — only relevant for pending (approval flow) */}
+                                {reservation.status === "pending" && showWarning && (
                                   <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-pulse">
                                     <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                                     <div className="flex-1">
@@ -1344,20 +1349,49 @@ export default function AdminReservations() {
                                   </div>
                                 )}
 
+                                {/* Session confirmed banner — only for approved reservations */}
+                                {reservation.status === "approved" && (
+                                  <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                                        Session Confirmed
+                                      </p>
+                                      <p className="text-[11px] font-bold text-emerald-600/80 mt-0.5">
+                                        Reservation approved. Use <span className="font-black">Start Sit-in</span> when the student arrives.
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
                                 <div className="flex flex-wrap items-center gap-2">
                                   {isEligibleForSitIn &&
                                     convertingId !== reservation.id && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() =>
-                                          setConvertingId(reservation.id)
-                                        }
-                                        loading={isActioning}
-                                        icon={<Play className="w-4 h-4" />}
-                                        className="bg-primary hover:bg-primary/90 text-white shadow-sm"
-                                      >
-                                        Start Sit-in
-                                      </Button>
+                                      activeSessionStudentIds.has(String(reservation.student_id)) ? (
+                                        /* Student already has a live session — redirect instead */
+                                        <Link
+                                          to="/admin/sit-in"
+                                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                                        >
+                                          <Activity className="w-3.5 h-3.5" />
+                                          View Live Session
+                                          <ChevronRight className="w-3.5 h-3.5" />
+                                        </Link>
+                                      ) : (
+                                        <Button
+                                          size="sm"
+                                          onClick={() =>
+                                            setConvertingId(reservation.id)
+                                          }
+                                          loading={isActioning}
+                                          icon={<Play className="w-4 h-4" />}
+                                          className="bg-primary hover:bg-primary/90 text-white shadow-sm"
+                                        >
+                                          Start Sit-in
+                                        </Button>
+                                      )
                                     )}
                                   {reservation.status === "pending" && (
                                     <Button
@@ -1377,31 +1411,36 @@ export default function AdminReservations() {
                                       Approve
                                     </Button>
                                   )}
-                                  <Button
-                                    variant="danger"
-                                    size="sm"
-                                    onClick={() =>
-                                      updateReservationStatus(
-                                        reservation,
-                                        "rejected",
-                                      )
-                                    }
-                                    loading={isActioning}
-                                    icon={<XCircle className="w-4 h-4" />}
-                                  >
-                                    Reject
-                                  </Button>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() =>
-                                      requestStudentReschedule(reservation)
-                                    }
-                                    loading={isActioning}
-                                    className="border-primary text-primary hover:bg-primary/5"
-                                  >
-                                    Request Reschedule
-                                  </Button>
+                                  {/* Reject & Reschedule — only available for pending reservations */}
+                                  {reservation.status === "pending" && (
+                                    <>
+                                      <Button
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={() =>
+                                          updateReservationStatus(
+                                            reservation,
+                                            "rejected",
+                                          )
+                                        }
+                                        loading={isActioning}
+                                        icon={<XCircle className="w-4 h-4" />}
+                                      >
+                                        Reject
+                                      </Button>
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() =>
+                                          requestStudentReschedule(reservation)
+                                        }
+                                        loading={isActioning}
+                                        className="border-primary text-primary hover:bg-primary/5"
+                                      >
+                                        Request Reschedule
+                                      </Button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             ) : (

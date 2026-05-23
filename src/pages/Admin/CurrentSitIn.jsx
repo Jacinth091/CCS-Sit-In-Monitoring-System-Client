@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { SITIN_PURPOSES } from "../../constants/app.constants";
 import sitinService from "../../services/sitin.service";
 import { formatTime } from "../../utils/dateUtils";
+import Pagination from "../../components/ui/Pagination";
+import { useConfirm } from "../../hooks/useConfirm.jsx";
 
 function SessionDetailModal({ session, onClose, onEndSession }) {
   if (!session) return null;
@@ -165,12 +167,32 @@ export default function CurrentSitIn() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalActiveNow, setTotalActiveNow] = useState(0);
+  const itemsPerPage = 10;
+
+  const { confirm, ConfirmModalUI } = useConfirm();
+
   const fetchActiveSessions = async () => {
     setIsLoading(true);
     try {
-      const data = await sitinService.getActiveSessions();
-      setSessions(data || []);
-      setFilteredSessions(data || []);
+      const params = {
+        page: currentPage,
+        per_page: itemsPerPage,
+        search: searchQuery.trim() || undefined,
+        purpose: purposeFilter !== "all" ? purposeFilter : undefined,
+      };
+      const res = await sitinService.getActiveSessions(params);
+      const recordsArray = res.data?.records || [];
+      const meta = res.data?.meta || {};
+      
+      setSessions(recordsArray);
+      setFilteredSessions(recordsArray);
+      setTotalPages(meta.last_page || 1);
+      setTotalRecords(meta.total || 0);
+      setTotalActiveNow(meta.total_active_now || 0);
     } catch (_err) {
       toast.error("Load failed");
     } finally {
@@ -180,39 +202,26 @@ export default function CurrentSitIn() {
 
   useEffect(() => {
     fetchActiveSessions();
-  }, []);
+  }, [currentPage, searchQuery, purposeFilter]);
 
   useEffect(() => {
-    let result = [...sessions];
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.student_id?.toLowerCase().includes(q) ||
-          s.first_name?.toLowerCase().includes(q) ||
-          s.last_name?.toLowerCase().includes(q) ||
-          s.name?.toLowerCase().includes(q),
-      );
-    }
-    if (purposeFilter !== "all") {
-      if (purposeFilter === "Other") {
-        const predefined = SITIN_PURPOSES.filter((p) => p !== "Other");
-        result = result.filter((s) => !predefined.includes(s.purpose));
-      } else {
-        result = result.filter((s) => s.purpose === purposeFilter);
-      }
-    }
-    setFilteredSessions(result);
-  }, [searchQuery, purposeFilter, sessions]);
+    setCurrentPage(1);
+  }, [searchQuery, purposeFilter]);
 
   const handleEndSession = async (logId) => {
-    if (!window.confirm("End session?")) return;
+    const ok = await confirm({
+      title: "End Session?",
+      message: "This will log the student out of their current sit-in session.",
+      variant: "danger",
+      confirmText: "Yes, End Session",
+    });
+    if (!ok) return;
     try {
       await sitinService.endSessionAdmin(logId);
-      toast.success("Ended");
+      toast.success("Session ended");
       fetchActiveSessions();
     } catch (_err) {
-      toast.error("Failed");
+      toast.error("Failed to end session");
     }
   };
 
@@ -235,7 +244,7 @@ export default function CurrentSitIn() {
             {[
               {
                 label: "Active Now",
-                value: sessions.length,
+                value: totalActiveNow,
                 icon: UserCheck,
                 color: "text-emerald-500",
               },
@@ -291,7 +300,7 @@ export default function CurrentSitIn() {
           </div>
 
           <div className="px-4 py-2 bg-bg-secondary border border-border rounded-xl text-[10px] font-black text-primary-light uppercase tracking-widest whitespace-nowrap">
-            {filteredSessions.length} Results
+            {totalRecords} Results
           </div>
         </div>
 
@@ -357,7 +366,7 @@ export default function CurrentSitIn() {
                     className="hover:bg-bg-secondary/50 transition-colors group text-sm"
                   >
                     <td className="py-3 px-6 font-bold text-primary-light/40">
-                      {index + 1}
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
                     <td className="py-3 px-6 font-bold text-primary-hover">
                       {session.student_id}
@@ -402,7 +411,7 @@ export default function CurrentSitIn() {
                     <td className="py-3 px-6 text-right">
                       <div className="flex justify-end gap-1">
                         <button
-                          onClick={() => setSelectedSession(session)}
+                           onClick={() => setSelectedSession(session)}
                           className="px-4 py-1.5 rounded-lg border border-border text-[10px] font-black uppercase text-primary hover:bg-bg-secondary transition-all"
                         >
                           Details
@@ -421,6 +430,15 @@ export default function CurrentSitIn() {
             </tbody>
           </table>
         </div>
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-border bg-bg-secondary/30 flex items-center justify-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
       {selectedSession && (
         <SessionDetailModal
@@ -429,6 +447,7 @@ export default function CurrentSitIn() {
           onEndSession={handleEndSession}
         />
       )}
+      {ConfirmModalUI}
     </div>
   );
 }

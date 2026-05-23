@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, UserCheck, ClipboardList, Loader2, 
+import {
+  Users, UserCheck, ClipboardList, Loader2,
   FlaskConical, Activity, TrendingUp, Calendar,
-  ArrowUpRight, Clock, ShieldCheck, ChevronRight
+  ArrowUpRight, Clock, ShieldCheck, ChevronRight, Monitor
 } from 'lucide-react';
 import adminService from '../../services/admin.service';
 import { Link } from 'react-router';
@@ -35,17 +35,17 @@ function DonutChart({ data }) {
             const dash = (val / total) * circumference;
             const gap = circumference - dash;
             const offset = (acc.cumulative / total) * circumference;
-            
+
             acc.circles.push(
-              <circle 
-                key={`${d.label}-${i}`} 
-                cx="50" cy="50" r={radius} 
-                fill="none" 
-                stroke={COLORS[i % COLORS.length]} 
-                strokeWidth={hoveredItem?.label === d.label ? "12" : "10"} 
-                strokeDasharray={`${dash} ${gap}`} 
-                strokeDashoffset={-offset} 
-                strokeLinecap="round" 
+              <circle
+                key={`${d.label}-${i}`}
+                cx="50" cy="50" r={radius}
+                fill="none"
+                stroke={COLORS[i % COLORS.length]}
+                strokeWidth={hoveredItem?.label === d.label ? "12" : "10"}
+                strokeDasharray={`${dash} ${gap}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="round"
                 className="transition-all duration-300 hover:opacity-100 opacity-90 cursor-pointer"
                 onMouseEnter={() => setHoveredItem(d)}
                 onMouseLeave={() => setHoveredItem(null)}
@@ -56,25 +56,25 @@ function DonutChart({ data }) {
           }, { circles: [], cumulative: 0 }).circles}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-           <span className={`font-black text-primary tracking-tighter transition-all duration-300 ${hoveredItem ? 'text-xl' : 'text-2xl'}`}>
-             {hoveredItem ? hoveredItem.count : total}
-           </span>
-           <span className="text-[8px] font-black text-primary-light uppercase tracking-widest text-center max-w-[80px] line-clamp-2">
-             {hoveredItem ? hoveredItem.label : 'Total'}
-           </span>
+          <span className={`font-black text-primary tracking-tighter transition-all duration-300 ${hoveredItem ? 'text-xl' : 'text-2xl'}`}>
+            {hoveredItem ? hoveredItem.count : total}
+          </span>
+          <span className="text-[8px] font-black text-primary-light uppercase tracking-widest text-center max-w-[80px] line-clamp-2">
+            {hoveredItem ? hoveredItem.label : 'Total'}
+          </span>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full">
         {data.map((d, i) => (
-          <div 
-            key={`${d.label}-${i}`} 
+          <div
+            key={`${d.label}-${i}`}
             className="flex items-center gap-2 group cursor-pointer"
             onMouseEnter={() => setHoveredItem(d)}
             onMouseLeave={() => setHoveredItem(null)}
           >
-            <span 
-              className={`inline-block w-2 h-2 rounded-full ring-2 ring-white shadow-sm transition-transform duration-300 ${hoveredItem?.label === d.label ? 'scale-125' : ''}`} 
-              style={{ backgroundColor: COLORS[i % COLORS.length] }} 
+            <span
+              className={`inline-block w-2 h-2 rounded-full ring-2 ring-white shadow-sm transition-transform duration-300 ${hoveredItem?.label === d.label ? 'scale-125' : ''}`}
+              style={{ backgroundColor: COLORS[i % COLORS.length] }}
             />
             <div className="flex flex-col">
               <span className={`text-[9px] font-bold uppercase tracking-tight transition-colors line-clamp-1 ${hoveredItem?.label === d.label ? 'text-primary' : 'text-primary-light'}`}>
@@ -184,9 +184,10 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard icon={Users} label="Registered Students" value={stats.total_students || 0} accent="#3A6D8C" trend="+12%" />
         <StatCard icon={UserCheck} label="Active Sit-in" value={stats.current_sitin || 0} accent="#10B981" />
+        <StatCard icon={Monitor} label="Active Units" value={stats.current_sitin || 0} accent="#6A9AB0" />
         <StatCard icon={ClipboardList} label="Total Sit-ins" value={stats.total_sitin || 0} accent="#F59E0B" />
         <StatCard icon={FlaskConical} label="Total Labs" value={stats.total_labs || 0} accent="#6366F1" />
       </div>
@@ -199,11 +200,11 @@ export default function AdminDashboard() {
         <div className="lg:col-span-3 bg-white rounded-xl border border-border shadow-sm p-6 flex flex-col">
           <div className="flex items-center justify-between w-full mb-6"><div><h3 className="text-[10px] font-black tracking-[0.2em] uppercase text-primary mb-1">Sit-in Purpose</h3><p className="text-[9px] font-bold text-primary-light uppercase tracking-widest">Usage Reasons</p></div><TrendingUp className="h-4 w-4 text-primary-light/30" /></div>
           <div className="flex-1 space-y-8">
-             <SimpleBarChart data={stats.purpose_distribution} />
-             <div className="pt-6 border-t border-border/60 flex items-center justify-between">
-                <div className="flex gap-4"><div className="flex flex-col"><span className="text-[8px] font-black text-primary-light uppercase tracking-widest">Top Lab</span><span className="text-xs font-black text-primary uppercase">Lab 542</span></div><div className="w-[1px] h-6 bg-border/60" /><div className="flex flex-col"><span className="text-[8px] font-black text-primary-light uppercase tracking-widest">Avg Duration</span><span className="text-xs font-black text-primary uppercase">1.5 Hours</span></div></div>
-                <Link to="/admin/sit-in/records" className="flex items-center gap-1.5 text-[9px] font-black text-primary-hover uppercase tracking-widest hover:translate-x-1 transition-transform group">View All Records <ArrowUpRight className="h-3 w-3" /></Link>
-             </div>
+            <SimpleBarChart data={stats.purpose_distribution} />
+            <div className="pt-6 border-t border-border/60 flex items-center justify-between">
+              <div className="flex gap-4"><div className="flex flex-col"><span className="text-[8px] font-black text-primary-light uppercase tracking-widest">Top Lab</span><span className="text-xs font-black text-primary uppercase">Lab 542</span></div><div className="w-[1px] h-6 bg-border/60" /><div className="flex flex-col"><span className="text-[8px] font-black text-primary-light uppercase tracking-widest">Avg Duration</span><span className="text-xs font-black text-primary uppercase">1.5 Hours</span></div></div>
+              <Link to="/admin/sit-in/records" className="flex items-center gap-1.5 text-[9px] font-black text-primary-hover uppercase tracking-widest hover:translate-x-1 transition-transform group">View All Records <ArrowUpRight className="h-3 w-3" /></Link>
+            </div>
           </div>
         </div>
       </div>
@@ -225,18 +226,73 @@ export default function AdminDashboard() {
           <div className="p-4 border-b border-border bg-bg-secondary/30 flex items-center justify-between">
             <h3 className="text-[10px] font-black tracking-[0.2em] uppercase text-primary flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-primary-hover" /> Recent Activity</h3>
             <Link to="/admin/sit-in" className="flex items-center gap-1.5 text-[9px] font-black text-primary-hover uppercase tracking-widest hover:translate-x-1 transition-transform group">
-               Manage Active <ArrowUpRight className="h-3 w-3" />
+              Manage Active <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="overflow-x-auto grow">
-            <table className="w-full text-left">
-              <thead><tr className="border-b border-border/50"><th className="px-6 py-3 text-[9px] font-black text-primary-light uppercase tracking-widest">Student</th><th className="px-6 py-3 text-[9px] font-black text-primary-light uppercase tracking-widest text-center">Laboratory</th><th className="px-6 py-3 text-[9px] font-black text-primary-light uppercase tracking-widest text-center">Time</th><th className="px-6 py-3 text-[9px] font-black text-primary-light uppercase tracking-widest text-right">Status</th></tr></thead>
-              <tbody className="divide-y divide-border/30">
-                {stats.recent_sessions && stats.recent_sessions.length > 0 ? stats.recent_sessions.map((session, idx) => (
-                  <tr key={idx} className="hover:bg-bg-secondary/50 transition-colors group text-sm"><td className="px-6 py-3"><div className="flex items-center gap-3"><div className="w-7 h-7 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10 group-hover:bg-primary transition-colors"><Users className="h-3.5 w-3.5 text-primary group-hover:text-white transition-colors" /></div><div className="flex flex-col"><p className="text-xs font-black text-primary tracking-tight">{session.first_name} {session.last_name}</p><p className="text-[8px] font-bold text-primary-light uppercase tracking-widest">{session.purpose}</p></div></div></td><td className="px-6 py-3 text-center"><p className="text-[10px] font-black text-primary-light uppercase tracking-widest bg-brand-sand/10 px-2 py-0.5 rounded inline-block">{session.lab_name}</p></td><td className="px-6 py-3 text-center"><div className="flex flex-col items-center"><p className="text-[10px] font-bold text-primary tracking-tighter">{formatTime(session.time_in)}</p><p className="text-[8px] font-bold text-primary-light uppercase tracking-widest">{formatDate(session.time_in)}</p></div></td><td className="px-6 py-3 text-right"><span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${session.status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-primary/5 text-primary-light'}`}>{session.status}</span></td></tr>
-                )) : <tr><td colSpan="4" className="py-20 text-center opacity-30 text-[9px] font-black uppercase">No recent logs discovered</td></tr>}
-              </tbody>
-            </table>
+          <div className="p-4 space-y-3 grow overflow-y-auto max-h-[500px] custom-scrollbar">
+            {stats.recent_sessions && stats.recent_sessions.length > 0 ? (
+              stats.recent_sessions.map((session, idx) => {
+                const isOngoing = session.status === 'active';
+                return (
+                  <div
+                    key={idx}
+                    className="relative border border-border rounded-xl p-0 transition-all duration-300 bg-white overflow-hidden hover:shadow-md hover:border-primary/20"
+                  >
+                    {/* Status Accent Bar */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${isOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-primary-light/20'}`} />
+
+                    <div className="px-5 py-4 ml-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-3 gap-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold text-primary leading-tight">
+                                  {session.pc_number ? `PC ${session.pc_number}` : 'No Station'}
+                                </span>
+                                <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/5">
+                                  {session.lab_name}
+                                </span>
+                              </div>
+                              <p className="text-[12px] font-bold text-primary-light leading-tight">
+                                {session.first_name} {session.last_name}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-primary-light">
+                            <span className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1.5 rounded-lg text-primary border border-border/50">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {formatDate(session.time_in)}
+                            </span>
+                            <span className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1.5 rounded-lg text-primary border border-border/50">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatTime(session.time_in)}
+                            </span>
+                            <span className="flex items-center gap-1.5 bg-bg-secondary/60 px-2.5 py-1.5 rounded-lg text-primary-light border border-border/60 text-[10px] font-extrabold tracking-wide">
+                              {session.purpose}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end justify-between min-w-[88px]">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${isOngoing
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                            : 'bg-bg-secondary text-primary-light border-border'
+                            }`}>
+                            {session.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-20 text-center opacity-30">
+                <p className="text-[9px] font-black uppercase tracking-widest">No recent logs discovered</p>
+              </div>
+            )}
           </div>
           <Link to="/admin/sit-in/history" className="px-6 py-3 text-[9px] font-black text-primary-light uppercase tracking-widest hover:text-primary transition-colors border-t border-border text-center">View History</Link>
         </div>

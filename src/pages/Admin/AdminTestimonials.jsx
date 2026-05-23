@@ -24,24 +24,38 @@ import {
 import testimonialService from "../../services/testimonial.service";
 import notificationService from "../../services/notification.service";
 import { formatDate } from "../../utils/dateUtils";
+import Pagination from "../../components/ui/Pagination";
+import { useConfirm } from "../../hooks/useConfirm.jsx";
 
 export default function AdminTestimonials() {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
-  const [filter, setFilter] = useState("all"); // all, pending, approved
+  const [filter, setFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  useEffect(() => {
-    fetchTestimonials();
-  }, []);
+  const [testimonialsPage, setTestimonialsPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const itemsPerPage = 6;
+
+  const { confirm, ConfirmModalUI } = useConfirm();
 
   const fetchTestimonials = async () => {
     setLoading(true);
     try {
-      const result = await testimonialService.getAll();
-      setTestimonials(result.data || []);
+      const result = await testimonialService.getAll({
+        page: testimonialsPage,
+        per_page: itemsPerPage,
+        status: filter !== "all" ? filter : undefined,
+      });
+      const recordsArray = result.data?.records || [];
+      const meta = result.data?.meta || {};
+      
+      setTestimonials(recordsArray);
+      setTotalPages(meta.last_page || 1);
+      setTotalRecords(meta.total || 0);
       setSelectedIds(new Set());
     } catch (err) {
       toast.error("Failed to load testimonials");
@@ -49,6 +63,14 @@ export default function AdminTestimonials() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, [testimonialsPage, filter]);
+
+  useEffect(() => {
+    setTestimonialsPage(1);
+  }, [filter]);
 
   const handleToggleApproval = async (id, currentStatus) => {
     setActionLoading(id);
@@ -82,7 +104,13 @@ export default function AdminTestimonials() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this testimonial?")) return;
+    const ok = await confirm({
+      title: "Delete Testimonial?",
+      message: "This testimonial will be permanently removed and cannot be recovered.",
+      variant: "danger",
+      confirmText: "Yes, Delete",
+    });
+    if (!ok) return;
     setActionLoading(id);
     try {
       await testimonialService.delete(id);
@@ -124,7 +152,13 @@ export default function AdminTestimonials() {
 
     try {
       if (action === "delete") {
-        if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} testimonials?`)) {
+        const ok = await confirm({
+          title: `Delete ${selectedIds.size} Testimonials?`,
+          message: `All ${selectedIds.size} selected testimonials will be permanently removed. This cannot be undone.`,
+          variant: "danger",
+          confirmText: "Yes, Delete All",
+        });
+        if (!ok) {
           setIsBulkProcessing(false);
           return;
         }
@@ -166,19 +200,13 @@ export default function AdminTestimonials() {
     }
   };
 
-  const filteredTestimonials = testimonials.filter((t) => {
-    if (filter === "all") return true;
-    if (filter === "pending") return !t.is_approved || t.is_approved == 0;
-    if (filter === "approved") return t.is_approved == 1 || t.is_approved === true;
-    if (filter === "anonymous") return t.is_anonymous == 1 || t.is_anonymous === true;
-    return true;
-  });
+  const filteredTestimonials = testimonials;
 
   const getStats = () => {
     const approved = testimonials.filter((t) => t.is_approved == 1 || t.is_approved === true).length;
     const anonymous = testimonials.filter((t) => t.is_anonymous == 1 || t.is_anonymous === true).length;
     const pending = testimonials.length - approved;
-    return { total: testimonials.length, approved, pending, anonymous };
+    return { total: totalRecords, approved, pending, anonymous };
   };
 
   const stats = getStats();
@@ -329,7 +357,8 @@ export default function AdminTestimonials() {
 
       {/* ── UNIFORM GRID ── */}
       {filteredTestimonials.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="space-y-8 animate-fade-in-up">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {filteredTestimonials.map((t) => {
             const isSelected = selectedIds.has(t.id);
             const isApproved = t.is_approved == 1 || t.is_approved === true;
@@ -472,6 +501,16 @@ export default function AdminTestimonials() {
               </div>
             );
           })}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center bg-white p-4 rounded-xl border border-border shadow-sm">
+              <Pagination
+                currentPage={testimonialsPage}
+                totalPages={totalPages}
+                onPageChange={setTestimonialsPage}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <div className="py-24 flex flex-col items-center justify-center text-center bg-white border-2 border-dashed border-border rounded-[12px]">
@@ -494,6 +533,7 @@ export default function AdminTestimonials() {
           )}
         </div>
       )}
+      {ConfirmModalUI}
     </div>
   );
 }

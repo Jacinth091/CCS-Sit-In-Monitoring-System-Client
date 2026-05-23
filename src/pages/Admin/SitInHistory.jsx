@@ -351,7 +351,7 @@ export default function SitInHistory() {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20 relative">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20 relative animate-fade-in">
       <div className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-4">
           <div className="min-w-0">
@@ -476,16 +476,16 @@ export default function SitInHistory() {
             <thead>
               <tr className="bg-bg-secondary/30 border-b border-border whitespace-nowrap">
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light">
-                  Student Name
+                  Student / Account
                 </th>
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light">
-                  Purpose
+                  Laboratory
                 </th>
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light text-center">
-                  PC Number
+                  Workstation
                 </th>
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light text-center">
-                  Lab Number
+                  Date
                 </th>
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light text-center">
                   Time In
@@ -495,6 +495,9 @@ export default function SitInHistory() {
                 </th>
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light text-center">
                   Duration
+                </th>
+                <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light text-center">
+                  Purpose
                 </th>
                 <th className="py-4 px-6 text-[10px] font-black tracking-[0.2em] uppercase text-primary-light text-center">
                   Status
@@ -507,14 +510,14 @@ export default function SitInHistory() {
             <tbody className="divide-y divide-border/30">
               {isLoading ? (
                 <tr>
-                  <td colSpan="9" className="py-32 text-center">
+                  <td colSpan="10" className="py-32 text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/20" />
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="9"
+                    colSpan="10"
                     className="py-32 text-center text-sm text-primary-light font-bold uppercase opacity-40"
                   >
                     No records found.
@@ -530,7 +533,7 @@ export default function SitInHistory() {
                     >
                       <td className="py-3 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10 relative">
+                          <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10 relative">
                             <User className="h-4 w-4 text-primary absolute" />
                             {record.profile_pic && (
                               <img
@@ -541,45 +544,48 @@ export default function SitInHistory() {
                               />
                             )}
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-primary">
+                          <div className="flex flex-col min-w-0">
+                            <p className="font-bold text-primary truncate leading-tight tracking-tight">
                               {record.first_name} {record.last_name}
-                            </span>
-                            <span className="text-[10px] font-bold text-primary-light">
+                            </p>
+                            <p className="text-[9px] font-black text-primary-light uppercase tracking-widest">
                               {record.student_id}
-                            </span>
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-6 text-primary-light max-w-[150px] truncate">
-                        {record.purpose}
+                      <td className="py-3 px-6">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-black text-primary uppercase tracking-tight">
+                            {record.name}
+                          </span>
+                          {record.lab_code && (
+                            <span className="text-[9px] font-bold text-primary-light/60 uppercase">
+                              {record.lab_code}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-6 text-center">
-                        <span className="inline-flex items-center gap-1 text-xs font-black text-primary bg-bg-secondary px-2 py-0.5 rounded-lg border border-border">
-                          {record.pc_number || "—"}
+                        <span className="text-xs font-black text-primary bg-bg-secondary px-2 py-1 rounded-lg border border-border">
+                          PC-{String(record.pc_number || "??").padStart(2, "0")}
                         </span>
                       </td>
-                      <td className="py-3 px-6 text-center font-bold text-primary-hover">
-                        {record.lab_code ? `${record.lab_code} - ${record.name}` : record.name}
+                      <td className="py-3 px-6 text-center">
+                        <span className="text-[11px] font-black text-primary uppercase tracking-widest">
+                          {formatDate(record.time_in)}
+                        </span>
                       </td>
                       <td className="py-3 px-6 text-center">
-                        <span className="font-black text-primary text-[11px]">
+                        <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
                           {formatTime(record.time_in)}
                         </span>
-                        <p className="text-[9px] font-bold text-primary-light uppercase">
-                          {formatDate(record.time_in)}
-                        </p>
                       </td>
                       <td className="py-3 px-6 text-center">
                         {record.time_out ? (
-                          <>
-                            <span className="font-black text-primary text-[11px]">
-                              {formatTime(record.time_out)}
-                            </span>
-                            <p className="text-[9px] font-bold text-primary-light uppercase">
-                              {formatDate(record.time_out)}
-                            </p>
-                          </>
+                          <span className="text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
+                            {formatTime(record.time_out)}
+                          </span>
                         ) : (
                           <span className="text-[10px] text-primary-light font-bold italic">
                             Ongoing
@@ -588,12 +594,15 @@ export default function SitInHistory() {
                       </td>
                       <td className="py-3 px-6 text-center">
                         {duration ? (
-                          <span className="bg-brand-sand/10 border border-brand-sand/20 px-2 py-1 rounded text-[10px] font-black">
+                          <span className="text-xs font-black text-primary bg-bg-secondary px-2 py-1 rounded-lg border border-border">
                             {duration}
                           </span>
                         ) : (
                           "—"
                         )}
+                      </td>
+                      <td className="py-3 px-6 text-center font-bold text-primary-light italic opacity-80">
+                        {record.purpose}
                       </td>
                       <td className="py-3 px-6 text-center">
                         <StatusBadge status={record.status} />
