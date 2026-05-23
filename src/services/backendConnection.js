@@ -99,11 +99,13 @@ api.interceptors.response.use(
       expireSessionAndRedirect();
     }
 
-    let msg = error.response?.data?.message || error.message;
-    if (msg && msg.toLowerCase().includes("status code")) {
-      msg = "Something went wrong on the server. Please try again later.";
-    } else if (!msg || error.code === "ERR_NETWORK") {
+    let msg = error.response?.data?.message || error.response?.data?.error || error.message;
+    
+    // If it's a network error or the server is down
+    if (!error.response && error.code === "ERR_NETWORK") {
       msg = "Network error. Please check your connection and try again.";
+    } else if (error.response?.status >= 500) {
+      msg = "Server error. Please try again later.";
     }
 
     error.customMessage = msg;
