@@ -9,28 +9,19 @@ import { useAuth } from '../../context/AuthContext';
 import announcementService from '../../services/announcement.service';
 import sitinService from '../../services/sitin.service';
 import studentService from '../../services/student.service';
+import labService from '../../services/lab.service';
 import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { COURSES } from '../../constants/app.constants';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 
-const RULES = [
-  'Maintain silence, decorum, and order inside the laboratory. Turn off or keep on silent mode all mobile phones and personal electronic devices.',
-  'Games are strictly NOT allowed inside the laboratory. This includes computer games, mobile games, and any other form of gaming.',
-  "Surfing the internet and downloading software, applications, or any files without the instructor's permission is strictly prohibited.",
-  'Food and drinks are NOT allowed inside the laboratory at any time.',
-  'Students must log in and out of the sit-in monitoring system when entering and leaving the lab.',
-  'Report any hardware or software issues to the lab technician or instructor immediately.',
-  'Students are responsible for any damage to lab equipment caused by negligence or misuse.',
-  'Follow the scheduled lab hours. Unauthorized access outside of scheduled hours is not permitted.',
-];
-
 export default function StudentDashboard() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('announcements');
   const [announcements, setAnnouncements] = useState([]);
+  const [labRules, setLabRules] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ 
     totalHours: '0h 0m',
@@ -39,15 +30,26 @@ export default function StudentDashboard() {
     lastSession: '—'
   });
 
-  // Fetch announcements & stats & profile sync
+  const defaultRules = [
+    'Maintain silence, decorum, and order inside the laboratory. Turn off or keep on silent mode all mobile phones and personal electronic devices.',
+    'Games are strictly NOT allowed inside the laboratory. This includes computer games, mobile games, and any other form of gaming.',
+    "Surfing the internet and downloading software, applications, or any files without the instructor's permission is strictly prohibited.",
+    'Food and drinks are NOT allowed inside the laboratory at any time.',
+    'Students must log in and out of the sit-in monitoring system when entering and leaving the lab.',
+    'Report any hardware or software issues to the lab technician or instructor immediately.',
+    'Students are responsible for any damage to lab equipment caused by negligence or misuse.',
+    'Follow the scheduled lab hours. Unauthorized access outside of scheduled hours is not permitted.',
+  ];
+
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const [annRes, statsRes, profileRes] = await Promise.all([
+        const [annRes, statsRes, profileRes, rulesRes] = await Promise.all([
           announcementService.getAll(1),
           sitinService.getDashboardStats(),
-          studentService.getProfile()
+          studentService.getProfile(),
+          labService.getRules()
         ]);
 
         // Sync fresh profile to context
@@ -78,8 +80,16 @@ export default function StudentDashboard() {
             lastSession: formatDate(s.last_session_date)
           });
         }
+
+        // Handle rules
+        if (rulesRes.status === 'success' && rulesRes.data?.length > 0) {
+          setLabRules(rulesRes.data.map(r => r.description));
+        } else {
+          setLabRules(defaultRules);
+        }
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
+        setLabRules(defaultRules);
       } finally {
         setIsLoading(false);
       }
@@ -268,7 +278,7 @@ export default function StudentDashboard() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-2.5">
-                    {RULES.map((rule, i) => (
+                    {labRules.map((rule, i) => (
                       <div
                         key={i}
                         className="flex gap-3.5 p-3.5 rounded-xl border border-border/60 hover:border-primary-hover/20 hover:bg-bg-secondary/30 transition-all duration-200"

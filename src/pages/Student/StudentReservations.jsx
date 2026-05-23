@@ -27,24 +27,11 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
+import ReservationCard from "../../components/reservations/ReservationCard";
 import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import reservationService from "../../services/reservation.service";
 import { formatDate, formatTime } from "../../utils/dateUtils";
-
-/* ── Helpers ── */
-const formatRelativeTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  const now = new Date();
-  const diffInHours = (now - date) / (1000 * 60 * 60);
-
-  if (diffInHours < 24) {
-    if (diffInHours < 1) return "Just now";
-    return `${Math.floor(diffInHours)} hours ago`;
-  }
-  return formatDate(date);
-};
 
 /* ── Integrated PC Map Component ── */
 function IntegratedPCMap({
@@ -544,33 +531,33 @@ function ConfirmationModal({
 }) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-primary/40 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-xl p-5 flex flex-col items-center text-center border border-border animate-fade-in-up">
-        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 border border-red-100">
-          <AlertCircle className="h-6 w-6 text-red-500" />
+    <div className="fixed inset-0 bg-primary/50 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center border border-border animate-fade-in-up">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-5 border border-red-100">
+          <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
-        <h3 className="text-lg font-bold text-primary tracking-tight mb-2">
+        <h3 className="text-xl font-black text-primary tracking-tight mb-3">
           {title}
         </h3>
-        <p className="text-[12px] font-bold text-primary-light leading-relaxed mb-6">
+        <p className="text-sm font-medium text-primary-light leading-relaxed mb-8 max-w-xs">
           {message}
         </p>
         <div className="flex gap-3 w-full">
           <button
             onClick={onClose}
-            className="flex-1 h-10 rounded-lg bg-bg-secondary text-primary text-[11px] font-bold hover:bg-border transition-all"
+            className="flex-1 h-12 rounded-xl bg-bg-secondary text-primary text-sm font-bold hover:bg-border transition-all border border-border"
           >
             No, Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 h-10 rounded-lg bg-red-500 text-white text-[11px] font-bold hover:bg-red-600 transition-all flex items-center justify-center"
+            className="flex-1 h-12 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-all flex items-center justify-center shadow-sm"
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              "Confirm"
+              "Yes, Confirm"
             )}
           </button>
         </div>
@@ -773,29 +760,6 @@ export default function StudentReservations() {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-500 dark:border-amber-500/20",
-      approved: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-500 dark:border-emerald-500/20",
-      rejected: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20",
-      rescheduled: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-500 dark:border-sky-500/20",
-      cancelled: "bg-primary/5 text-primary border-primary/15 dark:bg-white/5 dark:text-primary-light dark:border-white/10",
-      used: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-500 dark:border-indigo-500/20",
-      fulfilled: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-500 dark:border-blue-500/20",
-    };
-    const label = String(status || "unknown")
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
-    return (
-      <span
-        className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${styles[status] || styles.cancelled}`}
-      >
-        {label}
-      </span>
-    );
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
@@ -925,229 +889,169 @@ export default function StudentReservations() {
                     const labName = res.name || matchedLab?.name || "Laboratory";
 
                     return (
-                      <div
+                      <ReservationCard
                         key={res.id}
-                        className={`group relative border border-border rounded-xl p-0 transition-all duration-300 bg-white overflow-hidden ${
-                          isExpanded
-                            ? "shadow-md ring-1 ring-primary/10 border-primary/20"
-                            : "hover:shadow-sm hover:border-primary-hover/35"
-                        }`}
+                        reservation={{ ...res, lab_code: labCode, name: labName }}
+                        isExpanded={isExpanded}
+                        onToggle={() => setExpandedId(isExpanded ? null : res.id)}
                       >
-                        <div
-                          className={`absolute left-0 top-0 bottom-0 w-1 scale-y-100 transition-colors duration-300 ${
-                            res.status === "approved"
-                              ? "bg-emerald-500"
-                              : res.status === "pending"
-                                ? "bg-amber-500"
-                                : res.status === "rescheduled"
-                                  ? "bg-sky-500"
-                                  : "bg-primary-light/20"
-                          }`}
-                        />
-
-                        {/* Clickable Header */}
-                        <button
-                          onClick={() =>
-                            setExpandedId(isExpanded ? null : res.id)
-                          }
-                          className="w-full text-left px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 ml-1 focus:outline-none"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-3 gap-4">
-                              <div className="space-y-1">
-                                <h4 className="text-lg font-bold text-primary leading-tight">
-                                  PC {res.pc_number}
-                                </h4>
-                                <p className="text-[12px] font-bold text-primary-light leading-tight">
-                                  {labCode ? `${labCode} - ${labName}` : labName}
-                                </p>
+                        {/* Rescheduling Inline UI */}
+                        {isRescheduling && (
+                          <div className="mb-6 p-5 rounded-xl border border-primary/20 bg-white shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-[11px] font-bold text-primary flex items-center gap-2">
+                                <RefreshCw className="h-3.5 w-3.5" /> Adjust
+                                Schedule
+                              </h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold text-primary-light ml-1">
+                                  New Date
+                                </label>
+                                <Input
+                                  type="date"
+                                  value={
+                                    rescheduleDrafts[res.id]?.reserved_date
+                                  }
+                                  onChange={(e) =>
+                                    updateRescheduleField(
+                                      res.id,
+                                      "reserved_date",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="h-10 text-[11px] font-bold"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold text-primary-light ml-1">
+                                  New Time
+                                </label>
+                                <Input
+                                  type="time"
+                                  value={
+                                    rescheduleDrafts[res.id]?.reserved_time
+                                  }
+                                  onChange={(e) =>
+                                    updateRescheduleField(
+                                      res.id,
+                                      "reserved_time",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="h-10 text-[11px] font-bold"
+                                />
                               </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-primary-light">
-                              <span className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1.5 rounded-lg text-primary border border-border/50">
-                                <Calendar className="h-3.5 w-3.5" />{" "}
-                                {formatDate(res.reserved_date)}
-                              </span>
-                              <span className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1.5 rounded-lg text-primary border border-border/50">
-                                <Clock className="h-3.5 w-3.5" />{" "}
-                                {formatTime(res.reserved_time || res.time_slot)}
-                              </span>
-                              <span className="flex items-center gap-1.5 bg-bg-secondary/60 px-2.5 py-1.5 rounded-lg text-primary-light border border-border/60 text-[10px] font-extrabold tracking-wide">
-                                <Clock className="h-3 w-3" />
-                                {formatRelativeTime(res.created_at)}
-                              </span>
+
+                            <div className="mb-6 p-4 rounded-xl border border-border bg-bg-secondary/20">
+                              <label className="text-[11px] font-bold text-primary-light block mb-3">
+                                Re-assign PC
+                              </label>
+                              <IntegratedPCMap
+                                lab={labs.find((l) => l.id == res.lab_id)}
+                                labPcs={labPcs}
+                                occupiedPcs={occupiedPcs}
+                                selectedPc={
+                                  rescheduleDrafts[res.id]?.pc_number
+                                }
+                                onSelect={(num) =>
+                                  updateRescheduleField(
+                                    res.id,
+                                    "pc_number",
+                                    num,
+                                  )
+                                }
+                                isLoading={isLoadingPcs}
+                              />
                             </div>
-                          </div>
-                          <div className="flex flex-col items-end justify-between self-stretch sm:py-1.5 min-w-[88px]">
-                            {getStatusBadge(res.status)}
-                            <ChevronRight
-                              className={`h-5 w-5 text-primary-light/55 transition-transform duration-300 ${isExpanded ? "rotate-90 text-primary-light/80" : ""}`}
-                            />
-                          </div>
-                        </button>
 
-                        {/* Expanded Details View */}
-                        {isExpanded && (
-                          <div className="px-5 pb-5 pt-2 ml-1 border-t border-dashed border-border/50 animate-fade-in-up bg-bg-secondary/30">
-                            {/* Rescheduling Inline UI */}
-                            {isRescheduling && (
-                              <div className="mb-6 p-5 rounded-xl border border-primary/20 bg-white shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
-                                  <h4 className="text-[11px] font-bold text-primary flex items-center gap-2">
-                                    <RefreshCw className="h-3.5 w-3.5" /> Adjust
-                                    Schedule
-                                  </h4>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-primary-light ml-1">
-                                      New Date
-                                    </label>
-                                    <Input
-                                      type="date"
-                                      value={
-                                        rescheduleDrafts[res.id]?.reserved_date
-                                      }
-                                      onChange={(e) =>
-                                        updateRescheduleField(
-                                          res.id,
-                                          "reserved_date",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="h-10 text-[11px] font-bold"
-                                    />
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-primary-light ml-1">
-                                      New Time
-                                    </label>
-                                    <Input
-                                      type="time"
-                                      value={
-                                        rescheduleDrafts[res.id]?.reserved_time
-                                      }
-                                      onChange={(e) =>
-                                        updateRescheduleField(
-                                          res.id,
-                                          "reserved_time",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="h-10 text-[11px] font-bold"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="mb-6 p-4 rounded-xl border border-border bg-bg-secondary/20">
-                                  <label className="text-[11px] font-bold text-primary-light block mb-3">
-                                    Re-assign PC
-                                  </label>
-                                  <IntegratedPCMap
-                                    lab={labs.find((l) => l.id == res.lab_id)}
-                                    labPcs={labPcs}
-                                    occupiedPcs={occupiedPcs}
-                                    selectedPc={
-                                      rescheduleDrafts[res.id]?.pc_number
-                                    }
-                                    onSelect={(num) =>
-                                      updateRescheduleField(
-                                        res.id,
-                                        "pc_number",
-                                        num,
-                                      )
-                                    }
-                                    isLoading={isLoadingPcs}
-                                  />
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <button
-                                    onClick={() =>
-                                      handleRescheduleSubmit(res.id)
-                                    }
-                                    disabled={rescheduleLoading === res.id}
-                                    className="flex-1 h-10 rounded-lg bg-primary text-white text-[11px] font-bold hover:bg-primary-hover transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
-                                  >
-                                    {rescheduleLoading === res.id ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <CheckCircle className="h-3.5 w-3.5" />
-                                    )}
-                                    Confirm Updates
-                                  </button>
-                                  <button
-                                    onClick={() => toggleRescheduleDraft(res)}
-                                    className="px-6 h-10 rounded-lg border border-border text-primary-light text-[11px] font-bold hover:bg-bg-secondary transition-all"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="space-y-5">
-                              <div className="p-4 rounded-lg bg-bg-secondary/40 border border-border flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-1">
-                                  <span className="text-[11px] font-bold text-primary-light">
-                                    Purpose
-                                  </span>
-                                  <p className="text-sm font-bold text-primary italic">
-                                    "{res.purpose}"
-                                  </p>
-                                </div>
-                                <div className="sm:text-right space-y-1">
-                                  <span className="text-[11px] font-bold text-primary-light block">
-                                    Reference ID
-                                  </span>
-                                  <span className="text-[12px] font-bold text-primary">
-                                    #RSV-{res.id.toString().padStart(4, "0")}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {res.admin_note && (
-                                <div className="p-4 rounded-lg bg-amber-50 border border-amber-100 dark:bg-amber-900/10 dark:border-amber-800/50 relative overflow-hidden">
-                                  <ShieldCheck className="absolute -right-2 -top-2 h-16 w-16 text-amber-500/10" />
-                                  <span className="text-[11px] font-bold text-amber-700 dark:text-amber-500 block mb-1">
-                                    Administrative Feedback
-                                  </span>
-                                  <p className="text-[12px] font-bold text-amber-900 dark:text-amber-400/90 leading-relaxed relative z-10">
-                                    {res.admin_note}
-                                  </p>
-                                </div>
-                              )}
-
-                              {["pending", "approved", "rescheduled"].includes(
-                                res.status,
-                              ) &&
-                                !isRescheduling && (
-                                  <div className="flex items-center gap-3 pt-3 border-t border-border/50">
-                                    <button
-                                      onClick={() => toggleRescheduleDraft(res)}
-                                      className="h-9 px-4 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 text-[11px] font-bold transition-all flex items-center gap-2"
-                                    >
-                                      <RefreshCw className="h-3 w-3" />{" "}
-                                      Reschedule
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        setConfirmModal({
-                                          isOpen: true,
-                                          id: res.id,
-                                        })
-                                      }
-                                      className="h-9 px-4 rounded-lg border border-red-100 dark:border-red-900/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-[11px] font-bold transition-all flex items-center gap-2 ml-auto"
-                                    >
-                                      <Trash2 className="h-3 w-3" /> Cancel
-                                      Session
-                                    </button>
-                                  </div>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() =>
+                                  handleRescheduleSubmit(res.id)
+                                }
+                                disabled={rescheduleLoading === res.id}
+                                className="flex-1 h-10 rounded-lg bg-primary text-white text-[11px] font-bold hover:bg-primary-hover transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                              >
+                                {rescheduleLoading === res.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="h-3.5 w-3.5" />
                                 )}
+                                Confirm Updates
+                              </button>
+                              <button
+                                onClick={() => toggleRescheduleDraft(res)}
+                                className="px-6 h-10 rounded-lg border border-border text-primary-light text-[11px] font-bold hover:bg-bg-secondary transition-all"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         )}
-                      </div>
+
+                        <div className="space-y-5">
+                          <div className="p-4 rounded-lg bg-bg-secondary/40 border border-border flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1 space-y-1">
+                              <span className="text-[11px] font-bold text-primary-light">
+                                Purpose
+                              </span>
+                              <p className="text-sm font-bold text-primary italic">
+                                "{res.purpose}"
+                              </p>
+                            </div>
+                            <div className="sm:text-right space-y-1">
+                              <span className="text-[11px] font-bold text-primary-light block">
+                                Reference ID
+                              </span>
+                              <span className="text-[12px] font-bold text-primary">
+                                #RSV-{res.id.toString().padStart(4, "0")}
+                              </span>
+                            </div>
+                          </div>
+
+                          {res.admin_note && (
+                            <div className="p-4 rounded-lg bg-amber-50 border border-amber-100 dark:bg-amber-900/10 dark:border-amber-800/50 relative overflow-hidden">
+                              <ShieldCheck className="absolute -right-2 -top-2 h-16 w-16 text-amber-500/10" />
+                              <span className="text-[11px] font-bold text-amber-700 dark:text-amber-500 block mb-1">
+                                Administrative Feedback
+                              </span>
+                              <p className="text-[12px] font-bold text-amber-900 dark:text-amber-400/90 leading-relaxed relative z-10">
+                                {res.admin_note}
+                              </p>
+                            </div>
+                          )}
+
+                          {["pending", "approved", "rescheduled"].includes(
+                            res.status,
+                          ) &&
+                            !isRescheduling && (
+                              <div className="flex items-center gap-3 pt-3 border-t border-border/50">
+                                <button
+                                  onClick={() => toggleRescheduleDraft(res)}
+                                  className="h-9 px-4 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 text-[11px] font-bold transition-all flex items-center gap-2"
+                                >
+                                  <RefreshCw className="h-3 w-3" />{" "}
+                                  Reschedule
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setConfirmModal({
+                                      isOpen: true,
+                                      id: res.id,
+                                    })
+                                  }
+                                  className="h-9 px-4 rounded-lg border border-red-100 dark:border-red-900/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-[11px] font-bold transition-all flex items-center gap-2 ml-auto"
+                                >
+                                  <Trash2 className="h-3 w-3" /> Cancel
+                                  Session
+                                </button>
+                              </div>
+                            )}
+                        </div>
+                      </ReservationCard>
                     );
                   })}
                 </div>

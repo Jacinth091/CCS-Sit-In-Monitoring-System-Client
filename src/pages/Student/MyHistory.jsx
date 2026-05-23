@@ -5,10 +5,11 @@ import UsageStats from '../../components/student-history/UsageStats';
 import SessionTable from '../../components/student-history/SessionTable';
 import FeedbackViewModal from '../../components/student-history/FeedbackViewModal';
 import StudentFeedbackModal from '../../components/modals/StudentFeedbackModal';
-import { Loader2, ArrowLeft, History, Clock, FlaskConical } from 'lucide-react';
+import { Loader2, ArrowLeft, History, Clock, FlaskConical, LayoutGrid, List } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { formatDate, formatDuration, formatTime } from '../../utils/dateUtils';
+import Pagination from '../../components/ui/Pagination';
 
 export default function MyHistory() {
   const { user } = useAuth();
@@ -24,6 +25,12 @@ export default function MyHistory() {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [initialFeedback, setInitialFeedback] = useState({ rating: 0, comment: '' });
 
+  // Pagination & View Mode state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [viewMode, setViewMode] = useState('card');
+
   const [stats, setStats] = useState({
     totalSessions: 0,
     totalHours: '0h 0m',
@@ -36,6 +43,11 @@ export default function MyHistory() {
   useEffect(() => {
     if (user?.student_id) {
       fetchHistory();
+    }
+  }, [user, currentPage]);
+
+  useEffect(() => {
+    if (user?.student_id) {
       fetchStats();
     }
   }, [user]);
@@ -73,8 +85,15 @@ export default function MyHistory() {
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      const res = await sitinService.getHistoryByStudent(user.student_id);
+      const res = await sitinService.getHistoryByStudent(user.student_id, {
+        page: currentPage,
+        per_page: 8
+      });
       const rawData = res.data || [];
+      const meta = res.meta || {};
+
+      setTotalPages(meta.last_page || 1);
+      setTotalRecords(meta.total || 0);
       
       const transformed = rawData.map(s => {
         // Use central utility for duration if we have minutes
@@ -194,18 +213,53 @@ export default function MyHistory() {
                <h3 className="text-[10px] font-bold text-primary-light">
                   Detailed Session History
                </h3>
-               <div className="flex items-center gap-2.5 text-primary-light">
-                <div className="h-px w-6 bg-border" />
-                <span className="text-[9px] font-bold whitespace-nowrap">
-                  {sessions.length} records
-                </span>
-              </div>
+               <div className="flex items-center gap-4 text-primary-light">
+                 {/* View Mode Toggle */}
+                 <div className="flex items-center gap-1 bg-bg-secondary p-1 rounded-lg border border-border">
+                   <button
+                     onClick={() => setViewMode('card')}
+                     className={`p-1.5 rounded-md transition-all cursor-pointer ${viewMode === 'card' ? 'bg-white text-primary shadow-sm border border-border/30' : 'text-primary-light/60 hover:text-primary'}`}
+                     title="Card View"
+                   >
+                     <LayoutGrid className="h-3.5 w-3.5" />
+                   </button>
+                   <button
+                     onClick={() => setViewMode('list')}
+                     className={`p-1.5 rounded-md transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-primary shadow-sm border border-border/30' : 'text-primary-light/60 hover:text-primary'}`}
+                     title="List View"
+                   >
+                     <List className="h-3.5 w-3.5" />
+                   </button>
+                 </div>
+
+                 <div className="flex items-center gap-2.5">
+                   <div className="h-px w-6 bg-border" />
+                   <span className="text-[9px] font-bold whitespace-nowrap">
+                     {totalRecords} records
+                   </span>
+                 </div>
+               </div>
             </div>
             <SessionTable 
               sessions={sessions} 
+              viewMode={viewMode}
               onOpenFeedback={handleOpenFeedback} 
               onOpenEntry={handleOpenEntry}
             />
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
+                <span className="text-[10px] text-primary-light font-bold uppercase tracking-wider">
+                  Showing {(currentPage - 1) * 8 + 1}—{Math.min(currentPage * 8, totalRecords)} of {totalRecords} records
+                </span>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
