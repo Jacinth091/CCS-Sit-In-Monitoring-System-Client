@@ -83,10 +83,6 @@ function App() {
                 <Route path="reservation" element={<AdminReservations />} />
                 <Route path="laboratory-software" element={<AdminSoftware />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />
-                <Route
-                  path="feedback-reports"
-                  element={<UnderConstruction />}
-                />
               </Route>
 
               <Route

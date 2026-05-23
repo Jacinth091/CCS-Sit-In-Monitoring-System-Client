@@ -36,15 +36,7 @@ const navItems = [
       { to: '/admin/analytics', label: 'System analytics' }
     ]
   },
-  {
-    label: 'Feedback',
-    icon: ClipboardList,
-    group: 3,
-    children: [
-      { to: '/admin/testimonials', label: 'Testimonials' },
-      { to: '/admin/feedback-reports', label: 'Student feedback' }
-    ]
-  }
+  { to: '/admin/testimonials', label: 'Testimonials', icon: ClipboardList, group: 3 }
 ];
 
 function useDropdown() {
