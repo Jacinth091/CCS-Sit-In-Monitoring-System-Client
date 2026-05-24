@@ -6,6 +6,7 @@ import {
   setStoredAuthToken,
   stripBearerPrefix,
 } from "../utils/authToken";
+import aiService from "./ai.service";
 
 const collectLoginTokenCandidates = (body = {}) => {
   const data = body?.data || {};
@@ -74,8 +75,15 @@ const authService = {
     const response = await api.post("auth/register.php", payload);
     return response.data;
   },
-  logout: () => {
-    clearStoredAuthSession();
+  logout: async () => {
+    try {
+      await api.post("auth/logout.php");
+    } catch (err) {
+      console.warn("Server logout request failed:", err);
+    } finally {
+      aiService.clearCache();
+      clearStoredAuthSession();
+    }
   },
 };
 
