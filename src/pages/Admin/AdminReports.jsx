@@ -3,13 +3,15 @@ import {
   ChevronDown,
   ClipboardList,
   Download,
-  FileJson,
+  FileSpreadsheet,
   FileType,
   Filter,
   FlaskConical,
   Loader2,
   Search,
   User,
+  Sparkles,
+  X
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +21,7 @@ import Pagination from "../../components/ui/Pagination";
 import Select from "../../components/ui/Select";
 import labService from "../../services/lab.service";
 import reportService from "../../services/report.service";
+import aiService from "../../services/ai.service";
 import { formatDate, formatDuration, formatTime } from "../../utils/dateUtils";
 
 export default function AdminReports() {
@@ -37,6 +40,28 @@ export default function AdminReports() {
   const [totalPages, setTotalPages] = useState(1);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const downloadRef = useRef(null);
+
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  const handleSummarize = async () => {
+    if (!reports || reports.length === 0) return;
+    setSummaryLoading(true);
+    try {
+      const res = await aiService.summarizeReport(reports);
+      if (res.status === "success" && res.data) {
+        setSummary(res.data);
+      } else {
+        throw new Error(res.message || "Failed to generate report summary");
+      }
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || "AI report summary could not be compiled.";
+      toast.error(msg);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchLabs();
@@ -79,6 +104,7 @@ export default function AdminReports() {
           (Array.isArray(result.data) ? result.data : []);
         console.log("Processed logs data:", logsData);
         setReports(logsData);
+        setSummary(null);
 
         // Use the new pagination metadata
         const pagination =
@@ -173,13 +199,13 @@ export default function AdminReports() {
               </button>
 
               {downloadOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white border border-border rounded-xl shadow-md py-2 z-[100] animate-fade-in-up">
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-border rounded-xl shadow-md py-2 z-[100] animate-fade-in-up">
                   <button
                     onClick={() => downloadReport("csv")}
                     className="w-full flex items-center gap-3 px-5 py-3 text-xs font-bold text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
                   >
-                    <FileJson className="h-4 w-4 text-emerald-500" />
-                    Download as CSV
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                    Download as Excel (CSV)
                   </button>
                   <button
                     onClick={() => downloadReport("pdf")}
@@ -287,12 +313,79 @@ export default function AdminReports() {
           <h3 className="text-[10px] font-black tracking-[0.2em] uppercase text-primary-light">
             Generation Results
           </h3>
-          {totalRecords > 0 && (
-            <span className="px-3 py-1 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest shadow-sm">
-              {totalRecords} Logs Compiled
-            </span>
-          )}
+          <div className="flex items-center gap-2.5">
+            {reports && reports.length > 0 && (
+              <button
+                onClick={handleSummarize}
+                disabled={summaryLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary/10 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {summaryLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3 animate-pulse text-primary-hover" />
+                )}
+                {summaryLoading ? "Summarizing..." : "Summarize with AI"}
+              </button>
+            )}
+            {totalRecords > 0 && (
+              <span className="px-3 py-1 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest shadow-sm">
+                {totalRecords} Logs Compiled
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* AI Compiled Summary Panel */}
+        {summary && (
+          <div className="px-6 py-5 bg-gradient-to-br from-primary/5 to-bg-secondary/40 border-b border-border/80 relative animate-fade-in">
+            <button 
+              onClick={() => setSummary(null)}
+              className="absolute top-4 right-4 text-primary-light hover:text-primary transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="max-w-4xl space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-primary-hover animate-pulse" />
+                <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                  AI Executive Digest
+                </h4>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xs font-black text-primary uppercase tracking-tight">
+                  {summary.headline}
+                </h3>
+                <p className="text-[11px] text-primary/80 font-medium leading-relaxed max-w-3xl">
+                  {summary.summary}
+                </p>
+              </div>
+
+              {/* Summary Metrics */}
+              {summary.metrics && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  {summary.metrics.map((m, idx) => (
+                    <div 
+                      key={idx} 
+                      className="bg-white/80 p-3 rounded-lg border border-border/50 flex flex-col justify-between"
+                    >
+                      <span className="text-[8.5px] font-black uppercase tracking-widest text-primary-light">
+                        {m.label}
+                      </span>
+                      <span className="text-lg font-black text-primary my-1 tracking-tight">
+                        {m.value}
+                      </span>
+                      <span className="text-[9px] font-bold text-primary-light lowercase">
+                        {m.desc}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse">
             <thead>
