@@ -14,6 +14,7 @@ import AdminAnnouncements from "./pages/Admin/AdminAnnouncements";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminReports from "./pages/Admin/AdminReports";
 import AdminReservations from "./pages/Admin/AdminReservations";
+import AdminSettings from "./pages/Admin/AdminSettings";
 import AdminSoftware from "./pages/Admin/AdminSoftware";
 import AdminStudents from "./pages/Admin/AdminStudents";
 import AdminTestimonials from "./pages/Admin/AdminTestimonials";
@@ -83,6 +84,7 @@ function App() {
                 <Route path="reservation" element={<AdminReservations />} />
                 <Route path="laboratory-software" element={<AdminSoftware />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
 
               <Route

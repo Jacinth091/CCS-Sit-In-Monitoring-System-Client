@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, NavLink, useLocation } from 'react-router';
-import { Menu, X, LogOut, ChevronDown, User, LayoutDashboard, Users, FlaskConical, ClipboardList, CalendarCheck, FileText, Monitor, Sun, Moon } from 'lucide-react';
+import { useNavigate, NavLink, Link, useLocation } from 'react-router';
+import { Menu, X, LogOut, ChevronDown, User, LayoutDashboard, Users, FlaskConical, ClipboardList, CalendarCheck, FileText, Monitor, Sun, Moon, Settings } from 'lucide-react';
 import ccsLogo from '../../assets/images/png/ccsmainlogo.png';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -86,8 +86,14 @@ function ProfileDropdown() {
 
           <div className="h-px my-1 bg-border" />
 
-          <button className="w-full text-left px-3 py-2 rounded-lg text-[11px] text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer">
-            System settings
+          <button
+            onClick={() => { setOpen(false); navigate('/admin/settings'); }}
+            className="w-full text-left px-3 py-2 rounded-lg text-[11px] text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Settings className="h-3.5 w-3.5" />
+              System settings
+            </span>
           </button>
 
           <button className="w-full text-left px-3 py-2 rounded-lg text-[11px] text-primary-light hover:text-primary hover:bg-bg-secondary transition-colors cursor-pointer mt-0.5">
@@ -331,9 +337,13 @@ export default function AdminNavbar() {
             <div className="h-px my-2 bg-border" />
 
             <div className="grid grid-cols-2 gap-2">
-              <button className="flex items-center justify-center py-2.5 rounded-lg text-[12px] text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+              <Link
+                to="/admin/settings"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center py-2.5 rounded-lg text-[12px] text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
+              >
                 Settings
-              </button>
+              </Link>
               <MobileThemeToggle />
             </div>
 
