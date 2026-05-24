@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import ReservationCard from "../../components/reservations/ReservationCard";
+import AIRecommendationsCard from "../../components/AIRecommendationsCard";
 import labService from "../../services/lab.service";
 import pcService from "../../services/pc.service";
 import reservationService from "../../services/reservation.service";
@@ -1084,6 +1085,9 @@ export default function StudentReservations() {
               </button>
             </div>
           </div>
+
+          {/* AI Schedule Recommendations */}
+          <AIRecommendationsCard />
 
           {/* Technical Directory */}
           <div className="bg-white rounded-xl border border-border shadow-sm p-5">
