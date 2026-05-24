@@ -10,6 +10,7 @@ import announcementService from '../../services/announcement.service';
 import sitinService from '../../services/sitin.service';
 import studentService from '../../services/student.service';
 import labService from '../../services/lab.service';
+import AIInsightsCard from '../../components/AIInsightsCard';
 import RichTextRenderer from '../../components/ui/RichTextRenderer';
 import { Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
@@ -397,6 +398,8 @@ export default function StudentDashboard() {
               </Link>
             ))}
           </div>
+
+          <AIInsightsCard />
 
           {/* Mini profile card */}
           <div className="bg-bg-primary rounded-xl border border-border shadow-sm p-5">
