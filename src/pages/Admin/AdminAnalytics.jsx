@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, PieChart, BarChart2, Activity, Calendar, Clock, Loader2, ArrowRight, Users, FlaskConical, Hash, Target, RefreshCw, Trophy, ClipboardList, Medal, Crown } from 'lucide-react';
+import { TrendingUp, PieChart, BarChart2, Activity, Calendar, Clock, Loader2, ArrowRight, Users, FlaskConical, Hash, Target, RefreshCw, Trophy, ClipboardList, Medal, Crown, Download, ChevronDown, FileSpreadsheet, FileType } from 'lucide-react';
 import { toast } from 'sonner';
 import analyticsService from '../../services/analytics.service';
 import leaderboardService from '../../services/leaderboard.service';
 import reservationService from '../../services/reservation.service';
+import AIAnalyticsInsights from '../../components/AIAnalyticsInsights';
+import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import { ASSET_URL } from '../../config';
@@ -712,6 +714,7 @@ function LineChart({ data, title, subtitle }) {
 }
 
 export default function AdminAnalytics() {
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0]
@@ -720,6 +723,53 @@ export default function AdminAnalytics() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [reservations, setReservations] = useState({ pending: 0 });
   const [loading, setLoading] = useState(true);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const downloadRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (downloadRef.current && !downloadRef.current.contains(event.target)) {
+        setDownloadOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const getAiInsights = () => {
+    try {
+      const saved = localStorage.getItem(`admin_insights_${user?.id}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      setDownloadOpen(false);
+      toast.loading("Preparing Excel export...");
+      await analyticsService.downloadAnalytics(dateRange, 'csv', getAiInsights());
+      toast.dismiss();
+      toast.success("Excel/CSV analytics report exported successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.dismiss();
+      toast.error("Failed to export Excel/CSV analytics data.");
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setDownloadOpen(false);
+      toast.loading("Generating PDF report...");
+      await analyticsService.downloadAnalytics(dateRange, 'pdf', getAiInsights());
+      toast.dismiss();
+      toast.success("PDF analytics report generated successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.dismiss();
+      toast.error("Failed to generate PDF analytics report.");
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -772,26 +822,62 @@ export default function AdminAnalytics() {
             <h1 className="text-base sm:text-lg font-black text-primary tracking-tight">System Analytics</h1>
           </div>
 
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-bg-secondary p-1.5">
-            <Input
-              type="date"
-              value={dateRange.from}
-              onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-              className="h-8 text-[10px] border-none bg-transparent w-36 text-primary font-bold uppercase tracking-wider focus:ring-0"
-            />
-            <ArrowRight className="h-4 w-4 text-primary-light/40" />
-            <Input
-              type="date"
-              value={dateRange.to}
-              onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-              className="h-8 text-[10px] border-none bg-transparent w-36 text-primary font-bold uppercase tracking-wider focus:ring-0"
-            />
-            <button
-              onClick={fetchData}
-              className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary-hover transition-all shadow-sm active:scale-95 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            {/* DATE RANGE FILTERS */}
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-bg-secondary p-1.5">
+              <Input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                className="h-8 text-[10px] border-none bg-transparent w-36 text-primary font-bold uppercase tracking-wider focus:ring-0"
+              />
+              <ArrowRight className="h-4 w-4 text-primary-light/40" />
+              <Input
+                type="date"
+                value={dateRange.to}
+                onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                className="h-8 text-[10px] border-none bg-transparent w-36 text-primary font-bold uppercase tracking-wider focus:ring-0"
+              />
+              <button
+                onClick={fetchData}
+                className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary-hover transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* EXPORT ACTION DROPDOWN */}
+            <div className="relative" ref={downloadRef}>
+              <button
+                onClick={() => setDownloadOpen(!downloadOpen)}
+                className="flex items-center gap-2 h-11 px-4 rounded-lg border border-border bg-white text-primary-light text-[10px] font-black uppercase tracking-widest hover:text-primary hover:bg-bg-secondary transition-all cursor-pointer shadow-sm font-bold"
+              >
+                <Download className="h-4 w-4" />
+                Export
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform duration-200 ${downloadOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {downloadOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-border rounded-xl shadow-md py-2 z-[100] animate-fade-in-up">
+                  <button
+                    onClick={handleExportCSV}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-xs font-bold text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                    Download as Excel (CSV)
+                  </button>
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-xs font-bold text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
+                  >
+                    <FileType className="h-4 w-4 text-red-500" />
+                    Download as PDF
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -909,6 +995,8 @@ export default function AdminAnalytics() {
           />
         </div>
       </div>
+
+      <AIAnalyticsInsights />
 
       {/* ───── FOOTER ───── */}
       <div className="mt-10 flex flex-col items-center opacity-50">
