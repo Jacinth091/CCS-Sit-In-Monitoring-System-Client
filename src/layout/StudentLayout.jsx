@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router';
 import StudentNavbar from './Student/StudentNavbar';
+import ChatWidget from '../components/ChatWidget';
 
 export default function StudentLayout() {
   return (
@@ -8,6 +9,7 @@ export default function StudentLayout() {
       <main className="flex-grow">
         <Outlet />
       </main>
+      <ChatWidget />
     </div>
   );
 }
