@@ -520,6 +520,36 @@ export default function AdminSettings() {
                 </div>
               </div>
 
+              {/* Telemetry Diagnostics Audit Card */}
+              {stats?.telemetry_audit && (
+                <div className={`p-5 rounded-xl border ${stats.telemetry_audit.triggered ? 'border-amber-200 bg-amber-500/[0.03]' : 'border-border bg-slate-500/[0.02]'} overflow-hidden relative transition-all duration-300`}>
+                  <div className="flex items-start gap-4">
+                    <div className={`p-2.5 rounded-lg flex items-center justify-center border ${stats.telemetry_audit.triggered ? 'bg-amber-100/50 border-amber-200 text-amber-600 animate-pulse' : 'bg-slate-100 border-border text-slate-500'}`}>
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-light">
+                          AI-Narrated Diagnostic Audit
+                        </h4>
+                        <span className={`text-[8.5px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${stats.telemetry_audit.triggered ? 'bg-amber-500/10 text-amber-700 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'}`}>
+                          {stats.telemetry_audit.triggered ? 'Stress Alert Triggered' : 'System Nominal'}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-700 leading-relaxed max-w-4xl">
+                        {stats.telemetry_audit.summary}
+                      </p>
+                      <div className="pt-2 flex items-center gap-2 flex-wrap">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Urgent Recommendation:</span>
+                        <span className="text-[10.5px] font-bold text-indigo-600 uppercase tracking-wider">
+                          {stats.telemetry_audit.urgent_action}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Global Daily Budget Progress */}
               <div className="p-5 rounded-xl border border-border">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-light mb-4">
