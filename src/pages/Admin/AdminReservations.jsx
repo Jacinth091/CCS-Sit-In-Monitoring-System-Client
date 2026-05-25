@@ -676,17 +676,18 @@ export default function AdminReservations() {
 
   const requestStudentReschedule = async (reservation) => {
     const reason = (adminNotes[reservation.id] || "").trim();
-    if (!reason) {
+    if (!reason && reservation.status === "pending") {
       toast.error("Please provide a reason before requesting reschedule");
       return;
     }
+    const finalReason = reason || "Please reschedule your reservation.";
     setReservationActionId(reservation.id);
     try {
       const result = await reservationService.updateStatus(
         reservation.id,
         "rescheduled",
         {
-          admin_note: reason,
+          admin_note: finalReason,
         },
       );
       if (!isApiSuccess(result)) {
@@ -699,7 +700,7 @@ export default function AdminReservations() {
         await notificationService.create({
           student_id: reservation.student_id,
           type: "reservation",
-          message: `Administrative adjustment: Please reschedule your reservation #${reservation.id}. Reason: ${reason}`,
+          message: `Administrative adjustment: Please reschedule your reservation #${reservation.id}. Reason: ${finalReason}`,
         });
       } catch (notifyErr) {
         console.error("Failed to send notification:", notifyErr);
@@ -1392,6 +1393,35 @@ export default function AdminReservations() {
                                           Start Sit-in
                                         </Button>
                                       )
+                                    )}
+                                  {reservation.status === "approved" &&
+                                    isEligibleForSitIn && (
+                                      <>
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={() =>
+                                            requestStudentReschedule(reservation)
+                                          }
+                                          loading={isActioning}
+                                          className="border-primary text-primary hover:bg-primary/5"
+                                        >
+                                          Request Reschedule
+                                        </Button>
+                                        <Button
+                                          variant="danger"
+                                          size="sm"
+                                          onClick={() =>
+                                            updateReservationStatus(
+                                              reservation,
+                                              "cancelled",
+                                            )
+                                          }
+                                          loading={isActioning}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </>
                                     )}
                                   {reservation.status === "pending" && (
                                     <Button

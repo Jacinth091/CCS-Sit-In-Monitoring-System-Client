@@ -580,6 +580,32 @@ export default function StudentReservations() {
   const { user } = useAuth();
   const [labs, setLabs] = useState([]);
   const [myReservations, setMyReservations] = useState([]);
+  const isReservationToday = (dateStr) => {
+    if (!dateStr) return false;
+    const now = new Date();
+
+    // Handle YYYY-MM-DD explicitly to avoid timezone shifts
+    const isoMatch = String(dateStr).match(/^\d{4}-\d{2}-\d{2}$/);
+    if (isoMatch) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      if (!y || !m || !d) return false;
+      const resDate = new Date(y, m - 1, d);
+      return (
+        resDate.getFullYear() === now.getFullYear() &&
+        resDate.getMonth() === now.getMonth() &&
+        resDate.getDate() === now.getDate()
+      );
+    }
+
+    const parsed = new Date(dateStr);
+    if (Number.isNaN(parsed.getTime())) return false;
+
+    return (
+      parsed.getFullYear() === now.getFullYear() &&
+      parsed.getMonth() === now.getMonth() &&
+      parsed.getDate() === now.getDate()
+    );
+  };
   const [isSystemEnabled, setIsSystemEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -1025,10 +1051,13 @@ export default function StudentReservations() {
                             </div>
                           )}
 
-                          {["pending", "approved", "rescheduled"].includes(
-                            res.status,
-                          ) &&
-                            !isRescheduling && (
+                          {[
+                            "pending",
+                            "approved",
+                            "rescheduled",
+                          ].includes(String(res.status || "").toLowerCase()) &&
+                            !isRescheduling &&
+                            isReservationToday(res.reserved_date || res.date) && (
                               <div className="flex items-center gap-3 pt-3 border-t border-border/50">
                                 <button
                                   onClick={() => toggleRescheduleDraft(res)}
