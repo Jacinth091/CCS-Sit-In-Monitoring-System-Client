@@ -23,12 +23,12 @@ export default function AIRecommendationsCard() {
     }
   };
 
-  const fetchRecommendations = async (force = false) => {
+  const fetchRecommendations = async () => {
     setIsLoading(true);
     setError('');
     try {
       const res = await aiService.getBookingRecommendations();
-      if (res.status === 'success' && res.data && Array.isArray(res.data.recommended_slots)) {
+      if (res.status === 'success' && res.data && (Array.isArray(res.data.slots) || Array.isArray(res.data.recommended_slots))) {
         setRecommendations(res.data);
         if (userId) {
           localStorage.setItem(`booking_recs_${userId}`, JSON.stringify(res.data));
@@ -46,6 +46,9 @@ export default function AIRecommendationsCard() {
       setIsLoading(false);
     }
   };
+
+  const slots = recommendations?.slots || recommendations?.recommended_slots || [];
+  const recSummary = recommendations?.summary || '';
 
   useEffect(() => {
     fetchQuota();
@@ -83,7 +86,7 @@ export default function AIRecommendationsCard() {
         </div>
         {recommendations && !isLoading && (
           <button 
-            onClick={() => fetchRecommendations(true)}
+            onClick={() => fetchRecommendations()}
             className="text-[9px] font-bold text-primary-light hover:text-primary flex items-center gap-1 transition-colors cursor-pointer"
           >
             <RefreshCw className="h-3 w-3" /> Refresh
@@ -104,7 +107,7 @@ export default function AIRecommendationsCard() {
             </p>
           </div>
           <button
-            onClick={() => fetchRecommendations(true)}
+            onClick={() => fetchRecommendations()}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary-hover shadow-sm transition-all duration-300 w-full justify-center cursor-pointer active:scale-[0.98]"
           >
             Generate Recommendations
@@ -128,7 +131,7 @@ export default function AIRecommendationsCard() {
           <AlertTriangle className="h-6 w-6 text-red-500 mx-auto" />
           <p className="text-xs font-bold text-red-600">{error}</p>
           <button
-            onClick={() => fetchRecommendations(true)}
+            onClick={() => fetchRecommendations()}
             className="text-[10px] font-bold text-primary-hover underline cursor-pointer"
           >
             Try Again
@@ -140,61 +143,84 @@ export default function AIRecommendationsCard() {
       {recommendations && !isLoading && !error && (
         <div className="space-y-4 animate-fade-in">
           
+          {/* Executive Summary Narrative */}
+          {recSummary && (
+            <div className="p-3.5 rounded-xl bg-gradient-to-r from-primary/5 via-primary/[0.02] to-transparent border border-primary/10 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex gap-3 relative z-10">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/10 shrink-0 mt-0.5">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                </div>
+                <div className="space-y-1 grow">
+                  <h5 className="text-[10px] font-black uppercase text-primary-hover tracking-wider">
+                    Schedule Advisor Narrative
+                  </h5>
+                  <p className="text-[11px] text-primary font-medium leading-relaxed">
+                    {recSummary}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Header Title */}
-          <div>
-            <h5 className="text-[10px] font-black uppercase text-primary-light tracking-wider mb-2.5">
+          <div className="flex items-center justify-between mb-2.5">
+            <h5 className="text-[10px] font-black uppercase text-primary-light tracking-wider">
               Recommended Workstations & Timeslots
             </h5>
+            {recommendations.preference_match && (
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/5 border border-primary/10 text-[9px] font-bold text-primary animate-pulse">
+                <CheckCircle2 className="h-3 w-3" /> Pattern Match
+              </span>
+            )}
+          </div>
             
-            {/* Recommended Slots Grid */}
-            <div className="grid grid-cols-1 gap-2.5">
-              {recommendations.recommended_slots?.map((slot, idx) => (
-                <div 
-                  key={idx}
-                  className="p-3 rounded-xl border border-border bg-bg-secondary/20 hover:border-primary/20 hover:bg-white transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10 shrink-0">
-                      <Clock className="h-4 w-4 text-primary-hover" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-primary">{slot.time}</span>
-                        <span className="text-[9px] font-medium text-primary-light">•</span>
-                        <span className="text-[10px] font-black text-primary-hover flex items-center gap-1">
-                          <MapPin className="h-3 w-3" /> {slot.lab}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-primary-light font-medium mt-0.5 leading-relaxed">
-                        {slot.reason}
-                      </p>
-                    </div>
+          {/* Recommended Slots Grid */}
+          <div className="grid grid-cols-1 gap-2.5">
+            {slots.map((slot, idx) => (
+              <div 
+                key={idx}
+                className="p-3 rounded-xl border border-border bg-bg-secondary/20 hover:border-primary/20 hover:bg-white transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10 shrink-0">
+                    <Clock className="h-4 w-4 text-primary-hover" />
                   </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-primary">{slot.time}</span>
+                      <span className="text-[9px] font-medium text-primary-light">•</span>
+                      <span className="text-[10px] font-black text-primary-hover flex items-center gap-1">
+                        <MapPin className="h-3 w-3" /> {slot.lab}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-primary-light font-medium mt-0.5 leading-relaxed">
+                      {slot.reason}
+                    </p>
+                  </div>
+                </div>
 
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border self-start sm:self-center shrink-0 ${getOccupancyBadgeColor(slot.occupancy_rate)}`}>
+                <div className="flex items-center gap-2 self-start sm:self-center">
+                  {slot.available_pcs !== undefined && (
+                    <span className="text-[9px] font-bold text-primary-light bg-white/50 px-2 py-0.5 rounded-md border border-white/80">
+                      {slot.available_pcs} PCs
+                    </span>
+                  )}
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${getOccupancyBadgeColor(slot.occupancy_rate)}`}>
                     {slot.occupancy_rate} Traffic
                   </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
-          {/* Strategic Recommendations Callout */}
-          {recommendations.recommendations && recommendations.recommendations.length > 0 && (
-            <div className="pt-4 border-t border-border/80">
-              <h5 className="text-[10px] font-black uppercase text-primary-light tracking-wider mb-3">
-                Advisor Strategic Notes
-              </h5>
-              <div className="space-y-2.5">
-                {recommendations.recommendations.map((rec, idx) => (
-                  <div key={idx} className="flex gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-primary/95 font-medium leading-relaxed">
-                      {rec}
-                    </p>
-                  </div>
-                ))}
-              </div>
+          {/* PC Warnings */}
+          {recommendations.pc_warning && (
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-100 flex items-center gap-2.5 animate-pulse">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+              <p className="text-[10.5px] font-bold text-amber-700">
+                {recommendations.pc_warning}
+              </p>
             </div>
           )}
 

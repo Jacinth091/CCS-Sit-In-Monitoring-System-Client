@@ -7,6 +7,17 @@ export default function AIInsightsCard() {
   const { user } = useAuth();
   const userId = user?.id || '';
 
+  const formatGeneratedTime = (timeStr) => {
+    if (!timeStr) return '';
+    try {
+      const isoStr = timeStr.replace(' ', 'T');
+      const date = new Date(isoStr);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch (e) {
+      return '';
+    }
+  };
+
   const [insights, setInsights] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,15 +49,22 @@ export default function AIInsightsCard() {
     }
   }, [userId]);
 
-  const fetchInsights = async () => {
+  const [unchangedNotice, setUnchangedNotice] = useState('');
+
+  const fetchInsights = async (bypassCache = false) => {
     setIsLoading(true);
     setError('');
+    setUnchangedNotice('');
     try {
-      const res = await aiService.getStudentInsights();
+      const res = await aiService.getStudentInsights(bypassCache);
       if (res.status === 'success' && res.data && Array.isArray(res.data.cards)) {
         setInsights(res.data);
         if (userId) {
           localStorage.setItem(`student_insights_${userId}`, JSON.stringify(res.data));
+        }
+        if (res.data._data_unchanged) {
+          setUnchangedNotice('Your data has not changed since the last analysis. Showing cached results.');
+          setTimeout(() => setUnchangedNotice(''), 6000);
         }
         fetchQuota();
       } else {
@@ -96,19 +114,34 @@ export default function AIInsightsCard() {
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary-hover animate-pulse" />
-          <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.15em]">
-            AI Student Companion {quota && `(${quota.remaining}/${quota.quota} left)`}
-          </h4>
+          <div>
+            <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.15em] leading-none">
+              AI Student Companion {quota && `(${quota.remaining}/${quota.quota} left)`}
+            </h4>
+            {insights?._generated_at && (
+              <p className="text-[8px] text-primary-light font-medium mt-0.5 leading-none">
+                Cached at {formatGeneratedTime(insights._generated_at)}
+              </p>
+            )}
+          </div>
         </div>
         {insights && !isLoading && (
           <button 
-            onClick={fetchInsights}
+            onClick={() => fetchInsights(true)}
             className="text-[9px] font-bold text-primary-light hover:text-primary flex items-center gap-1 transition-colors cursor-pointer"
           >
             <RefreshCw className="h-3 w-3" /> Refresh
           </button>
         )}
       </div>
+
+      {/* ─── DATA UNCHANGED NOTICE ─── */}
+      {unchangedNotice && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-semibold mb-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          {unchangedNotice}
+        </div>
+      )}
 
       {/* ─── INITIAL UNGENERATED STATE ─── */}
       {!insights && !isLoading && !error && (
