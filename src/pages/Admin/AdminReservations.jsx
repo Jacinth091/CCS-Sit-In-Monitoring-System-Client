@@ -1162,7 +1162,7 @@ export default function AdminReservations() {
                                     Academic Info
                                   </p>
                                   <p className="text-xs font-bold text-primary">
-                                    {reservation.course} â€”{" "}
+                                    {reservation.course} —{" "}
                                     {reservation.course_level}
                                   </p>
                                   <p className="text-[10px] text-primary-light">
