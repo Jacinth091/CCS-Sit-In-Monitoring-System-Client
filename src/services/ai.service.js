@@ -49,10 +49,11 @@ const aiService = {
 
   /**
    * Retrieve analytical insights for the logged in student
+   * @param {boolean} bypassCache - Force a freshness check (skips cache, but reuses if data unchanged)
    * @returns {Promise<Object>} The API response data containing 3 cards
    */
-  getStudentInsights: () => {
-    return signedPost('ai/student_insights.php', {});
+  getStudentInsights: (bypassCache = false) => {
+    return signedPost('ai/student_insights.php', { bypass_cache: bypassCache || undefined });
   },
 
   /**
@@ -65,10 +66,11 @@ const aiService = {
 
   /**
    * Retrieve operational insights for the admin dashboard
+   * @param {boolean} bypassCache - Force a freshness check (skips cache, but reuses if data unchanged)
    * @returns {Promise<Object>} The API response data containing 4 cards
    */
-  getAdminInsights: () => {
-    return signedPost('ai/admin_insights.php', {});
+  getAdminInsights: (bypassCache = false) => {
+    return signedPost('ai/admin_insights.php', { bypass_cache: bypassCache || undefined });
   },
 
   /**
@@ -111,6 +113,22 @@ const aiService = {
    */
   getAdminDashboardStats: () => {
     return api.get('ai/admin_dashboard_stats.php').then(r => r.data);
+  },
+
+  /**
+   * Retrieve behavioral cohort analysis for students
+   * @returns {Promise<Object>} The cohort analysis payload
+   */
+  getCohortAnalysis: () => {
+    return signedPost('ai/student_cohort_analysis.php', {});
+  },
+
+  /**
+   * Retrieve software demand and procurement report
+   * @returns {Promise<Object>} The software demand payload
+   */
+  getSoftwareDemand: () => {
+    return signedPost('ai/software_demand_report.php', {});
   }
 };
 
