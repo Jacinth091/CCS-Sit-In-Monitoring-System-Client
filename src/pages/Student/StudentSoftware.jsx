@@ -372,18 +372,30 @@ function LaboratoriesTab() {
 }
 
 // -------------------------------------------------------------
-// SOFTWARE TAB (View Only)
+// SOFTWARE TAB (Interactive Request Catalog)
 // -------------------------------------------------------------
 function SoftwareTab() {
   const [software, setSoftware] = useState([]);
+  const [labs, setLabs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    software_name: "",
+    version: "",
+    lab_id: "",
+    reason: ""
+  });
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const swRes = await softwareService.getStudentCatalog();
       setSoftware(swRes.data || []);
+      
+      const labsRes = await labService.getAll();
+      setLabs(labsRes.data || []);
     } catch (e) {
       toast.error("Failed to load catalogue");
     } finally {
@@ -394,6 +406,30 @@ function SoftwareTab() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.software_name.trim()) {
+      toast.error("Software Name is required");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await softwareService.submitRequest({
+        software_name: form.software_name.trim(),
+        version: form.version.trim() || null,
+        lab_id: form.lab_id ? parseInt(form.lab_id) : null,
+        reason: form.reason.trim() || null
+      });
+      toast.success("Software request submitted successfully!");
+      setIsModalOpen(false);
+      setForm({ software_name: "", version: "", lab_id: "", reason: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit request");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filteredSoftware = software.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase()),
@@ -421,10 +457,18 @@ function SoftwareTab() {
               className="w-full pl-9 pr-4 py-2.5 text-xs font-bold bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
             />
           </div>
-          <div className="px-4 py-2 bg-primary/5 border border-primary/10 rounded-lg">
-             <span className="text-[10px] font-bold text-primary">
-                {filteredSoftware.length} Software Assets
-             </span>
+          <div className="flex items-center gap-3 self-end sm:self-center">
+            <div className="px-4 py-2 bg-primary/5 border border-primary/10 rounded-lg">
+               <span className="text-[10px] font-bold text-primary">
+                  {filteredSoftware.length} Software Assets
+               </span>
+            </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-2 bg-primary text-white hover:bg-primary-hover text-[10px] font-bold rounded-lg transition-all shadow-sm cursor-pointer"
+            >
+              Request Software
+            </button>
           </div>
         </div>
 
@@ -497,9 +541,15 @@ function SoftwareTab() {
                 <tr>
                   <td colSpan="4" className="py-32 text-center">
                     <Package className="h-10 w-10 text-primary-light/20 mx-auto mb-3" />
-                    <p className="text-[10px] font-bold text-primary-light">
+                    <p className="text-[10px] font-bold text-primary-light mb-4">
                       No Results Matching Your Search
                     </p>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="px-4 py-2 bg-primary/5 border border-primary/20 text-primary text-[10px] font-bold rounded-lg hover:bg-primary/10 transition-all cursor-pointer"
+                    >
+                      Can't find what you need? Request new software
+                    </button>
                   </td>
                 </tr>
               )}
@@ -507,6 +557,111 @@ function SoftwareTab() {
           </table>
         </div>
       </Card>
+
+      {/* ───── REQUEST SOFTWARE MODAL ───── */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" 
+            onClick={() => !submitting && setIsModalOpen(false)}
+          />
+          
+          {/* Modal Container */}
+          <Card className="relative w-full max-w-md bg-white border border-border shadow-xl rounded-xl overflow-hidden p-6 animate-scale-in z-10">
+            <h3 className="text-base font-black text-primary uppercase tracking-wider mb-2">
+              Request New Software
+            </h3>
+            <p className="text-[11px] text-primary-light font-bold mb-5 leading-relaxed">
+              Can't find a tool you need for your laboratory work? Request it here so laboratory managers can review and queue it for installation.
+            </p>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                    Software Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Visual Studio Code"
+                    value={form.software_name}
+                    onChange={(e) => setForm({ ...form, software_name: e.target.value })}
+                    className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    disabled={submitting}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                    Version Tag (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2026.1, v3.12"
+                    value={form.version}
+                    onChange={(e) => setForm({ ...form, version: e.target.value })}
+                    className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    disabled={submitting}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                  Preferred Laboratory (Optional)
+                </label>
+                <select
+                  value={form.lab_id}
+                  onChange={(e) => setForm({ ...form, lab_id: e.target.value })}
+                  className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  disabled={submitting}
+                >
+                  <option value="">All / Any Laboratory</option>
+                  {labs.map((lab) => (
+                    <option key={lab.id} value={lab.id}>
+                      {lab.lab_code ? `${lab.lab_code} - ${lab.name}` : lab.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                  Reason for Request (Optional)
+                </label>
+                <textarea
+                  placeholder="e.g. Needed for compiler design assignments in IT 302..."
+                  value={form.reason}
+                  onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                  rows="3"
+                  className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-3 border-t border-border mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={submitting}
+                  className="px-4 py-2 border border-border bg-white text-primary text-[10px] font-black uppercase tracking-widest hover:bg-bg-secondary transition-all rounded-lg cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-hover transition-all rounded-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {submitting && <Loader2 className="h-3 w-3 animate-spin" />}
+                  {submitting ? "Submitting..." : "Submit Request"}
+                </button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

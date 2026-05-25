@@ -25,7 +25,7 @@ import Pagination from "../../components/ui/Pagination";
 import { useConfirm } from "../../hooks/useConfirm.jsx";
 
 export default function AdminSoftware() {
-  const [activeTab, setActiveTab] = useState("labs"); // 'labs' | 'software'
+  const [activeTab, setActiveTab] = useState("labs"); // 'labs' | 'software' | 'requests'
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-20 animate-fade-in">
@@ -50,13 +50,25 @@ export default function AdminSoftware() {
               onClick={() => setActiveTab("software")}
               className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "software" ? "bg-primary text-white shadow-md" : "bg-bg-secondary text-primary-light hover:text-primary hover:bg-bg-secondary/70"}`}
             >
-              Software
+              Software Catalog
+            </button>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "requests" ? "bg-primary text-white shadow-md" : "bg-bg-secondary text-primary-light hover:text-primary hover:bg-bg-secondary/70"}`}
+            >
+              Software Requests
             </button>
           </div>
         </div>
       </div>
 
-      {activeTab === "labs" ? <LaboratoriesTab /> : <SoftwareTab />}
+      {activeTab === "labs" ? (
+        <LaboratoriesTab />
+      ) : activeTab === "software" ? (
+        <SoftwareTab />
+      ) : (
+        <RequestsTab />
+      )}
 
       <div className="mt-8 flex flex-col items-center opacity-40">
         <div className="h-0.5 w-8 bg-brand-sand/50 rounded-full mb-4" />
@@ -1392,3 +1404,439 @@ function SoftwareTab() {
     </div>
   );
 }
+
+// -------------------------------------------------------------
+// SOFTWARE REQUESTS TAB
+// -------------------------------------------------------------
+function RequestsTab() {
+  const [requests, setRequests] = useState([]);
+  const [labs, setLabs] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("pending");
+  const [actionLoading, setActionLoading] = useState(null);
+
+  // Modal resolving state
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [modalForm, setModalForm] = useState({
+    name: "",
+    version: "1.0.0",
+    description: "",
+    lab_ids: [],
+    is_active: true,
+  });
+
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const [reqRes, labsRes] = await Promise.all([
+        softwareService.getRequests(statusFilter === "all" ? null : statusFilter),
+        labService.getAll()
+      ]);
+      setRequests(reqRes.data?.requests || []);
+      setSummary(reqRes.data?.summary || null);
+      setLabs(labsRes.data || []);
+    } catch (e) {
+      toast.error("Failed to load software requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [statusFilter]);
+
+  const openResolveModal = (req) => {
+    setSelectedRequest(req);
+    setModalForm({
+      name: req.software_name,
+      version: req.version || "1.0.0",
+      description: `Requested by ${req.first_name} ${req.last_name} (${req.student_id}) for ${req.course}. Reason: ${req.reason || "None specified."}`,
+      lab_ids: req.lab_id ? [parseInt(req.lab_id)] : [],
+      is_active: true,
+    });
+  };
+
+  const handleResolveOnly = async (id) => {
+    setActionLoading("resolve_only");
+    try {
+      await softwareService.markRequestsReviewed([id]);
+      toast.success("Request marked as reviewed.");
+      setSelectedRequest(null);
+      fetchRequests();
+    } catch (err) {
+      toast.error("Failed to resolve request");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleInstallAndResolve = async (id) => {
+    if (!modalForm.name.trim()) {
+      toast.error("Software Name is required");
+      return;
+    }
+    if (!modalForm.version.trim()) {
+      toast.error("Version is required");
+      return;
+    }
+    setActionLoading("install_resolve");
+    try {
+      // 1. Create global software and associate with labs
+      await softwareService.create({
+        name: modalForm.name.trim(),
+        version: modalForm.version.trim(),
+        description: modalForm.description.trim(),
+        is_active: modalForm.is_active,
+        lab_ids: modalForm.lab_ids
+      });
+      
+      // 2. Mark request as reviewed
+      await softwareService.markRequestsReviewed([id]);
+      
+      toast.success("Software added to catalogue and request resolved!");
+      setSelectedRequest(null);
+      fetchRequests();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to resolve and install software");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      {summary && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-5 rounded-xl bg-white border border-border shadow-sm flex flex-col justify-between">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light mb-1">
+              Pending Requests
+            </span>
+            <span className="text-2xl font-black text-primary">
+              {summary.pending_requests || 0}
+            </span>
+          </div>
+          <div className="p-5 rounded-xl bg-white border border-border shadow-sm flex flex-col justify-between">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light mb-1">
+              Reviewed Requests
+            </span>
+            <span className="text-2xl font-black text-primary">
+              {summary.reviewed_requests || 0}
+            </span>
+          </div>
+          <div className="p-5 rounded-xl bg-white border border-border shadow-sm flex flex-col justify-between">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-light mb-1">
+              Total Request Count
+            </span>
+            <span className="text-2xl font-black text-primary">
+              {summary.total_requests || 0}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <Card className="bg-white border-border shadow-sm overflow-hidden min-h-[400px] flex flex-col">
+        <div className="p-5 border-b border-border bg-bg-secondary/30 flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
+          <h3 className="text-[11px] font-black tracking-[0.2em] uppercase text-primary">
+            Student Request Directory
+          </h3>
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] font-black text-primary-light uppercase tracking-widest">
+              Filter status:
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 px-3 text-xs font-bold border border-border rounded-lg bg-white text-primary tracking-wide focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="pending">Pending</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="all">All Requests</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-border bg-bg-secondary/10 whitespace-nowrap">
+                <th className="py-4 px-6 text-[9px] font-bold text-primary-light w-1/4">Requested Software</th>
+                <th className="py-4 px-6 text-[9px] font-bold text-primary-light">Requested By</th>
+                <th className="py-4 px-6 text-[9px] font-bold text-primary-light">Target Lab</th>
+                <th className="py-4 px-6 text-[9px] font-bold text-primary-light">Reason / Purpose</th>
+                <th className="py-4 px-6 text-[9px] font-bold text-primary-light text-center">Status</th>
+                <th className="py-4 px-6 text-[9px] font-bold text-primary-light text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/30">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="py-32 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary/20 mx-auto" />
+                  </td>
+                </tr>
+              ) : requests.length > 0 ? (
+                requests.map((req) => (
+                  <tr key={req.id} className="hover:bg-bg-secondary/30 transition-colors group">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+                          <Package className="h-4.5 w-4.5 text-primary" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-primary tracking-tight text-sm block">
+                            {req.software_name}
+                          </span>
+                          {req.version && (
+                            <span className="text-[10px] font-bold text-primary-light/80 block mt-0.5">
+                              Version: {req.version}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-primary text-xs">
+                          {req.first_name} {req.last_name}
+                        </span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          {req.student_id} • {req.course}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      {req.lab_code ? (
+                        <div className="flex flex-col">
+                          <span className="px-2.5 py-1 rounded text-[9px] font-bold bg-brand-sand/15 text-primary-hover border border-brand-sand/25 w-max">
+                            {req.lab_code}
+                          </span>
+                          <span className="text-[8px] text-primary-light font-bold mt-1 opacity-70">
+                            {req.lab_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[9px] font-bold text-primary-light/50 italic">
+                          Any Laboratory
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6">
+                      <p className="text-xs text-primary-light font-bold line-clamp-2 max-w-[250px] italic opacity-85">
+                        {req.reason || "No reason provided"}
+                      </p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${
+                        req.status === 'pending' ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                      }`}>
+                        {req.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      {req.status === 'pending' ? (
+                        <div className="flex flex-col items-end gap-1.5">
+                          {parseInt(req.is_installed) > 0 && (
+                            <span className="text-[8px] font-black uppercase text-emerald-600 tracking-wider bg-emerald-50 px-1.5 py-0.5 border border-emerald-100 rounded">
+                              Already Catalogued
+                            </span>
+                          )}
+                          <button
+                            onClick={() => openResolveModal(req)}
+                            className="px-3.5 py-1.5 bg-primary text-white hover:bg-primary-hover text-[9px] font-black uppercase tracking-widest rounded transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                          >
+                            Resolve
+                          </button>
+                        </div>
+                      ) : (
+                        // Status is reviewed. Show button only if NOT already installed in catalogue
+                        parseInt(req.is_installed) > 0 ? (
+                          <span className="text-[10px] font-bold text-slate-400 italic">
+                            Reviewed & Catalogue Registered
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => openResolveModal(req)}
+                            className="px-3.5 py-1.5 bg-bg-secondary text-primary hover:bg-bg-secondary/70 text-[9px] font-black uppercase tracking-widest rounded border border-border transition-all shadow-sm flex items-center gap-1.5 cursor-pointer ml-auto"
+                          >
+                            Install / Catalogue
+                          </button>
+                        )
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="py-32 text-center">
+                    <Package className="h-10 w-10 text-primary-light/20 mx-auto mb-3" />
+                    <p className="text-[10px] font-black text-primary-light uppercase tracking-[0.2em]">
+                      No software requests found
+                    </p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* ───── RESOLVE SOFTWARE REQUEST MODAL ───── */}
+      {selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-scale-in">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" 
+            onClick={() => !actionLoading && setSelectedRequest(null)}
+          />
+          
+          {/* Modal Container */}
+          <Card className="relative w-full max-w-lg bg-white border border-border shadow-xl rounded-xl overflow-hidden p-6 z-10">
+            <h3 className="text-base font-black text-primary uppercase tracking-wider mb-2">
+              {selectedRequest.status === 'pending' ? 'Resolve Software Request' : 'Install Requested Software'}
+            </h3>
+            <p className="text-[11px] text-primary-light font-bold mb-5 leading-relaxed">
+              {selectedRequest.status === 'pending' 
+                ? 'You can choose to install this software globally (adding it to the active software catalogue and mapping it to lab workstations) or simply mark the request as reviewed for offline tracking.'
+                : 'This request was marked as reviewed. You can register the requested software in the system catalogue now to complete the deployment.'}
+            </p>
+            
+            <div className="space-y-4">
+              {/* Info banner */}
+              <div className="p-3 bg-bg-secondary rounded-lg border border-border flex flex-col gap-1 text-xs">
+                <span className="font-bold text-primary">Student Details:</span>
+                <span className="text-primary-light font-bold">
+                  {selectedRequest.first_name} {selectedRequest.last_name} ({selectedRequest.student_id}) - {selectedRequest.course}
+                </span>
+                <span className="font-bold text-primary mt-2">Requested Laboratory:</span>
+                <span className="text-primary-light font-bold">
+                  {selectedRequest.lab_code ? `${selectedRequest.lab_code} - ${selectedRequest.lab_name}` : "Any / All Laboratories"}
+                </span>
+                <span className="font-bold text-primary mt-2">Student's Stated Reason:</span>
+                <span className="text-primary-light font-bold italic">
+                  "{selectedRequest.reason || "No reason provided"}"
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                  Software Name (To register in Catalogue)
+                </label>
+                <input
+                  type="text"
+                  value={modalForm.name}
+                  onChange={(e) => setModalForm({ ...modalForm, name: e.target.value })}
+                  className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                  disabled={!!actionLoading}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                    Version Tag
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1.0.0"
+                    value={modalForm.version}
+                    onChange={(e) => setModalForm({ ...modalForm, version: e.target.value })}
+                    className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                    disabled={!!actionLoading}
+                  />
+                </div>
+                <div className="space-y-1.5 flex flex-col justify-end pb-1.5">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={modalForm.is_active}
+                      onChange={(e) => setModalForm({ ...modalForm, is_active: e.target.checked })}
+                      className="rounded text-primary focus:ring-primary h-4 w-4"
+                      disabled={!!actionLoading}
+                    />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                      Active in Catalogue
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                  Description
+                </label>
+                <textarea
+                  rows="2"
+                  value={modalForm.description}
+                  onChange={(e) => setModalForm({ ...modalForm, description: e.target.value })}
+                  className="w-full px-3 py-2 text-xs font-bold bg-bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                  disabled={!!actionLoading}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-wider text-primary-light ml-1">
+                  Deploy to Laboratories (Check to install)
+                </label>
+                <div className="border border-border bg-bg-secondary/40 rounded-lg p-3 max-h-32 overflow-y-auto grid grid-cols-2 gap-2">
+                  {labs.map((lab) => {
+                    const isChecked = modalForm.lab_ids.includes(lab.id);
+                    return (
+                      <label key={lab.id} className="flex items-center gap-2 cursor-pointer text-xs font-bold text-primary">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            const nextIds = isChecked
+                              ? modalForm.lab_ids.filter((id) => id !== lab.id)
+                              : [...modalForm.lab_ids, lab.id];
+                            setModalForm({ ...modalForm, lab_ids: nextIds });
+                          }}
+                          className="rounded text-primary focus:ring-primary h-4 w-4"
+                          disabled={!!actionLoading}
+                        />
+                        <span>{lab.lab_code || lab.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 justify-end pt-4 border-t border-border mt-6">
+              <button
+                type="button"
+                onClick={() => setSelectedRequest(null)}
+                disabled={!!actionLoading}
+                className="px-4 py-2 border border-border bg-white text-primary text-[10px] font-black uppercase tracking-widest hover:bg-bg-secondary transition-all rounded-lg cursor-pointer"
+              >
+                Cancel
+              </button>
+              {selectedRequest.status === 'pending' && (
+                <button
+                  type="button"
+                  onClick={() => handleResolveOnly(selectedRequest.id)}
+                  disabled={!!actionLoading}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-primary text-[10px] font-black uppercase tracking-widest transition-all rounded-lg cursor-pointer disabled:opacity-50"
+                >
+                  {actionLoading === "resolve_only" ? "Saving..." : "Mark Reviewed Only"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleInstallAndResolve(selectedRequest.id)}
+                disabled={!!actionLoading}
+                className="px-5 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-hover transition-all rounded-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {actionLoading === "install_resolve" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {selectedRequest.status === 'pending' ? 'Install & Resolve' : 'Install to Catalogue'}
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
