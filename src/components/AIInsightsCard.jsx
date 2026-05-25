@@ -156,7 +156,7 @@ export default function AIInsightsCard() {
             </p>
           </div>
           <button
-            onClick={fetchInsights}
+            onClick={() => fetchInsights()}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary-hover shadow-sm transition-all duration-300 w-full justify-center cursor-pointer active:scale-[0.98]"
           >
             Generate Insights
@@ -180,7 +180,7 @@ export default function AIInsightsCard() {
           <AlertTriangle className="h-6 w-6 text-red-500 mx-auto" />
           <p className="text-xs font-bold text-red-600">{error}</p>
           <button
-            onClick={fetchInsights}
+            onClick={() => fetchInsights()}
             className="text-[10px] font-bold text-primary-hover underline cursor-pointer"
           >
             Try Again
